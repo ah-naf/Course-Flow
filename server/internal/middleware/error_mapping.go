@@ -12,7 +12,8 @@ func mapErrorToStatus(err error) (int, string) {
 			return http.StatusNotFound, apiErr.Message
 		case "EMAIL_DUPLICATE", "USERNAME_DUPLICATE":
 			return http.StatusConflict, apiErr.Message
-		// ... other cases
+		case "VALIDATION_ERROR":
+			return http.StatusBadRequest, apiErr.Message
 		default:
 			return http.StatusInternalServerError, "Internal server error"
 		}
