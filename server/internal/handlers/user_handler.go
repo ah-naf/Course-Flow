@@ -5,7 +5,6 @@ import (
 	"collab-editor/internal/services"
 	"collab-editor/internal/utils"
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
@@ -20,21 +19,18 @@ func NewUserHandler(service *services.UserService) *UserHandler {
 }
 
 // CreateUserHandler handles POST /api/users requests to create a new user.
-func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) error {
 	var user models.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		return
+		return err
 	}
 
 	if err := h.Service.CreateUser(&user); err != nil {
-		http.Error(w, "Error creating user", http.StatusInternalServerError)
-		return
+		return err
 	}
-	fmt.Printf("%+v\n", user)
 
 	// Respond with the created user details (excluding password)
-	utils.WriteJSON(w, http.StatusCreated, map[string]interface{}{
+	return utils.WriteJSON(w, http.StatusCreated, map[string]interface{}{
 		"message": "User created successfully",
 		"user":    user,
 	})
