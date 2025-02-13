@@ -22,10 +22,14 @@ func NewUserService(storage *storage.UserStorage) *UserService {
 	}
 }
 
+func (s *UserService) GetAllUser() ([]*models.User, error) {
+	return s.Storage.GetAllUser()
+}
+
 func (s *UserService) CreateUser(userReq *models.UserRequest) error {
 	// Trim space
 	userReq.Email, userReq.FirstName, userReq.LastName, userReq.Username = strings.TrimSpace(userReq.Email), strings.TrimSpace(userReq.FirstName), strings.TrimSpace(userReq.LastName), strings.TrimSpace(userReq.Username)
-	
+
 	// validate user request
 	validate := validator.New()
 	if err := validate.Struct(userReq); err != nil {
@@ -42,13 +46,13 @@ func (s *UserService) CreateUser(userReq *models.UserRequest) error {
 	}
 
 	user := &models.User{
-		Email: userReq.Email,
-		Username: userReq.Username,
-		FirstName: userReq.FirstName,
-		LastName: userReq.LastName,
+		Email:        userReq.Email,
+		Username:     userReq.Username,
+		FirstName:    userReq.FirstName,
+		LastName:     userReq.LastName,
 		PasswordHash: userReq.Password,
 	}
-	
+
 	// Check if user with same email or username exist
 	err := s.Storage.CheckForUsernameOrEmail(user)
 	if err != nil {

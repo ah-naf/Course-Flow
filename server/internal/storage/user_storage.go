@@ -17,6 +17,23 @@ func NewUserStorage(db *sql.DB) *UserStorage {
 	}
 }
 
+func (s *UserStorage) GetAllUser() ([]*models.User, error) {
+	rows, err := s.DB.Query("SELECT * FROM users")
+	if err != nil {
+		return nil, err
+	}
+
+	var users []*models.User
+	for rows.Next() {
+		user := new(models.User)
+		if err := rows.Scan(&user.ID, &user.Email, &user.Username, &user.PasswordHash, &user.FirstName, &user.LastName, &user.CreatedAt, &user.UpdatedAt, &user.LastLogin); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	return users, nil
+}
+
 func (s *UserStorage) SaveUser(user *models.User) error {
 	query := `
 	INSERT into users(email, username, password_hash, first_name, last_name, created_at, updated_at)

@@ -18,7 +18,7 @@ func NewUserHandler(service *services.UserService) *UserHandler {
 	return &UserHandler{Service: service}
 }
 
-// CreateUserHandler handles POST /api/users requests to create a new user.
+// CreateUserHandler handles POST /api/users/register requests to create a new user.
 func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) error {
 	var userReq models.UserRequest
 	if err := json.NewDecoder(r.Body).Decode(&userReq); err != nil {
@@ -35,4 +35,13 @@ func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 		"message": "User created successfully",
 		"user":    userReq,
 	})
+}
+
+// GetUserHandler handle GET /api/users requests to get all the user.
+func (h *UserHandler) GetUserHandler(w http.ResponseWriter, r *http.Request) error {
+	users, err := h.Service.GetAllUser()
+	if err != nil {
+		return nil
+	}
+	return utils.WriteJSON(w, http.StatusOK, users)
 }
