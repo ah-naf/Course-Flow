@@ -5,7 +5,6 @@ import (
 	"collab-editor/internal/storage"
 	"collab-editor/internal/utils"
 	"errors"
-	"fmt"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -34,6 +33,11 @@ func (s *AuthService) Login(user *models.LoginRequest) (string, string, error) {
 		return "", "", errors.New("invalid username or password")
 	}
 
+	return generateTokens(userID)
+}
+
+// Generate new access and refresh token
+func generateTokens(userID string) (string, string, error) {
 	accessToken, err := utils.GenerateToken(userID, 15*time.Minute)
 	if err != nil {
 		return "", "", err
@@ -46,15 +50,3 @@ func (s *AuthService) Login(user *models.LoginRequest) (string, string, error) {
 
 	return accessToken, refreshToken, nil
 }
-
-// Generate new access and refresh token
-func (s *AuthService) GenerateTokens(userId string) (string, string, error) {
-	accessToken, err := utils.GenerateToken(userId, 15*time.Minute)
-	if err != nil {
-		return "", "", err
-	}
-	fmt.Println(accessToken)
-	return "", "", nil
-}
-
-// Login
