@@ -18,9 +18,14 @@ func SetupRouter(db *sql.DB) *mux.Router {
 	userService := services.NewUserService(userStorage)
 	userHandler := handlers.NewUserHandler(userService)
 
+	authStorage := storage.NewAuthStorage(db)
+	authService := services.NewAuthService(userStorage, authStorage)
+	authHandler := handlers.NewAuthHandler(authService)
+
 	// Define routes for /api/users
 	router.HandleFunc("/api/users", middleware.ConvertToHandlerFunc(userHandler.GetUserHandler)).Methods("GET")
 	router.HandleFunc("/api/users/register", middleware.ConvertToHandlerFunc(userHandler.CreateUserHandler)).Methods("POST")
+	router.HandleFunc("/api/auth/login", middleware.ConvertToHandlerFunc(authHandler.LogUserIn)).Methods("POST")
 
 	return router
 }
