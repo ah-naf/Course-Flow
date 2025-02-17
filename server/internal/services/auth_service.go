@@ -27,18 +27,43 @@ func NewAuthService(userStorage *storage.UserStorage, authStorage *storage.AuthS
 
 // validate the user and generate JWT token
 func (s *AuthService) Login(user *models.LoginRequest) (*models.LoginResponse, error) {
+	// retrieve the hashed password fromm db
 	userID, storedHash, err := s.AuthStorage.RetrieveUserPassword(user.Username)
 	if err != nil {
 		return nil, err
 	}
 
+	// compare the login password with the hashed password
 	if err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(user.Password)); err != nil {
 		return nil, errors.New("invalid username or password")
 	}
 
-	return generateTokens(userID)
+	// create access and refresh token
+	accessToken, err := utils.GenerateToken(userID, 15*time.Minute)
+	if err != nil {
+		return nil, err
+	}
+
+	exp := 7*24*time.Hour
+	refreshToken, err := utils.GenerateToken(userID, exp) // 7 days
+	if err != nil {
+		return nil, err
+	}
+
+	// save the refresh token in db with a expiration value
+	err = s.AuthStorage.SaveRefreshToken(userID, refreshToken, time.Now().Add(exp))
+	if err != nil {
+		return nil, err
+	}
+
+	// if the token is successfully saved, send it to user
+	return &models.LoginResponse{
+		AccessToken: accessToken,
+		RefreshToken: refreshToken,
+	}, nil
 }
 
+// Creates new user on registration
 func (s *AuthService) CreateUser(userReq *models.UserRequest) error {
 	// Trim space
 	userReq.Email, userReq.FirstName, userReq.LastName, userReq.Username = strings.TrimSpace(userReq.Email), strings.TrimSpace(userReq.FirstName), strings.TrimSpace(userReq.LastName), strings.TrimSpace(userReq.Username)
@@ -84,22 +109,6 @@ func (s *AuthService) CreateUser(userReq *models.UserRequest) error {
 	// save the user
 	return s.UserStorage.SaveUser(user)
 }
-
-// Generate new access and refresh token
-func generateTokens(userID string) (*models.LoginResponse, error) {
-	accessToken, err := utils.GenerateToken(userID, 15*time.Minute)
-	if err != nil {
-		return nil, err
-	}
-
-	refreshToken, err := utils.GenerateToken(userID, 7*24*time.Hour) // 7 days
-	if err != nil {
-		return nil, err
-	}
-
-	return &models.LoginResponse{AccessToken: accessToken, RefreshToken: refreshToken}, nil
-}
-
 
 func hashPassword(pw string) ([]byte, error) {
 	return bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)

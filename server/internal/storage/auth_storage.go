@@ -36,7 +36,7 @@ func (s *AuthStorage) RetrieveUserPassword(username string) (string, string, err
 // Stores a refresh token in the database
 func (s *AuthStorage) SaveRefreshToken(userID, refreshToken string, expiresAt time.Time) error {
 	query := `
-	INSERT INTO refresh_tokens (user_id, refresh_token, expiresAt)
+	INSERT INTO refresh_tokens (user_id, refresh_token, expires_at)
 	VALUES ($1, $2, $3)
 	`
 	_, err := s.DB.Query(query, userID, refreshToken, expiresAt)

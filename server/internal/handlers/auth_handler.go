@@ -31,7 +31,7 @@ func (h *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) error
 }
 
 // Handles POST /api/auth/register requests to register a new user.
-func (h *AuthHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) error {
+func (h *AuthHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) error {
 	var userReq models.UserRequest
 	if err := json.NewDecoder(r.Body).Decode(&userReq); err != nil {
 		return err
