@@ -1,7 +1,7 @@
 package main
 
 import (
-	"collab-editor/internal/server"
+	"collab-editor/internal/router"
 	"collab-editor/pkg/database"
 	"fmt"
 	"log"
@@ -15,10 +15,11 @@ func main() {
 	}
 	defer db.Close()
 
-	router := server.SetupRouter(db)
+	router := router.NewRouter(db)
+	appRouter := router.Setup()
 
 	// Start the server
 	port := ":8080"
 	fmt.Println("Server is running on port", port)
-	log.Fatal(http.ListenAndServe(port, router))
+	log.Fatal(http.ListenAndServe(port, appRouter))
 }
