@@ -1,31 +1,77 @@
 package utils
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
 )
 
-func GenerateToken(userID string, exp time.Duration) (string, error) {
-	err := godotenv.Load()
+type contextKey string
+
+const userIDKey contextKey = "userID"
+
+func ExtractUserIDFromToken(r *http.Request) (string, error) {
+	secret_key := getAuthSecretKey()
+
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		return "", &ApiError{Code: "TOKEN_NOT_FOUND", Message: "Missing access token"}
+	}
+
+	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+		return []byte(secret_key), nil
+	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Name}))
+
 	if err != nil {
-		fmt.Println("Warning: .env file not found, using system environment variables")
+		if err == jwt.ErrTokenExpired {
+			return "", &ApiError{Code: "TOKEN_EXPIRED", Message: "token has expired"}
+		}
+		return "", &ApiError{Code: "INVALID_TOKEN", Message: "invalid token: " + err.Error()}
 	}
 
-	secret_key := os.Getenv("SECRET_KEY")
-	if secret_key == "" {
-		log.Fatalln("Secret key is empty")
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return "", &ApiError{Code: "INVALID_REFRESH_TOKEN", Message: "invalid token claims"}
 	}
 
+	userID, ok := claims["sub"].(string)
+	if !ok {
+		return "", &ApiError{Code: "INVALID_REFRESH_TOKEN", Message: "user id not found in the token"}
+	}
+
+	return userID, nil
+}
+
+// SetUserIDInContext stores the user ID in request context
+func SetUserIDInContext(ctx context.Context, userID string) context.Context {
+	return context.WithValue(ctx, userIDKey, userID)
+}
+
+// GetUserIDFromContext retrieves the user ID from request context
+func GetUserIDFromContext(ctx context.Context) (string, error) {
+	userID, ok := ctx.Value(userIDKey).(string)
+	if !ok || userID == "" {
+		return "", &ApiError{Code: "INVALID_REFRESH_TOKEN", Message: "user id not found in the context"}
+	}
+	return userID, nil
+}
+
+func GenerateToken(userID string, exp time.Duration) (string, error) {
+	secret_key := getAuthSecretKey()
+	
 	claims := jwt.MapClaims{
 		"sub": userID,
-		"exp": time.Now().Add(exp),
+		// "exp": time.Now().Add(exp).Unix(),
+		"exp": jwt.NewNumericDate(time.Now().Add(exp)).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -37,6 +83,20 @@ func WriteJSON(w http.ResponseWriter, statusCode int, v any) error {
 	w.WriteHeader(statusCode)
 	w.Header().Add("Content-Type", "application/json")
 	return json.NewEncoder(w).Encode(v)
+}
+
+func getAuthSecretKey() string {
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Println("Warning: .env file not found, using system environment variables")
+	}
+
+	secret_key := os.Getenv("SECRET_KEY")
+	if secret_key == "" {
+		log.Fatalln("Secret key is empty")
+	}
+
+	return secret_key
 }
 
 type ApiError struct {

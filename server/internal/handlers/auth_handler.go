@@ -49,9 +49,8 @@ func (h *AuthHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) er
 	})
 }
 
-
 // Handles POST /api/auth/logout request to logout an user
-func(h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) error {
+func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) error {
 	var req struct {
 		RefreshToken string `json:"refresh_token"`
 	}
@@ -60,7 +59,13 @@ func(h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) error {
 		return utils.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid request payload"})
 	}
 
-	err := h.Service.Logout(req.RefreshToken)
+	ctx := r.Context()
+	_, err := utils.GetUserIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = h.Service.Logout(req.RefreshToken)
 	if err != nil {
 		return err
 	}

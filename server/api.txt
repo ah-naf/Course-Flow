@@ -1,0 +1,14 @@
+curl -X POST http://localhost:8080/api/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{
+          "username": "ahnaf",
+          "password": "123456"
+         }'
+
+
+curl -X POST http://localhost:8080/api/auth/logout \
+     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDAxNTYxOTEsInN1YiI6ImRkNmY2ODVhLTYyYjYtNDA0Yy1iYTY2LTRhMWQzMzE1YTY2OSJ9.ixxNHJ25Eb-ex712CaTIj2bOEB9K5OJLGnR-QslE8Kg" \
+     -H "Content-Type: application/json" \
+     -d '{
+          "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDA3NjAwOTEsInN1YiI6ImRkNmY2ODVhLTYyYjYtNDA0Yy1iYTY2LTRhMWQzMzE1YTY2OSJ9.h2M1BR-wze93S66-4jwDhmumdEhq8-JCpTnt-A1dRdk"
+         }'

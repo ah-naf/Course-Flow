@@ -15,7 +15,7 @@ func mapErrorToStatus(err error) (int, string) {
 			return http.StatusConflict, apiErr.Message
 		case "VALIDATION_ERROR":
 			return http.StatusBadRequest, apiErr.Message
-		case "ACCESS_DENIED", "INVALID_REFRESH_TOKEN":
+		case "ACCESS_DENIED", "INVALID_REFRESH_TOKEN", "TOKEN_EXPIRED", "INVALID_TOKEN":
 			return http.StatusUnauthorized, apiErr.Message
 		case "TOKEN_STORAGE_FAILED":
 			return http.StatusInternalServerError, "Failed to store token"
