@@ -109,6 +109,15 @@ func (s *AuthService) CreateUser(userReq *models.UserRequest) error {
 	return s.UserStorage.SaveUser(user)
 }
 
+// handle logout
+func(s *AuthService) Logout(refreshToken string) error {
+	if refreshToken == "" {
+		return &utils.ApiError{Code: "TOKEN_NOT_FOUND", Message: "Refresh token is required"}
+	}
+
+	return s.AuthStorage.DeleteRefreshToken(refreshToken)
+}
+
 func hashPassword(pw string) ([]byte, error) {
 	return bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)
 }
