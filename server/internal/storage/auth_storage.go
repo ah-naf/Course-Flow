@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"collab-editor/internal/utils"
 	"database/sql"
 	"errors"
 	"time"
@@ -26,7 +27,7 @@ func (s *AuthStorage) RetrieveUserPassword(username string) (string, string, err
 	err := s.DB.QueryRow(query, username).Scan(&userID, &hashedPass)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return "", "", errors.New("invalid credential")
+			return "", "", &utils.ApiError{Code: "ACCESS_DENIED", Message: "Invalid username or password"}
 		}
 		return "", "", err
 	}
@@ -40,7 +41,10 @@ func (s *AuthStorage) SaveRefreshToken(userID, refreshToken string, expiresAt ti
 	VALUES ($1, $2, $3)
 	`
 	_, err := s.DB.Query(query, userID, refreshToken, expiresAt)
-	return err
+	if err != nil {
+		return &utils.ApiError{Code: "TOKEN_STORAGE_FAILED", Message: "Failed to save refresh token"}
+	}
+	return nil
 }
 
 // Verifies refresh token exists and is valid
@@ -54,7 +58,7 @@ func (s *AuthStorage) VerifyRefreshToken(refreshToken string) (string, error) {
 	err := s.DB.QueryRow(query, refreshToken).Scan(&userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return "", errors.New("invalid or expired refresh token")
+			return "", &utils.ApiError{Code: "INVALID_REFRESH_TOKEN", Message: "Refresh token is invalid or expired"}
 		}
 		return "", err
 	}
@@ -64,13 +68,30 @@ func (s *AuthStorage) VerifyRefreshToken(refreshToken string) (string, error) {
 // Removes a refresh token from the database (used during logout)
 func (s *AuthStorage) DeleteRefreshToken(refreshToken string) error {
 	query := `DELETE FROM refresh_tokens WHERE refresh_token = $1`
-	_, err := s.DB.Exec(query, refreshToken)
-	return err
+	result, err := s.DB.Exec(query, refreshToken)
+	if err != nil {
+		return errors.New("internal server error") // Return plain error for 500
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return &utils.ApiError{Code: "TOKEN_NOT_FOUND", Message: "Refresh token not found"}
+	}
+	return nil
 }
 
 // Removes all refresh tokens for a specific user (force logout)
 func (s *AuthStorage) DeleteAllTokensForUser(userID string) error {
 	query := `DELETE FROM refresh_tokens WHERE user_id = $1`
-	_, err := s.DB.Exec(query, userID)
-	return err
+	result, err := s.DB.Exec(query, userID)
+	if err != nil {
+		return errors.New("internal server error") // Return plain error for 500
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return &utils.ApiError{Code: "USER_TOKENS_NOT_FOUND", Message: "No refresh tokens found for the user"}
+	}
+
+	return nil
 }

@@ -4,7 +4,6 @@ import (
 	"collab-editor/internal/models"
 	"collab-editor/internal/storage"
 	"collab-editor/internal/utils"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -35,7 +34,7 @@ func (s *AuthService) Login(user *models.LoginRequest) (*models.LoginResponse, e
 
 	// compare the login password with the hashed password
 	if err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(user.Password)); err != nil {
-		return nil, errors.New("invalid username or password")
+		return nil, &utils.ApiError{Code: "ACCESS_DENIED", Message: "Invalid username or password"}
 	}
 
 	// create access and refresh token
@@ -44,7 +43,7 @@ func (s *AuthService) Login(user *models.LoginRequest) (*models.LoginResponse, e
 		return nil, err
 	}
 
-	exp := 7*24*time.Hour
+	exp := 7 * 24 * time.Hour
 	refreshToken, err := utils.GenerateToken(userID, exp) // 7 days
 	if err != nil {
 		return nil, err
@@ -58,7 +57,7 @@ func (s *AuthService) Login(user *models.LoginRequest) (*models.LoginResponse, e
 
 	// if the token is successfully saved, send it to user
 	return &models.LoginResponse{
-		AccessToken: accessToken,
+		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil
 }

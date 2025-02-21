@@ -1,0 +1,324 @@
+Below is a comprehensive, step-by-step breakdown into tasks and sub‐tasks for building your Collaborative Document Editor. This plan covers everything—from project setup to deployment—and includes real-time collaboration via WebSocket, file uploading/serving, authentication, caching, background job processing, and more.
+
+---
+
+# **Project: Collaborative Document Editor**
+
+> **Overview:**  
+> Build a web application where multiple users can collaborate on editing documents in real time. Users can also upload files (e.g., images or attachments) that get stored locally, while the backend (in Go) exposes REST endpoints, manages WebSocket connections for live collaboration, integrates with PostgreSQL for persistent storage, uses Redis for caching, and processes background jobs via a queue. The React frontend will handle user authentication, editing (with a rich text editor), file uploads, and real-time updates.
+
+---
+
+## **Task 1: Project Setup & Environment Configuration**
+
+### **Sub-task 1.1: Backend (Go) Setup**
+- **Initialize Module & Repository:**
+  - Create a new Git repository.
+  - Run `go mod init github.com/yourusername/collab-doc-editor`.
+- **Establish Folder Structure:**
+  - Create folders such as:
+    - `/cmd` — for the main application entry point.
+    - `/internal/api` — for HTTP handlers and routes.
+    - `/internal/models` — for data models (User, Document, File, etc.).
+    - `/internal/auth` — for authentication (JWT, middleware, etc.).
+    - `/internal/ws` — for WebSocket server logic.
+    - `/internal/queue` — for job queue and worker implementation.
+    - `/pkg` — for shared utilities and helper functions.
+- **Set Up Basic HTTP Server:**
+  - Choose between `net/http` or a router framework (like Gorilla Mux or Gin).
+  - Create a basic server that logs requests and listens on a configurable port.
+- **Environment Variables:**
+  - Plan for configuration (database URLs, Redis settings, JWT secret, file storage paths, etc.).
+  - Create a sample `.env` file.
+
+### **Sub-task 1.2: Frontend (React) Setup**
+- **Project Bootstrapping:**
+  - Use Create React App (or your preferred boilerplate) to initialize your React project.
+- **Folder Organization:**
+  - Create directories for:
+    - `/src/components` — for UI components.
+    - `/src/services` — for API and WebSocket service code.
+    - `/src/context` or `/src/store` — for state management (using React Context API or Redux).
+- **Dependency Installation:**
+  - Install libraries for a rich text editor (e.g., Draft.js or Quill).
+  - Install packages for HTTP requests (e.g., Axios) and WebSocket management.
+- **Basic App Shell:**
+  - Build a simple landing page and router setup (using React Router) to navigate between login, document list, and editor pages.
+
+### **Sub-task 1.3: Docker & Docker Compose Setup**
+- **Dockerfiles:**
+  - Create a `Dockerfile` for the Go backend.
+  - Create a `Dockerfile` for the React frontend.
+- **Docker Compose:**
+  - Write a `docker-compose.yml` to orchestrate:
+    - The Go API server.
+    - The React frontend.
+    - PostgreSQL (for database).
+    - Redis (for caching and possibly for queue management).
+- **Local Environment:**
+  - Ensure environment variables are passed through Docker Compose.
+
+---
+
+## **Task 2: Database Design & Setup (PostgreSQL)**
+
+### **Sub-task 2.1: Define Database Schema**
+- **Users Table:**
+  - Fields: `id` (UUID/serial), `username`, `email`, `password_hash`, `created_at`, etc.
+- **Documents Table:**
+  - Fields: `id` (UUID/serial), `title`, `content` (text or JSON), `last_modified`, `owner_id` (foreign key to Users), etc.
+- **Files Table:**
+  - Fields: `id`, `document_id` (foreign key), `filename`, `filepath`, `uploaded_at`.
+- **(Optional) Collaborators Table:**
+  - Map documents to multiple users if you plan to manage permissions.
+
+### **Sub-task 2.2: Create and Run Migrations**
+- Choose a migration tool (e.g., [golang-migrate](https://github.com/golang-migrate/migrate) or goose).
+- Write migration scripts to create and update tables.
+- Test migrations locally against a Dockerized PostgreSQL instance.
+
+### **Sub-task 2.3: Database Integration in Go**
+- Set up a connection pool using `database/sql` or an ORM (like GORM or sqlx).
+- Create helper functions for common operations (CRUD for Users, Documents, and Files).
+
+---
+
+## **Task 3: Authentication & Authorization**
+
+### **Sub-task 3.1: Backend Auth Endpoints**
+- **User Registration:**
+  - **Endpoint:** `POST /api/auth/register`
+  - Hash passwords using bcrypt.
+  - Save new user records in the database.
+- **User Login:**
+  - **Endpoint:** `POST /api/auth/login`
+  - Verify credentials and generate a JWT token.
+- **Middleware:**
+  - Create an authentication middleware to verify JWT tokens on protected routes.
+  - Store user information in the request context for downstream handlers.
+
+### **Sub-task 3.2: Frontend Auth Integration**
+- **Components:**
+  - Build login and registration forms.
+  - Implement client-side validation.
+- **API Integration:**
+  - Write services (using Axios) to call `/api/auth/register` and `/api/auth/login`.
+  - Manage token storage (localStorage or cookies) and attach the JWT token to subsequent API requests.
+- **Route Protection:**
+  - Use React Router guards (or HOC) to protect routes that require authentication.
+
+---
+
+## **Task 4: Document Management (REST API)**
+
+### **Sub-task 4.1: Document CRUD Endpoints**
+- **Create Document:**
+  - **Endpoint:** `POST /api/documents`
+  - Accept JSON payload with `title` and optional `content`.
+  - Return created document data (including unique `id`).
+- **List Documents:**
+  - **Endpoint:** `GET /api/documents`
+  - Optionally filter by user (if multi-user functionality is implemented).
+- **Retrieve Document:**
+  - **Endpoint:** `GET /api/documents/{documentID}`
+  - Return full document details.
+- **Update Document:**
+  - **Endpoint:** `PUT /api/documents/{documentID}`
+  - Accept updated `content` and/or `title`.
+  - Use context for timeout/cancellation.
+  - Consider versioning or patch-based updates to handle collaboration.
+- **Delete Document:**
+  - **Endpoint:** `DELETE /api/documents/{documentID}`
+  - Remove the document and all associated files.
+
+### **Sub-task 4.2: Caching Document Data**
+- **Integration with Redis:**
+  - On read requests, check Redis cache before querying PostgreSQL.
+  - Invalidate or update cache on document changes.
+- **Helper Functions:**
+  - Write caching wrappers for document retrieval.
+
+### **Sub-task 4.3: Testing Document Endpoints**
+- Write unit and integration tests using `net/http/httptest`.
+
+---
+
+## **Task 5: File Uploading & Serving**
+
+### **Sub-task 5.1: File Upload Endpoint**
+- **Endpoint:** `POST /api/documents/{documentID}/upload`
+- Accept multipart/form-data containing the file.
+- Validate file type and size.
+- Store the file in a designated uploads directory on the local machine.
+- Save file metadata in the Files table in PostgreSQL.
+- Optionally, enqueue a background job for further file processing.
+
+### **Sub-task 5.2: File Listing Endpoint**
+- **Endpoint:** `GET /api/documents/{documentID}/files`
+- Return a list of files (with metadata) associated with the document.
+
+### **Sub-task 5.3: File Serving Endpoint**
+- **Endpoint:** `GET /api/files/{filename}`
+- Read the file from local storage and serve it with the proper MIME type.
+  
+### **Sub-task 5.4: Testing File Handling**
+- Write tests for uploading, listing, and serving files.
+
+---
+
+## **Task 6: Job Queue & Background Processing**
+
+### **Sub-task 6.1: Implement a Job Queue**
+- Use Go channels to create a FIFO job queue.
+- Define a `Job` struct (e.g., for thumbnail generation, virus scanning, or logging file uploads).
+
+### **Sub-task 6.2: Worker Goroutines**
+- Write one or more worker functions that process jobs from the queue.
+- Use mutexes if shared resources (like counters) need protection.
+- Log job processing status.
+
+### **Sub-task 6.3: Integrate Queue with File Upload**
+- Enqueue a file processing job after successful file upload.
+- Update file metadata (if needed) once processing is complete.
+
+### **Sub-task 6.4: Testing Background Processing**
+- Write tests or use manual triggers to simulate and verify background job processing.
+
+---
+
+## **Task 7: Real-Time Collaboration with WebSocket**
+
+### **Sub-task 7.1: Backend WebSocket Server**
+- **Endpoint:** `GET /ws/documents/{documentID}`
+- Upgrade HTTP connections to WebSocket.
+- Handle client connections (maintain a map of connected clients per document).
+- Implement broadcasting:
+  - When a client sends an `"edit"` message, broadcast it to all other clients connected to that document.
+- **Message Types:**
+  - Define JSON message formats for `"join"`, `"edit"`, `"sync"`, etc.
+
+### **Sub-task 7.2: WebSocket Client Authentication**
+- Validate JWT tokens on connection upgrade (either via query parameters or HTTP headers).
+- Reject unauthorized connections.
+
+### **Sub-task 7.3: Frontend WebSocket Integration**
+- Build a WebSocket service in React to:
+  - Connect to the backend endpoint.
+  - Send document edit updates.
+  - Listen for updates and apply them to the editor.
+- Integrate this service with your rich text editor component to support live collaboration.
+
+### **Sub-task 7.4: Testing WebSocket Communication**
+- Simulate multiple client connections and verify message broadcasting.
+- Use browser developer tools or dedicated WebSocket testing tools.
+
+---
+
+## **Task 8: Context Management & Middleware**
+
+### **Sub-task 8.1: Context in HTTP Handlers**
+- Wrap each API handler with a context that has a timeout (e.g., using `context.WithTimeout`).
+- Propagate this context to all database queries, file I/O, and long-running operations.
+
+### **Sub-task 8.2: Middleware Implementation**
+- **Logging Middleware:** Log details of each request and response.
+- **Error Handling Middleware:** Catch and format errors into consistent JSON responses.
+- **Authentication Middleware:** Validate JWT tokens and set user info in the request context.
+- **WebSocket Middleware (if needed):** Validate the JWT during the connection upgrade process.
+
+---
+
+## **Task 9: Caching Strategy with Redis**
+
+### **Sub-task 9.1: Integrate Redis Client in Go**
+- Choose a Redis client (like go-redis).
+- Create helper functions to set and get cached data.
+
+### **Sub-task 9.2: Cache Documents & Session Data**
+- Cache frequently requested document details.
+- Invalidate or update cache when a document is updated.
+- Optionally cache user sessions or rate limiting data.
+
+### **Sub-task 9.3: Testing Caching Logic**
+- Write tests to verify cache retrieval and invalidation works as expected.
+
+---
+
+## **Task 10: Frontend Development (React)**
+
+### **Sub-task 10.1: Authentication Components**
+- Build registration and login forms.
+- Integrate with the backend `/api/auth/*` endpoints.
+- Handle token storage and attach JWT to API requests.
+
+### **Sub-task 10.2: Document List & Navigation**
+- Create a component that lists available documents (fetched from `/api/documents`).
+- Implement navigation to open a document editor.
+
+### **Sub-task 10.3: Document Editor Component**
+- Integrate a rich text editor (Draft.js, Quill, etc.) to handle document editing.
+- Auto-save changes by calling the `PUT /api/documents/{documentID}` endpoint.
+- Display indicators for collaborative editing (e.g., other users editing).
+
+### **Sub-task 10.4: File Upload & Listing UI**
+- Create a file upload component that allows selecting and previewing files.
+- Integrate with the `POST /api/documents/{documentID}/upload` endpoint.
+- Create a file list component to display uploaded files, linking to `/api/files/{filename}` for serving.
+
+### **Sub-task 10.5: WebSocket Integration on the Frontend**
+- Build a service or hook to manage the WebSocket connection.
+- Handle sending and receiving messages for real-time document edits.
+- Update the editor’s content based on incoming WebSocket messages.
+
+### **Sub-task 10.6: State Management**
+- Use React Context or Redux to manage application state (authentication, document data, WebSocket connection, etc.).
+
+### **Sub-task 10.7: Frontend Testing**
+- Write component tests using Jest and React Testing Library.
+- Test API integration and WebSocket message handling.
+
+---
+
+## **Task 11: DevOps & Deployment**
+
+### **Sub-task 11.1: Dockerize the Application**
+- Finalize Dockerfile for the Go backend.
+- Finalize Dockerfile for the React frontend.
+- Ensure that files, static assets, and environment variables are correctly configured.
+
+### **Sub-task 11.2: Docker Compose Configuration**
+- Create and test a `docker-compose.yml` file that starts:
+  - Go API server
+  - React frontend
+  - PostgreSQL container
+  - Redis container
+- Verify inter-container communication (e.g., backend to database and Redis).
+
+### **Sub-task 11.3: Documentation & README**
+- Document how to build, run, and test the project.
+- Include setup instructions for Docker, environment variable configuration, and migration commands.
+- Generate API documentation using Swagger/OpenAPI (if desired).
+
+---
+
+## **Task 12: Testing & Final Integration**
+
+### **Sub-task 12.1: Backend Testing**
+- Write unit tests for each handler, middleware, and helper function.
+- Use `net/http/httptest` to simulate HTTP requests.
+- Test WebSocket endpoints with simulated clients.
+
+### **Sub-task 12.2: Frontend Testing**
+- Write unit tests and integration tests for React components.
+- Test the API service layer and WebSocket integration.
+
+### **Sub-task 12.3: End-to-End (E2E) Testing**
+- Optionally, set up automated E2E tests (using Cypress or Selenium) to cover full flows from login to document editing and file uploading.
+
+---
+
+# **Final Remarks**
+
+This breakdown divides your project into granular, actionable sub-tasks. Starting with project setup and progressing through database design, authentication, REST API endpoints, file handling, real-time collaboration via WebSocket, context management, caching, and frontend development ensures that nothing is left behind. You can tackle each sub-task sequentially or in parallel (if working in a team) to build a robust, full-featured collaborative document editor that leverages all the key concepts in Go and React.
+
+Happy coding!
