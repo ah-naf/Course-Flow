@@ -16,3 +16,14 @@ CREATE TABLE refresh_tokens (
     refresh_token TEXT NOT NULL UNIQUE,
     expires_at TIMESTAMP NOT NULL
 );
+
+CREATE TABLE documents (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(100) NOT NULL,
+    "description" TEXT,
+    file_path TEXT NOT NULL,  -- Allow longer file paths (S3, Google Drive, etc.)
+    file_type VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
