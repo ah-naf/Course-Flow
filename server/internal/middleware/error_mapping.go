@@ -19,7 +19,7 @@ func mapErrorToStatus(err error) (int, string) {
 			return http.StatusUnauthorized, apiErr.Message
 		case "TOKEN_STORAGE_FAILED":
 			return http.StatusInternalServerError, "Failed to store token"
-		case "TOKEN_NOT_FOUND", "USER_TOKENS_NOT_FOUND":
+		case "TOKEN_NOT_FOUND", "USER_TOKENS_NOT_FOUND", "DOCUMENT_NOT_FOUND":
 			return http.StatusNotFound, apiErr.Message
 		default:
 			return http.StatusInternalServerError, "Internal server error"
