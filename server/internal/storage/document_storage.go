@@ -4,6 +4,7 @@ import (
 	"collab-editor/internal/models"
 	"collab-editor/internal/utils"
 	"database/sql"
+	"net/http"
 )
 
 type DocumentStorage struct {
@@ -52,7 +53,7 @@ func (s *DocumentStorage) DeleteDocument(id string, userID string) error {
 	}
 
 	if rowsAffected == 0 {
-		return &utils.ApiError{Code: "DOCUMENT_NOT_FOUND", Message: "No document found or you don't have permission to delete it"}
+		return &utils.ApiError{Code: http.StatusNotFound, Message: "No document found or you don't have permission to delete it"}
 	}
 
 	return nil

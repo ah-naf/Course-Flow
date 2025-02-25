@@ -23,7 +23,7 @@ func ExtractUserIDFromToken(r *http.Request) (string, error) {
 
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
-		return "", &ApiError{Code: "TOKEN_NOT_FOUND", Message: "Missing access token"}
+		return "", &ApiError{Code: http.StatusNotFound, Message: "Missing access token"}
 	}
 
 	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
@@ -33,19 +33,19 @@ func ExtractUserIDFromToken(r *http.Request) (string, error) {
 
 	if err != nil {
 		if err == jwt.ErrTokenExpired {
-			return "", &ApiError{Code: "TOKEN_EXPIRED", Message: "token has expired"}
+			return "", &ApiError{Code: http.StatusUnauthorized, Message: "token has expired"}
 		}
-		return "", &ApiError{Code: "INVALID_TOKEN", Message: "invalid token: " + err.Error()}
+		return "", &ApiError{Code: http.StatusUnauthorized, Message: "invalid token: " + err.Error()}
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return "", &ApiError{Code: "INVALID_REFRESH_TOKEN", Message: "invalid token claims"}
+		return "", &ApiError{Code: http.StatusUnauthorized, Message: "invalid token claims"}
 	}
 
 	userID, ok := claims["sub"].(string)
 	if !ok {
-		return "", &ApiError{Code: "INVALID_REFRESH_TOKEN", Message: "user id not found in the token"}
+		return "", &ApiError{Code: http.StatusUnauthorized, Message: "user id not found in the token"}
 	}
 
 	return userID, nil
@@ -60,14 +60,14 @@ func SetUserIDInContext(ctx context.Context, userID string) context.Context {
 func GetUserIDFromContext(ctx context.Context) (string, error) {
 	userID, ok := ctx.Value(userIDKey).(string)
 	if !ok || userID == "" {
-		return "", &ApiError{Code: "INVALID_REFRESH_TOKEN", Message: "user id not found in the context"}
+		return "", &ApiError{Code: http.StatusUnauthorized, Message: "user id not found in the context"}
 	}
 	return userID, nil
 }
 
 func GenerateToken(userID string, exp time.Duration) (string, error) {
 	secret_key := getAuthSecretKey()
-	
+
 	claims := jwt.MapClaims{
 		"sub": userID,
 		// "exp": time.Now().Add(exp).Unix(),
@@ -100,7 +100,7 @@ func getAuthSecretKey() string {
 }
 
 type ApiError struct {
-	Code    string
+	Code    int
 	Message string
 }
 

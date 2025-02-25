@@ -4,6 +4,7 @@ import (
 	"collab-editor/internal/utils"
 	"database/sql"
 	"errors"
+	"net/http"
 	"time"
 )
 
@@ -27,7 +28,7 @@ func (s *AuthStorage) RetrieveUserPassword(username string) (string, string, err
 	err := s.DB.QueryRow(query, username).Scan(&userID, &hashedPass)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return "", "", &utils.ApiError{Code: "ACCESS_DENIED", Message: "Invalid username or password"}
+			return "", "", &utils.ApiError{Code: http.StatusUnauthorized, Message: "Invalid username or password"}
 		}
 		return "", "", err
 	}
@@ -42,7 +43,7 @@ func (s *AuthStorage) SaveRefreshToken(userID, refreshToken string, expiresAt ti
 	`
 	_, err := s.DB.Query(query, userID, refreshToken, expiresAt)
 	if err != nil {
-		return &utils.ApiError{Code: "TOKEN_STORAGE_FAILED", Message: "Failed to save refresh token"}
+		return &utils.ApiError{Code: http.StatusInternalServerError, Message: "Failed to save refresh token"}
 	}
 	return nil
 }
@@ -58,7 +59,7 @@ func (s *AuthStorage) VerifyRefreshToken(refreshToken string) (string, error) {
 	err := s.DB.QueryRow(query, refreshToken).Scan(&userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return "", &utils.ApiError{Code: "INVALID_REFRESH_TOKEN", Message: "Refresh token is invalid or expired"}
+			return "", &utils.ApiError{Code: http.StatusUnauthorized, Message: "Refresh token is invalid or expired"}
 		}
 		return "", err
 	}
@@ -75,7 +76,7 @@ func (s *AuthStorage) DeleteRefreshToken(refreshToken string) error {
 
 	rowsAffected, _ := result.RowsAffected()
 	if rowsAffected == 0 {
-		return &utils.ApiError{Code: "TOKEN_NOT_FOUND", Message: "Refresh token not found"}
+		return &utils.ApiError{Code: http.StatusNotFound, Message: "Refresh token not found"}
 	}
 	return nil
 }
@@ -90,7 +91,7 @@ func (s *AuthStorage) DeleteAllTokensForUser(userID string) error {
 
 	rowsAffected, _ := result.RowsAffected()
 	if rowsAffected == 0 {
-		return &utils.ApiError{Code: "USER_TOKENS_NOT_FOUND", Message: "No refresh tokens found for the user"}
+		return &utils.ApiError{Code: http.StatusNotFound, Message: "No refresh tokens found for the user"}
 	}
 
 	return nil

@@ -4,6 +4,7 @@ import (
 	"collab-editor/internal/models"
 	"collab-editor/internal/utils"
 	"database/sql"
+	"net/http"
 )
 
 type UserStorage struct {
@@ -61,7 +62,7 @@ func (s *UserStorage) CheckForUsernameOrEmail(user *models.User) error {
 		// Check for duplicate username.
 		if user.Username == dbUsername {
 			return &utils.ApiError{
-				Code:    "USERNAME_DUPLICATE",
+				Code:    http.StatusConflict,
 				Message: "Username already exists",
 			}
 		}
@@ -69,7 +70,7 @@ func (s *UserStorage) CheckForUsernameOrEmail(user *models.User) error {
 		// Check for duplicate email.
 		if user.Email == dbEmail {
 			return &utils.ApiError{
-				Code:    "EMAIL_DUPLICATE",
+				Code:    http.StatusConflict,
 				Message: "Email already exists",
 			}
 		}

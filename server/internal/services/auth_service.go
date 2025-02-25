@@ -5,6 +5,7 @@ import (
 	"collab-editor/internal/storage"
 	"collab-editor/internal/utils"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -34,7 +35,7 @@ func (s *AuthService) Login(user *models.LoginRequest) (*models.LoginResponse, e
 
 	// compare the login password with the hashed password
 	if err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(user.Password)); err != nil {
-		return nil, &utils.ApiError{Code: "ACCESS_DENIED", Message: "Invalid username or password"}
+		return nil, &utils.ApiError{Code: http.StatusUnauthorized, Message: "Invalid username or password"}
 	}
 
 	// create access and refresh token
@@ -73,7 +74,7 @@ func (s *AuthService) CreateUser(userReq *models.UserRequest) error {
 		if validationErrors, ok := err.(validator.ValidationErrors); ok {
 			for _, err := range validationErrors {
 				return &utils.ApiError{
-					Code:    "VALIDATION_ERROR",
+					Code:    http.StatusBadRequest,
 					Message: getValidationMessage(err),
 				}
 			}
@@ -110,9 +111,9 @@ func (s *AuthService) CreateUser(userReq *models.UserRequest) error {
 }
 
 // handle logout
-func(s *AuthService) Logout(refreshToken string) error {
+func (s *AuthService) Logout(refreshToken string) error {
 	if refreshToken == "" {
-		return &utils.ApiError{Code: "TOKEN_NOT_FOUND", Message: "Refresh token is required"}
+		return &utils.ApiError{Code: http.StatusNotFound, Message: "Refresh token is required"}
 	}
 
 	return s.AuthStorage.DeleteRefreshToken(refreshToken)
