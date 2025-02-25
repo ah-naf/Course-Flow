@@ -1,6 +1,3 @@
-i am creating a web app in which authenticated user can upload, edit and do other important operation on a document using rest api and websocket. 
-i have done creating user and auth route. now i want to start with working the document route. 
-What should it contains? omit the websocket part for now. only do that can be done using the rest api. 
 
 
 
