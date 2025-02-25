@@ -19,6 +19,7 @@ func (r *Router) Setup() *mux.Router {
 
 	r.setupUserRouter(router)
 	r.setupAuthRoutes(router)
+	r.setupDocumentRouter(router)
 
 	return router
 }

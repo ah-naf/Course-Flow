@@ -19,7 +19,7 @@ type contextKey string
 const userIDKey contextKey = "userID"
 
 func ExtractUserIDFromToken(r *http.Request) (string, error) {
-	secret_key := getAuthSecretKey()
+	secret_key := GetEnv("secret_key")
 
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
@@ -66,7 +66,7 @@ func GetUserIDFromContext(ctx context.Context) (string, error) {
 }
 
 func GenerateToken(userID string, exp time.Duration) (string, error) {
-	secret_key := getAuthSecretKey()
+	secret_key := GetEnv("secret_key")
 
 	claims := jwt.MapClaims{
 		"sub": userID,
@@ -85,13 +85,13 @@ func WriteJSON(w http.ResponseWriter, statusCode int, v any) error {
 	return json.NewEncoder(w).Encode(v)
 }
 
-func getAuthSecretKey() string {
+func GetEnv(key string) string {
 	err := godotenv.Load()
 	if err != nil {
 		fmt.Println("Warning: .env file not found, using system environment variables")
 	}
 
-	secret_key := os.Getenv("SECRET_KEY")
+	secret_key := os.Getenv(key)
 	if secret_key == "" {
 		log.Fatalln("Secret key is empty")
 	}

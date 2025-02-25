@@ -20,19 +20,19 @@ func NewDocumentStorage(db *sql.DB) *DocumentStorage {
 // stores a document in the database
 func (s *DocumentStorage) SaveDocument(doc *models.Document) error {
 	query := `
-	INSERT INTO documents (user_id, title, description, file_path, file_type, created_at, updated_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7)
+	INSERT INTO documents (user_id, file_name, file_path, file_type, created_at, updated_at)
+	VALUES ($1, $2, $3, $4, $5, $6)
 	`
 
-	_, err := s.DB.Exec(query, doc.UserID, doc.Title, doc.Description, doc.FilePath, doc.FileType, doc.CreatedAt, doc.UpdatedAt)
+	_, err := s.DB.Exec(query, doc.UserID, doc.FileName, doc.FilePath, doc.FileType, doc.CreatedAt, doc.UpdatedAt)
 	return err
 }
 
 // GetDocument retrieves a document by its ID
 func (s *DocumentStorage) GetDocument(id string) (*models.Document, error) {
 	var doc models.Document
-	query := `SELECT id, user_id, title, description, file_path, file_type, created_at, updated_at FROM documents WHERE id = $1`
-	err := s.DB.QueryRow(query, id).Scan(&doc.ID, &doc.UserID, &doc.Title, &doc.Description, &doc.FilePath, &doc.FileType, &doc.CreatedAt, &doc.UpdatedAt)
+	query := `SELECT id, user_id, file_name, file_path, file_type, created_at, updated_at FROM documents WHERE id = $1`
+	err := s.DB.QueryRow(query, id).Scan(&doc.ID, &doc.UserID, &doc.FileName, &doc.FilePath, &doc.FileType, &doc.CreatedAt, &doc.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}

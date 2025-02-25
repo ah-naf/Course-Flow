@@ -3,6 +3,10 @@ package services
 import (
 	"collab-editor/internal/models"
 	"collab-editor/internal/storage"
+	"collab-editor/internal/utils"
+	"fmt"
+	"mime/multipart"
+	"path/filepath"
 	"time"
 )
 
@@ -14,16 +18,26 @@ func NewDocumentService(documentStorage *storage.DocumentStorage) *DocumentServi
 	return &DocumentService{DocumentStorage: documentStorage}
 }
 
+func (s *DocumentService) SaveFileToLocal(file multipart.File, filename string) (string, error) {
+	// TODO: Handle file save
+	mediaDir := utils.GetEnv("MEDIA_DIR")
+
+	timestamp := time.Now().Format("20060102_150405")
+	uniqueName := fmt.Sprintf("%s_%s", timestamp, filename)
+	filePath := filepath.Join(mediaDir, uniqueName)
+
+	return "", nil
+}
+
 // UploadDocument saves the document metadata
-func (s *DocumentService) UploadDocument(userID, title, description, filePath, fileType string) (*models.Document, error) {
+func (s *DocumentService) UploadDocument(userID, title, description, filePath, fileType, fileName string) (*models.Document, error) {
 	doc := &models.Document{
-		UserID:      userID,
-		Title:       title,
-		Description: description,
-		FilePath:    filePath,
-		FileType:    fileType,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		UserID:    userID,
+		FilePath:  filePath,
+		FileType:  fileType,
+		FileName:  fileName,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	if err := s.DocumentStorage.SaveDocument(doc); err != nil {
