@@ -3,7 +3,6 @@ package handlers
 import (
 	"collab-editor/internal/services"
 	"collab-editor/internal/utils"
-	"fmt"
 	"net/http"
 )
 
@@ -16,10 +15,10 @@ func NewDocumentHandler(service *services.DocumentService) *DocumentHandler {
 }
 
 func (h *DocumentHandler) UploadDocumentHandler(w http.ResponseWriter, r *http.Request) error {
-	// _, err := utils.ExtractUserIDFromToken(r)
-	// if err != nil {
-	// 	return err
-	// }
+	userID, err := utils.ExtractUserIDFromToken(r)
+	if err != nil {
+		return err
+	}
 
 	if err := r.ParseMultipartForm(20 << 20); err != nil {
 		return &utils.ApiError{Code: http.StatusBadRequest, Message: "File too large"}
@@ -33,22 +32,14 @@ func (h *DocumentHandler) UploadDocumentHandler(w http.ResponseWriter, r *http.R
 		return &utils.ApiError{Code: http.StatusBadRequest, Message: "No files uploaded"}
 	}
 
-	// Iterate over all uploaded files
-	for _, fileHeader := range files {
-		file, err := fileHeader.Open()
-		if err != nil {
-			return &utils.ApiError{Code: http.StatusBadRequest, Message: "Error opening file"}
-		}
-		defer file.Close()
-
-		fmt.Println("File Name:", fileHeader.Filename)
-		fmt.Println("File Type:", fileHeader.Header.Get("Content-Type"))
-		fmt.Println("File Size:", fileHeader.Size, "bytes")
-
-		// Define file path
-		filePath := "/uploads/" + fileHeader.Filename
-		fmt.Println("File Path:", filePath)
+	_, err = h.Service.SaveFilesToLocal(files, userID)
+	if err != nil {
+		return err
 	}
 
-	return nil
+	// for _, fp := range filePaths {
+	// 	fmt.Printf("%+v\n", fp)
+	// }
+
+	return utils.WriteJSON(w, http.StatusCreated, map[string]string{"message": "File uploaded successfully"})
 }

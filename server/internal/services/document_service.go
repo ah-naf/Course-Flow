@@ -16,7 +16,7 @@ import (
 
 // fileResult is used to capture the result for each file saved.
 type fileResult struct {
-	filePath string
+	metadata models.Document
 	err      error
 }
 
@@ -31,7 +31,7 @@ func NewDocumentService(documentStorage *storage.DocumentStorage) *DocumentServi
 // SaveFilesToLocal processes a slice of file headers concurrently.
 // It returns a slice of file paths (one for each successfully saved file)
 // or an error if any file fails to save.
-func (s *DocumentService) SaveFilesToLocal(fileHeaders []*multipart.FileHeader) ([]string, error) {
+func (s *DocumentService) SaveFilesToLocal(fileHeaders []*multipart.FileHeader, userID string) ([]models.Document, error) {
 	// channel to limit concurrency. For example we will handle 10 file concurrently at a time
 	concurrencyLimit := 10
 	sem := make(chan struct{}, concurrencyLimit)
@@ -51,17 +51,52 @@ func (s *DocumentService) SaveFilesToLocal(fileHeaders []*multipart.FileHeader) 
 			// Open the uploaded file
 			file, err := fh.Open()
 			if err != nil {
-				result <- fileResult{"", &utils.ApiError{
-					Code:    http.StatusBadRequest,
-					Message: "Error opening file",
-				}}
+				result <- fileResult{
+					err: &utils.ApiError{
+						Code:    http.StatusBadRequest,
+						Message: "Error opening file",
+					},
+				}
 				return
 			}
 			defer file.Close()
 
-			// Save the file using the existing SaveFileToLocal method
+			// Save the file locally.
 			filePath, err := s.SaveFileToLocal(file, fh.Filename)
-			result <- fileResult{filePath, err}
+			if err != nil {
+				result <- fileResult{err: err}
+				return
+			}
+
+			// Extract file extension using filepath.Ext.
+			ext := filepath.Ext(fh.Filename)
+			fileType := ""
+			if len(ext) > 0 {
+				// Remove the dot from the extension.
+				fileType = ext[1:]
+			}
+
+			// Create document metadata (ID is omitted).
+			doc := models.Document{
+				UserID:    userID,
+				FileName:  fh.Filename,
+				FilePath:  filePath,
+				FileType:  fileType,
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			}
+
+			// Save document metadata to the database.
+			if err := s.DocumentStorage.SaveDocument(&doc); err != nil {
+				result <- fileResult{err: err}
+				return
+			}
+
+			// Send the result with document metadata.
+			result <- fileResult{
+				metadata: doc,
+				err:      nil,
+			}
 		}(fh)
 	}
 
@@ -69,19 +104,19 @@ func (s *DocumentService) SaveFilesToLocal(fileHeaders []*multipart.FileHeader) 
 	close(result)
 
 	// Collect results
-	var filePaths []string
+	var files []models.Document
 	for res := range result {
 		if res.err != nil {
 			return nil, res.err
 		}
-		filePaths = append(filePaths, res.filePath)
+		files = append(files, res.metadata)
 	}
 
-	return filePaths, nil
+	return files, nil
 }
 
 // UploadDocument saves the document metadata
-func (s *DocumentService) UploadDocument(userID, title, description, filePath, fileType, fileName string) (*models.Document, error) {
+func (s *DocumentService) UploadDocument(userID, filePath, fileType, fileName string) (*models.Document, error) {
 	doc := &models.Document{
 		UserID:    userID,
 		FilePath:  filePath,

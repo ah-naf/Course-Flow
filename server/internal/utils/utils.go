@@ -19,7 +19,7 @@ type contextKey string
 const userIDKey contextKey = "userID"
 
 func ExtractUserIDFromToken(r *http.Request) (string, error) {
-	secret_key := GetEnv("secret_key")
+	secret_key := GetEnv("SECRET_KEY")
 
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
@@ -66,7 +66,7 @@ func GetUserIDFromContext(ctx context.Context) (string, error) {
 }
 
 func GenerateToken(userID string, exp time.Duration) (string, error) {
-	secret_key := GetEnv("secret_key")
+	secret_key := GetEnv("SECRET_KEY")
 
 	claims := jwt.MapClaims{
 		"sub": userID,
