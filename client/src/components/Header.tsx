@@ -7,6 +7,7 @@ import {
   Settings,
   LogOut,
   User,
+  BookOpen,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -26,8 +27,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({
   toggleSidebar,
-  pageTitle = "Home",
-  pagePath = ["Learning Hub"],
+  pagePath = [],
 }) => {
   // Current user info - this could come from a context or props
   const currentUser = {
@@ -50,21 +50,22 @@ const Header: React.FC<HeaderProps> = ({
       </Button>
 
       <div className="flex items-center text-lg font-medium">
+        <span className="text-gray-600 flex items-center mx-1">
+          <BookOpen className="h-6 w-6 mr-2 text-blue-600" />
+          Learning Hub
+        </span>
         {pagePath.map((item, index) => (
           <React.Fragment key={index}>
+            {index < pagePath.length && (
+              <ChevronRight className="h-4 w-4 mx-1" />
+            )}
             <span
               className={index < pagePath.length - 1 ? "" : "text-gray-600"}
             >
               {item}
             </span>
-            {index < pagePath.length - 1 && (
-              <ChevronRight className="h-4 w-4 mx-1" />
-            )}
           </React.Fragment>
         ))}
-        {pageTitle && pagePath.length === 0 && (
-          <span className="text-gray-600">{pageTitle}</span>
-        )}
       </div>
 
       <div className="ml-auto flex items-center space-x-3">
