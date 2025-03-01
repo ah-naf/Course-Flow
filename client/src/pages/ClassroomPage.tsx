@@ -3,14 +3,14 @@ import AppLayout from "@/layout/AppLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { 
-  BookOpen, 
-  MoreVertical, 
-  Edit, 
-  LogOut, 
-  Trash, 
-  Link, 
-  Archive 
+import {
+  BookOpen,
+  MoreVertical,
+  Edit,
+  LogOut,
+  Trash,
+  Link,
+  Archive,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -62,19 +62,16 @@ const ClassroomPage: React.FC = () => {
     console.log(`Leave course: ${courseId}`);
   };
 
-  const handleDeleteCourse = (courseId: string) => {
-    console.log(`Delete course: ${courseId}`);
-  };
-
   const handleCopyLink = (courseId: string) => {
     // Create a class link and copy to clipboard
     const link = `https://yourapp.com/classroom/${courseId}`;
-    navigator.clipboard.writeText(link)
+    navigator.clipboard
+      .writeText(link)
       .then(() => {
-        console.log('Link copied to clipboard');
+        console.log("Link copied to clipboard");
       })
-      .catch(err => {
-        console.error('Failed to copy link: ', err);
+      .catch((err) => {
+        console.error("Failed to copy link: ", err);
       });
   };
 
@@ -100,7 +97,7 @@ const ClassroomPage: React.FC = () => {
               <h3 className="text-2xl sm:text-xl md:text-2xl font-bold text-white px-3 text-center line-clamp-2">
                 {course.name}
               </h3>
-              
+
               {/* Dropdown Menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -114,27 +111,34 @@ const ClassroomPage: React.FC = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => handleEditCourse(course.id)} className="cursor-pointer">
+                  <DropdownMenuItem
+                    onClick={() => handleEditCourse(course.id)}
+                    className="cursor-pointer"
+                  >
                     <Edit className="mr-2 h-4 w-4" />
                     <span>Edit</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleLeaveCourse(course.id)} className="cursor-pointer">
+                  <DropdownMenuItem
+                    onClick={() => handleLeaveCourse(course.id)}
+                    className="cursor-pointer"
+                  >
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Leave</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => handleCopyLink(course.id)} className="cursor-pointer">
+                  <DropdownMenuItem
+                    onClick={() => handleCopyLink(course.id)}
+                    className="cursor-pointer"
+                  >
                     <Link className="mr-2 h-4 w-4" />
                     <span>Copy class link</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleArchiveCourse(course.id)} className="cursor-pointer">
+                  <DropdownMenuItem
+                    onClick={() => handleArchiveCourse(course.id)}
+                    className="cursor-pointer"
+                  >
                     <Archive className="mr-2 h-4 w-4" />
                     <span>Archive</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => handleDeleteCourse(course.id)} className="cursor-pointer text-red-600 hover:text-red-700 focus:text-red-700">
-                    <Trash className="mr-2 h-4 w-4" />
-                    <span>Delete</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

@@ -1,6 +1,8 @@
 import React, { useState, ReactNode } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
+import { useUserStore } from "@/store/userStore";
+import { Navigate } from "react-router-dom";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -9,6 +11,9 @@ interface AppLayoutProps {
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  const { user } = useUserStore(); // Get the user from Zustand store
+
+  if (!user) return <Navigate to={"/"} replace />;
 
   return (
     <div className="flex h-screen bg-gray-50">

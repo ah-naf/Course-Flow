@@ -2,9 +2,24 @@
 import React, { useState } from "react";
 import AuthModal from "@/components/AuthModal";
 import HeroBg from "../assets/hero-bg.svg";
+import { useUserStore } from "@/store/userStore";
 
 const Home: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const { setUser } = useUserStore();
+
+  const handleLogin = () => {
+    // Updated dummy user data
+    const dummyUser = {
+      id: "1",
+      firstName: "John",
+      lastName: "Doe",
+      username: "johndoe123",
+      email: "john.doe@example.com",
+    };
+    setUser(dummyUser); // Set the user in the store
+  };
 
   return (
     <div
@@ -17,11 +32,10 @@ const Home: React.FC = () => {
       {/* Main Content */}
       <div className="relative z-10 text-center text-white px-4">
         <h1 className="text-5xl font-bold mb-4">Welcome to My Classroom</h1>
-        <p className="text-xl mb-8">
-          Collaborate, learn, and grow together.
-        </p>
+        <p className="text-xl mb-8">Collaborate, learn, and grow together.</p>
         <button
-          onClick={() => setIsModalOpen(true)}
+          // onClick={() => setIsModalOpen(true)}
+          onClick={handleLogin}
           className="px-6 py-3 bg-blue-500 rounded-md hover:bg-blue-600 transition"
         >
           Login / Register

@@ -73,7 +73,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
   return (
     <div
       className={cn(
-        "bg-white border-r border-gray-200 transition-all duration-300 flex flex-col",
+        "bg-white border-r border-gray-200 flex flex-col",
         isOpen ? "w-64" : "w-0 overflow-hidden"
       )}
     >

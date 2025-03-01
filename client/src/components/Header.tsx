@@ -1,3 +1,4 @@
+// src/components/Header.tsx
 import React from "react";
 import {
   Menu,
@@ -18,6 +19,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { useUserStore } from "@/store/userStore"; // Import the Zustand store
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -25,17 +27,14 @@ interface HeaderProps {
   pagePath?: string[];
 }
 
-const Header: React.FC<HeaderProps> = ({
-  toggleSidebar,
-  pagePath = [],
-}) => {
-  // Current user info - this could come from a context or props
-  const currentUser = {
-    name: "John Doe",
-    avatar: "",
-    initials: "JD",
-    role: "Instructor & Student",
-  };
+const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = [] }) => {
+  const { user, logout } = useUserStore(); // Get user and logout from Zustand
+
+  // If no user, return null (this should be handled by App.tsx, but added as a safety check)
+  if (!user) return null;
+
+  // Derive initials from firstName and lastName
+  const initials = `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
 
   return (
     <header className="bg-white border-b border-gray-200 h-16 flex items-center px-4 shadow-sm">
@@ -91,7 +90,7 @@ const Header: React.FC<HeaderProps> = ({
             <Avatar className="cursor-pointer h-9 w-9 ring-2 ring-blue-500 ring-offset-2">
               <AvatarImage src="/api/placeholder/30/30" />
               <AvatarFallback className="bg-blue-600 text-white">
-                {currentUser.initials}
+                {initials}
               </AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
@@ -100,12 +99,16 @@ const Header: React.FC<HeaderProps> = ({
               <Avatar className="h-10 w-10 mr-3">
                 <AvatarImage src="/api/placeholder/40/40" />
                 <AvatarFallback className="bg-blue-600 text-white">
-                  {currentUser.initials}
+                  {initials}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <p className="font-medium">{currentUser.name}</p>
-                <p className="text-xs text-gray-500">{currentUser.role}</p>
+                <p className="font-medium">
+                  {user.firstName} {user.lastName}
+                </p>
+                <p className="text-xs text-gray-500 mt-1 bg-gray-200 p-1 rounded font-semibold">
+                  @{user.username}
+                </p>
               </div>
             </div>
 
@@ -123,7 +126,10 @@ const Header: React.FC<HeaderProps> = ({
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuItem className="flex items-center p-2 cursor-pointer text-red-500 hover:text-red-700">
+            <DropdownMenuItem
+              onClick={logout} // Call logout on click
+              className="flex items-center p-2 cursor-pointer text-red-500 hover:text-red-700"
+            >
               <LogOut className="h-4 w-4 mr-3" />
               <span>Sign Out</span>
             </DropdownMenuItem>
