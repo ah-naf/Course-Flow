@@ -92,8 +92,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           </button>
         </form>
 
+        <span className="text-center text-lg font-medium text-gray-600">or</span>
         {/* Social Login Section */}
-        <div className="mt-6 space-y-2">
+        <div className="space-y-2">
           <button className="flex items-center justify-center w-full py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-100">
             <FaGoogle className="mr-2" size={20} />
             Sign in with Google
