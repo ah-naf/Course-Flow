@@ -155,7 +155,7 @@ const ArchivedPage: React.FC = () => {
                 <p className="text-sm text-gray-600 line-clamp-2">
                   {course.description}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 mt-2 font-semibold">
                   Archived on: {course.archivedDate}
                 </p>
               </CardContent>

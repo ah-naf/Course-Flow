@@ -4,11 +4,11 @@ import {
   Menu,
   ChevronRight,
   Bell,
-  Plus,
   Settings,
   LogOut,
   User,
   BookOpen,
+  Plus,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,8 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { useUserStore } from "@/store/userStore"; // Import the Zustand store
+import { useUserStore } from "@/store/userStore";
+import AddClassDialog from "@/components/AddClassDialog"; // Import the new component
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -28,7 +29,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = [] }) => {
-  const { user, logout } = useUserStore(); // Get user and logout from Zustand
+  const { user, logout } = useUserStore();
 
   // If no user, return null (this should be handled by App.tsx, but added as a safety check)
   if (!user) return null;
@@ -68,14 +69,19 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = [] }) => {
       </div>
 
       <div className="ml-auto flex items-center space-x-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="rounded-full hover:bg-gray-100"
-          title="Add New"
-        >
-          <Plus className="h-5 w-5" />
-        </Button>
+        {/* Add Class Dialog */}
+        <AddClassDialog>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full hover:bg-gray-100"
+            title="Add New Class"
+            aria-label="Add a new class or join an existing one"
+          >
+            <Plus className="h-5 w-5" />
+          </Button>
+        </AddClassDialog>
+
         <Button
           variant="ghost"
           size="icon"
@@ -127,7 +133,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = [] }) => {
             <DropdownMenuSeparator />
 
             <DropdownMenuItem
-              onClick={logout} // Call logout on click
+              onClick={logout}
               className="flex items-center p-2 cursor-pointer text-red-500 hover:text-red-700"
             >
               <LogOut className="h-4 w-4 mr-3" />

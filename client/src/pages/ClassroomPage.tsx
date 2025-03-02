@@ -26,7 +26,6 @@ interface Course {
   description: string; // Added description field
   instructor: { name: string; avatar: string; initial: string };
   backgroundColor: string;
-  category: string;
 }
 
 const ClassroomPage: React.FC = () => {
@@ -35,34 +34,34 @@ const ClassroomPage: React.FC = () => {
     {
       id: "react-101",
       name: "React Development",
-      description: "Learn the fundamentals of React, including components, state management, and hooks.",
+      description:
+        "Learn the fundamentals of React, including components, state management, and hooks.",
       instructor: { name: "Sarah Johnson", avatar: "", initial: "S" },
       backgroundColor: "#4CAF50",
-      category: "Web",
     },
     {
       id: "ui-303",
       name: "UI/UX Design",
-      description: "Master the art of designing intuitive and visually appealing user interfaces.",
+      description:
+        "Master the art of designing intuitive and visually appealing user interfaces.",
       instructor: { name: "Priya Patel", avatar: "", initial: "P" },
       backgroundColor: "#9C27B0",
-      category: "Design",
     },
     {
       id: "ts-202",
       name: "TypeScript Mastery",
-      description: "Deep dive into TypeScript, focusing on advanced types, interfaces, and best practices.",
+      description:
+        "Deep dive into TypeScript, focusing on advanced types, interfaces, and best practices.",
       instructor: { name: "Michael Chen", avatar: "", initial: "M" },
       backgroundColor: "#2196F3",
-      category: "Programming",
     },
     {
       id: "node-404",
       name: "Node.js Backend",
-      description: "Build scalable backend applications using Node.js, Express, and MongoDB.",
+      description:
+        "Build scalable backend applications using Node.js, Express, and MongoDB.",
       instructor: { name: "Carlos Rodriguez", avatar: "", initial: "C" },
       backgroundColor: "#FF9800",
-      category: "Backend",
     },
   ];
 
@@ -160,24 +159,21 @@ const ClassroomPage: React.FC = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <CardContent className="pt-3 pb-3">
+            <CardContent className="pt-1 pb-3">
               <div className="flex items-center mb-2">
                 {/* Responsive avatar sizing */}
-                <Avatar className="h-8 w-8 sm:h-10 sm:w-10 mr-2 sm:mr-3 ring-2 ring-gray-200">
+                <Avatar className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 mr-2 sm:mr-3 ring-2 ring-gray-200">
                   <AvatarImage src="/api/placeholder/40/40" />
                   <AvatarFallback
                     style={{ backgroundColor: course.backgroundColor }}
-                    className="text-white text-xs sm:text-sm"
+                    className="text-white text-md md:text-xl"
                   >
                     {course.instructor.initial}
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-sm sm:text-md truncate">
+                  <p className="font-medium text-md md:text-xl truncate">
                     {course.instructor.name}
-                  </p>
-                  <p className="text-xs text-gray-500 truncate">
-                    {course.category}
                   </p>
                 </div>
               </div>
