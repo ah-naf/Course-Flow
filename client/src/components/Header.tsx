@@ -3,7 +3,6 @@ import React from "react";
 import {
   Menu,
   ChevronRight,
-  Bell,
   Settings,
   LogOut,
   User,
@@ -20,7 +19,8 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { useUserStore } from "@/store/userStore";
-import AddClassDialog from "@/components/AddClassDialog"; // Import the new component
+import AddClassDialog from "@/components/AddClassDialog";
+import NotificationDialog from "@/components/NotificationDialog"; // Import the new component
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -31,10 +31,8 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = [] }) => {
   const { user, logout } = useUserStore();
 
-  // If no user, return null (this should be handled by App.tsx, but added as a safety check)
   if (!user) return null;
 
-  // Derive initials from firstName and lastName
   const initials = `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
 
   return (
@@ -45,6 +43,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = [] }) => {
         onClick={toggleSidebar}
         className="mr-2 hover:bg-gray-100"
         title="Toggle Sidebar"
+        aria-label="Toggle sidebar navigation"
       >
         <Menu className="h-5 w-5" />
       </Button>
@@ -69,7 +68,6 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = [] }) => {
       </div>
 
       <div className="ml-auto flex items-center space-x-3">
-        {/* Add Class Dialog */}
         <AddClassDialog>
           <Button
             variant="ghost"
@@ -82,14 +80,8 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = [] }) => {
           </Button>
         </AddClassDialog>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className="rounded-full hover:bg-gray-100"
-          title="Notifications"
-        >
-          <Bell className="h-5 w-5" />
-        </Button>
+        {/* Use the NotificationDialog component */}
+        <NotificationDialog />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -117,21 +109,16 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = [] }) => {
                 </p>
               </div>
             </div>
-
             <DropdownMenuSeparator />
-
             <DropdownMenuItem className="flex items-center p-2 cursor-pointer">
               <User className="h-4 w-4 mr-3" />
               <span>Profile</span>
             </DropdownMenuItem>
-
             <DropdownMenuItem className="flex items-center p-2 cursor-pointer">
               <Settings className="h-4 w-4 mr-3" />
               <span>Settings</span>
             </DropdownMenuItem>
-
             <DropdownMenuSeparator />
-
             <DropdownMenuItem
               onClick={logout}
               className="flex items-center p-2 cursor-pointer text-red-500 hover:text-red-700"
