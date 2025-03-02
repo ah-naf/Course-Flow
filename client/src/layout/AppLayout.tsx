@@ -1,14 +1,10 @@
-import React, { useState, ReactNode } from "react";
+import React, { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import { useUserStore } from "@/store/userStore";
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 
-interface AppLayoutProps {
-  children: ReactNode;
-}
-
-const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
+const AppLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   const { user } = useUserStore(); // Get the user from Zustand store
@@ -27,7 +23,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
         {/* Page Content Area */}
         <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
-          {children}
+          <Outlet />
         </main>
       </div>
     </div>

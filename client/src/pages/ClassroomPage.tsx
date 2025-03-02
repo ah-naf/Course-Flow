@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import AppLayout from "@/layout/AppLayout";
+// src/pages/ClassroomPage.tsx
+import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,6 @@ import {
   MoreVertical,
   Edit,
   LogOut,
-  Trash,
   Link,
   Archive,
 } from "lucide-react";
@@ -20,12 +19,23 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+// Define the type for a course
+interface Course {
+  id: string;
+  name: string;
+  description: string; // Added description field
+  instructor: { name: string; avatar: string; initial: string };
+  backgroundColor: string;
+  category: string;
+}
+
 const ClassroomPage: React.FC = () => {
-  // Dummy data
-  const allCourses = [
+  // Dummy data with descriptions
+  const allCourses: Course[] = [
     {
       id: "react-101",
       name: "React Development",
+      description: "Learn the fundamentals of React, including components, state management, and hooks.",
       instructor: { name: "Sarah Johnson", avatar: "", initial: "S" },
       backgroundColor: "#4CAF50",
       category: "Web",
@@ -33,6 +43,7 @@ const ClassroomPage: React.FC = () => {
     {
       id: "ui-303",
       name: "UI/UX Design",
+      description: "Master the art of designing intuitive and visually appealing user interfaces.",
       instructor: { name: "Priya Patel", avatar: "", initial: "P" },
       backgroundColor: "#9C27B0",
       category: "Design",
@@ -40,6 +51,7 @@ const ClassroomPage: React.FC = () => {
     {
       id: "ts-202",
       name: "TypeScript Mastery",
+      description: "Deep dive into TypeScript, focusing on advanced types, interfaces, and best practices.",
       instructor: { name: "Michael Chen", avatar: "", initial: "M" },
       backgroundColor: "#2196F3",
       category: "Programming",
@@ -47,6 +59,7 @@ const ClassroomPage: React.FC = () => {
     {
       id: "node-404",
       name: "Node.js Backend",
+      description: "Build scalable backend applications using Node.js, Express, and MongoDB.",
       instructor: { name: "Carlos Rodriguez", avatar: "", initial: "C" },
       backgroundColor: "#FF9800",
       category: "Backend",
@@ -63,7 +76,6 @@ const ClassroomPage: React.FC = () => {
   };
 
   const handleCopyLink = (courseId: string) => {
-    // Create a class link and copy to clipboard
     const link = `https://yourapp.com/classroom/${courseId}`;
     navigator.clipboard
       .writeText(link)
@@ -80,7 +92,12 @@ const ClassroomPage: React.FC = () => {
   };
 
   return (
-    <AppLayout>
+    <div className="p-6">
+      <h1 className="text-3xl font-bold mb-6 flex items-center">
+        <BookOpen className="h-8 w-8 mr-2 text-blue-600" />
+        Classroom Dashboard
+      </h1>
+
       {/* Responsive grid with better spacing on small screens */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
         {allCourses.map((course) => (
@@ -144,7 +161,7 @@ const ClassroomPage: React.FC = () => {
               </DropdownMenu>
             </div>
             <CardContent className="pt-3 pb-3">
-              <div className="flex items-center">
+              <div className="flex items-center mb-2">
                 {/* Responsive avatar sizing */}
                 <Avatar className="h-8 w-8 sm:h-10 sm:w-10 mr-2 sm:mr-3 ring-2 ring-gray-200">
                   <AvatarImage src="/api/placeholder/40/40" />
@@ -156,7 +173,6 @@ const ClassroomPage: React.FC = () => {
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">
-                  {/* Prevent text overflow with truncation */}
                   <p className="font-medium text-sm sm:text-md truncate">
                     {course.instructor.name}
                   </p>
@@ -165,6 +181,10 @@ const ClassroomPage: React.FC = () => {
                   </p>
                 </div>
               </div>
+              {/* Description with truncation */}
+              <p className="text-sm text-gray-600 line-clamp-2">
+                {course.description}
+              </p>
             </CardContent>
           </Card>
         ))}
@@ -185,7 +205,7 @@ const ClassroomPage: React.FC = () => {
           <Button>Join Courses</Button>
         </div>
       )}
-    </AppLayout>
+    </div>
   );
 };
 
