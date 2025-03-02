@@ -1,11 +1,6 @@
 // src/components/NotificationDialog.tsx
 import React from "react";
-import {
-  Bell,
-  MessageSquare,
-  Video,
-  FileText,
-} from "lucide-react";
+import { Bell, MessageSquare, Video, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,10 +11,12 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { useNotificationStore } from "@/store/useNotificationStore";
+import { useNotificationStore } from "@/store/notificationStore";
+import { formatRelativeTime } from "@/utils/formatRelativeTime";
 
 const NotificationDialog: React.FC = () => {
-  const { notifications, markAsRead, getTotalUnreadCount } = useNotificationStore();
+  const { notifications, markAsRead, getTotalUnreadCount } =
+    useNotificationStore();
   const unreadCount = getTotalUnreadCount();
 
   return (
@@ -43,7 +40,10 @@ const NotificationDialog: React.FC = () => {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-96 p-2 max-h-96 overflow-y-auto">
+      <DropdownMenuContent
+        align="end"
+        className="w-96 p-2 max-h-96 overflow-y-auto"
+      >
         <DropdownMenuLabel className="text-lg font-semibold">
           Notifications
         </DropdownMenuLabel>
@@ -58,7 +58,9 @@ const NotificationDialog: React.FC = () => {
               key={notification.id}
               onClick={() => markAsRead(notification.id)}
               className={`flex items-start p-3 cursor-pointer rounded-md transition-colors ${
-                notification.read ? "bg-gray-50" : "bg-blue-50 hover:bg-blue-100"
+                notification.read
+                  ? "bg-gray-50"
+                  : "bg-blue-50 hover:bg-blue-100"
               }`}
             >
               <div className="mr-3 mt-1">
@@ -77,12 +79,7 @@ const NotificationDialog: React.FC = () => {
                   {notification.message}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {new Date(notification.timestamp).toLocaleString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                  {formatRelativeTime(notification.timestamp)}
                 </p>
               </div>
             </DropdownMenuItem>

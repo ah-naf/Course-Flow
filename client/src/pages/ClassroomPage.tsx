@@ -19,7 +19,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { useNotificationStore } from "@/store/useNotificationStore";
+import { useNotificationStore } from "@/store/notificationStore";
+import { useNavigate } from "react-router-dom";
 
 // Define the type for a course
 interface Course {
@@ -32,6 +33,7 @@ interface Course {
 
 const ClassroomPage: React.FC = () => {
   const { getUnreadCountForClass } = useNotificationStore();
+  const navigate = useNavigate();
 
   // Dummy data with descriptions
   const allCourses: Course[] = [
@@ -110,6 +112,7 @@ const ClassroomPage: React.FC = () => {
               key={course.id}
               className="overflow-hidden hover:shadow-lg pt-0 transition-all duration-200 cursor-pointer transform hover:-translate-y-1 border border-gray-200 rounded-xl"
               title={course.name}
+              onClick={() => navigate(`/class/${course.id}`)}
             >
               <div
                 className="h-24 sm:h-28 flex items-center justify-center relative"
@@ -171,7 +174,7 @@ const ClassroomPage: React.FC = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              <CardContent className="pt-4 pb-4">
+              <CardContent className="pb-4">
                 <div className="flex items-center mb-3">
                   <Avatar className="h-8 w-8 sm:h-10 sm:w-10 mr-3 ring-2 ring-gray-200">
                     <AvatarImage src="/api/placeholder/40/40" />
