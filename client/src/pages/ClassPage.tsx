@@ -1,3 +1,4 @@
+// src/pages/ClassPage.tsx
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,7 +12,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Image as ImageIcon, X, Edit2, Copy, Check } from "lucide-react";
+import { Image as ImageIcon, X, Edit2, Copy, Check, Lock, Share2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { Separator } from "@/components/ui/separator";
 import { MDXEditor } from "@mdxeditor/editor";
@@ -45,6 +46,8 @@ interface Course {
   backgroundColor: string;
   coverPic?: string;
   joinCode?: string;
+  inviteLink?: string;
+  isPrivate?: boolean; // Added to control visibility of join details
 }
 
 // Define the type for a post
@@ -70,6 +73,8 @@ const ClassPage: React.FC = () => {
       backgroundColor: "#4CAF50",
       coverPic: "https://via.placeholder.com/1200x400?text=React+Development",
       joinCode: "RCT-DEV-2025",
+      inviteLink: "https://yourapp.com/join/react-101",
+      isPrivate: false, // Not private, so join details are visible
     },
     {
       id: "ui-303",
@@ -80,6 +85,8 @@ const ClassPage: React.FC = () => {
       backgroundColor: "#9C27B0",
       coverPic: "https://via.placeholder.com/1200x400?text=UI/UX+Design",
       joinCode: "UIX-303-2025",
+      inviteLink: "https://yourapp.com/join/ui-303",
+      isPrivate: false,
     },
     {
       id: "ts-202",
@@ -90,6 +97,8 @@ const ClassPage: React.FC = () => {
       backgroundColor: "#2196F3",
       coverPic: "https://via.placeholder.com/1200x400?text=TypeScript+Mastery",
       joinCode: "TS-MST-2025",
+      inviteLink: "https://yourapp.com/join/ts-202",
+      isPrivate: false,
     },
     {
       id: "node-404",
@@ -100,6 +109,8 @@ const ClassPage: React.FC = () => {
       backgroundColor: "#FF9800",
       coverPic: "https://via.placeholder.com/1200x400?text=Node.js+Backend",
       joinCode: "NODE-BE-2025",
+      inviteLink: "https://yourapp.com/join/node-404",
+      isPrivate: false,
     },
   ];
 
@@ -114,8 +125,10 @@ const ClassPage: React.FC = () => {
   const [postContent, setPostContent] = useState("");
   const [postAttachments, setPostAttachments] = useState<File[]>([]);
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
+  const [isJoinDetailsDialogOpen, setIsJoinDetailsDialogOpen] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]); // Store posts
-  const [copied, setCopied] = useState(false);
+  const [copiedJoinCode, setCopiedJoinCode] = useState(false);
+  const [copiedInviteLink, setCopiedInviteLink] = useState(false);
   const editorRef = React.useRef<MDXEditorMethods>(null);
 
   // Handle file input for attachments
@@ -153,10 +166,22 @@ const ClassPage: React.FC = () => {
   const copyJoinCode = () => {
     if (course.joinCode) {
       navigator.clipboard.writeText(course.joinCode);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setCopiedJoinCode(true);
+      setTimeout(() => setCopiedJoinCode(false), 2000);
     }
   };
+
+  // Copy invite link to clipboard
+  const copyInviteLink = () => {
+    if (course.inviteLink) {
+      navigator.clipboard.writeText(course.inviteLink);
+      setCopiedInviteLink(true);
+      setTimeout(() => setCopiedInviteLink(false), 2000);
+    }
+  };
+
+  // Flag to control visibility of join details (set to true for now)
+  const showJoinDetails = !course.isPrivate; // Show if not private
 
   return (
     <div className="p-6">
@@ -171,59 +196,135 @@ const ClassPage: React.FC = () => {
         }}
       >
         <div className="absolute inset-0 bg-black bg-opacity-30 flex items-end p-6">
-          <div className="w-full">
-            <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
-              {course.name}
-            </h1>
-            <p className="text-white text-sm sm:text-base opacity-90 max-w-2xl">
-              {course.description}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Class Join Code Section */}
-      <Card className="mb-6">
-        <CardContent className="p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between">
+          <div className="w-full flex justify-between items-end">
             <div>
-              <h3 className="text-lg font-semibold">Class Join Code</h3>
-              <p className="text-sm text-gray-500">
-                Share this code with students to join your class
+              <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
+                {course.name}
+              </h1>
+              <p className="text-white text-sm sm:text-base opacity-90 max-w-2xl">
+                {course.description}
               </p>
             </div>
-            <div className="mt-3 sm:mt-0 flex items-center space-x-2">
-              <code className="bg-gray-100 px-3 py-2 rounded-md text-sm font-mono">
-                {course.joinCode}
-              </code>
+            {/* Trigger Button for Join Details Dialog */}
+            {showJoinDetails && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={copyJoinCode}
-                      className="flex items-center"
+                    <Dialog
+                      open={isJoinDetailsDialogOpen}
+                      onOpenChange={setIsJoinDetailsDialogOpen}
                     >
-                      {copied ? (
-                        <Check className="h-4 w-4" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                      <span className="ml-2 hidden sm:inline">
-                        {copied ? "Copied" : "Copy Code"}
-                      </span>
-                    </Button>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="bg-white/90 hover:bg-white text-gray-800"
+                        >
+                          <Share2 className="h-4 w-4 mr-2" />
+                          <span className="hidden sm:inline">Join Details</span>
+                          <span className="sm:hidden">Join</span>
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[600px] w-[90vw] rounded-lg">
+                        <DialogHeader>
+                          <DialogTitle className="text-2xl sm:text-3xl font-semibold">
+                            Join {course.name}
+                          </DialogTitle>
+                          <DialogDescription className="text-sm sm:text-base text-gray-600">
+                            Share these details with students to join your class.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-6 mt-6">
+                          {/* Join Code */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between">
+                            <div>
+                              <h4 className="font-medium text-gray-700">
+                                Join Code
+                              </h4>
+                            </div>
+                            <div className="mt-3 sm:mt-0 flex items-center space-x-2">
+                              <code className="bg-gray-100 px-3 py-2 rounded-md text-sm font-mono">
+                                {course.joinCode}
+                              </code>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={copyJoinCode}
+                                      className="flex items-center"
+                                    >
+                                      {copiedJoinCode ? (
+                                        <Check className="h-4 w-4" />
+                                      ) : (
+                                        <Copy className="h-4 w-4" />
+                                      )}
+                                      <span className="ml-2 hidden sm:inline">
+                                        {copiedJoinCode ? "Copied" : "Copy Code"}
+                                      </span>
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{copiedJoinCode ? "Copied to clipboard!" : "Copy join code"}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
+                          </div>
+                          {/* Invitation Link */}
+                          {showJoinDetails && course.inviteLink && (
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between">
+                              <div>
+                                <h4 className="font-medium text-gray-700">
+                                  Invitation Link
+                                </h4>
+                                
+                              </div>
+                              <div className="mt-3 sm:mt-0 flex items-center space-x-2">
+                                <code className="bg-gray-100 px-3 py-2 rounded-md text-sm font-mono truncate max-w-[200px] sm:max-w-[300px]">
+                                  {course.inviteLink}
+                                </code>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={copyInviteLink}
+                                        className="flex items-center"
+                                      >
+                                        {copiedInviteLink ? (
+                                          <Check className="h-4 w-4" />
+                                        ) : (
+                                          <Copy className="h-4 w-4" />
+                                        )}
+                                        <span className="ml-2 hidden sm:inline">
+                                          {copiedInviteLink ? "Copied" : "Copy Link"}
+                                        </span>
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>{copiedInviteLink ? "Copied to clipboard!" : "Copy invitation link"}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>{copied ? "Copied to clipboard!" : "Copy join code"}</p>
+                    <p>View class join details</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-            </div>
+            )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Post Section */}
       <div className="mb-8">
