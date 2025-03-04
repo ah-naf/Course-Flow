@@ -63,7 +63,7 @@ export const ClassBanner: React.FC<ClassBannerProps> = ({
       }}
     >
       <div className="absolute inset-0 flex items-end p-6">
-        <div className="w-full flex flex-col md:flex-row md:justify-between md:items-end gap-4 md:gap-0">
+        <div className="w-full flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 sm:gap-0">
           <div className="flex-1">
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
               {course.name}
@@ -102,10 +102,7 @@ export const ClassBanner: React.FC<ClassBannerProps> = ({
                         className="bg-white/90 hover:bg-white text-gray-800 cursor-pointer"
                       >
                         <Share2 className="h-4 w-4 mr-2" />
-                        <span className="hidden md:inline cursor-pointer">
-                          Join Details
-                        </span>
-                        <span className="md:hidden">Join</span>
+                        Join Details
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[600px] w-[90vw] rounded-lg">
