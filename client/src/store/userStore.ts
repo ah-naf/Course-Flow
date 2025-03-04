@@ -1,14 +1,6 @@
+import { User } from "@/utils/types";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-
-// Updated User interface
-interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
-  username: string;
-  email: string;
-}
 
 interface UserState {
   user: User | null;

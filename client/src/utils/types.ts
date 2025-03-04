@@ -9,12 +9,16 @@ export interface Course {
   joinCode?: string;
   inviteLink?: string;
   isPrivate?: boolean;
+  timestamp?: string;
 }
 
 export interface User {
   id: string;
-  name: string;
-  avatar?: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  email: string;
+  avatar: string;
   initial: string;
 }
 

@@ -21,15 +21,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useNotificationStore } from "@/store/notificationStore";
 import { useNavigate } from "react-router-dom";
-
-// Define the type for a course
-interface Course {
-  id: string;
-  name: string;
-  description: string;
-  instructor: { name: string; avatar: string; initial: string };
-  backgroundColor: string;
-}
+import { Course } from "@/utils/types";
 
 const ClassroomPage: React.FC = () => {
   const { getUnreadCountForClass } = useNotificationStore();
@@ -42,7 +34,15 @@ const ClassroomPage: React.FC = () => {
       name: "React Development",
       description:
         "Learn the fundamentals of React, including components, state management, and hooks.",
-      instructor: { name: "Sarah Johnson", avatar: "", initial: "S" },
+      instructor: {
+        id: "1",
+        firstName: "ss",
+        lastName: "ss",
+        avatar: "",
+        email: "",
+        username: "Sarah Johnson",
+        initial: "S",
+      },
       backgroundColor: "#4CAF50",
     },
     {
@@ -50,7 +50,15 @@ const ClassroomPage: React.FC = () => {
       name: "UI/UX Design",
       description:
         "Master the art of designing intuitive and visually appealing user interfaces.",
-      instructor: { name: "Priya Patel", avatar: "", initial: "P" },
+      instructor: {
+        id: "1",
+        firstName: "ss",
+        lastName: "ss",
+        avatar: "",
+        email: "",
+        username: "Sarah Johnson 1",
+        initial: "S",
+      },
       backgroundColor: "#9C27B0",
     },
     {
@@ -58,7 +66,15 @@ const ClassroomPage: React.FC = () => {
       name: "TypeScript Mastery",
       description:
         "Deep dive into TypeScript, focusing on advanced types, interfaces, and best practices.",
-      instructor: { name: "Michael Chen", avatar: "", initial: "M" },
+      instructor: {
+        id: "1",
+        firstName: "ss",
+        lastName: "ss",
+        avatar: "",
+        email: "",
+        username: "Sarah Johnson 2",
+        initial: "S",
+      },
       backgroundColor: "#2196F3",
     },
     {
@@ -66,7 +82,15 @@ const ClassroomPage: React.FC = () => {
       name: "Node.js Backend",
       description:
         "Build scalable backend applications using Node.js, Express, and MongoDB.",
-      instructor: { name: "Carlos Rodriguez", avatar: "", initial: "C" },
+      instructor: {
+        id: "1",
+        firstName: "ss",
+        lastName: "ss",
+        avatar: "",
+        email: "",
+        username: "Sarah Johnson 3",
+        initial: "S",
+      },
       backgroundColor: "#FF9800",
     },
   ];
@@ -187,7 +211,8 @@ const ClassroomPage: React.FC = () => {
                   </Avatar>
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-sm sm:text-base truncate">
-                      {course.instructor.name}
+                      {/* TODO: change to firstname + lastname */}
+                      {course.instructor.username}
                     </p>
                   </div>
                 </div>

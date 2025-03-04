@@ -9,18 +9,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useNavigate } from "react-router-dom";
-
-interface Course {
-  id: string;
-  name: string;
-  instructor: {
-    name: string;
-    avatar: string;
-    initial: string;
-  };
-  backgroundColor: string;
-  category?: string;
-}
+import { Course } from "@/utils/types";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -36,16 +25,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     {
       id: "react-101",
       name: "React Development",
-      instructor: { name: "Sarah Johnson", avatar: "", initial: "S" },
+      instructor: { id: "1", name: "Sarah Johnson", avatar: "", initial: "S" },
       backgroundColor: "#4CAF50",
-      category: "Web",
+      description: "Web",
     },
     {
       id: "ui-303",
       name: "UI/UX Design",
-      instructor: { name: "Priya Patel", avatar: "", initial: "P" },
+      instructor: { id: "1", name: "Priya Patel", avatar: "", initial: "P" },
       backgroundColor: "#9C27B0",
-      category: "Design",
+      description: "Design",
     },
   ];
 
@@ -54,16 +43,21 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     {
       id: "ts-202",
       name: "TypeScript Mastery",
-      instructor: { name: "Michael Chen", avatar: "", initial: "M" },
+      instructor: { id: "1", name: "Michael Chen", avatar: "", initial: "M" },
       backgroundColor: "#2196F3",
-      category: "Programming",
+      description: "Programming",
     },
     {
       id: "node-404",
       name: "Node.js Backend",
-      instructor: { name: "Carlos Rodriguez", avatar: "", initial: "C" },
+      instructor: {
+        id: "1",
+        name: "Carlos Rodriguez",
+        avatar: "",
+        initial: "C",
+      },
       backgroundColor: "#FF9800",
-      category: "Backend",
+      description: "Backend",
     },
   ];
 

@@ -10,59 +10,54 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Archive, MoreVertical, Trash, RefreshCw } from "lucide-react";
-
-// Define the type for an archived course
-interface ArchivedCourse {
-  id: string;
-  name: string;
-  description: string;
-  instructor: { name: string; avatar: string; initial: string };
-  backgroundColor: string;
-  category: string;
-  archivedDate: string;
-}
+import { Course } from "@/utils/types";
 
 const ArchivedPage: React.FC = () => {
   // Dummy data for archived courses
-  const [archivedCourses, setArchivedCourses] = useState<ArchivedCourse[]>([
+  const [archivedCourses, setArchivedCourses] = useState<Course[]>([
     {
       id: "web-101",
       name: "Web Fundamentals",
-      description: "Learn the basics of web development with HTML, CSS, and JavaScript.",
-      instructor: { name: "Emma Watson", avatar: "", initial: "E" },
+      description:
+        "Learn the basics of web development with HTML, CSS, and JavaScript.",
+      instructor: { id: "1", name: "Emma Watson", avatar: "", initial: "E" },
       backgroundColor: "#FF5722",
-      category: "Web",
-      archivedDate: "2024-10-15",
+      // category: "Web",
+      timestamp: "2024-10-15",
     },
     {
       id: "graphql-202",
       name: "GraphQL Basics",
       description: "Introduction to GraphQL for building efficient APIs.",
-      instructor: { name: "Liam Brown", avatar: "", initial: "L" },
+      instructor: { id: "2", name: "Liam Brown", avatar: "", initial: "L" },
       backgroundColor: "#E91E63",
-      category: "Backend",
-      archivedDate: "2024-09-20",
+      // category: "Backend",
+      timestamp: "2024-09-20",
     },
     {
       id: "figma-303",
       name: "Figma for Beginners",
       description: "Get started with Figma to design stunning user interfaces.",
-      instructor: { name: "Olivia Smith", avatar: "", initial: "O" },
+      instructor: { id: "3", name: "Olivia Smith", avatar: "", initial: "O" },
       backgroundColor: "#673AB7",
-      category: "Design",
-      archivedDate: "2024-08-10",
+      // category: "Design",
+      timestamp: "2024-08-10",
     },
   ]);
 
   // Handle Restore action
   const handleRestore = (courseId: string) => {
-    setArchivedCourses((prev) => prev.filter((course) => course.id !== courseId));
+    setArchivedCourses((prev) =>
+      prev.filter((course) => course.id !== courseId)
+    );
     console.log(`Restored course with ID: ${courseId}`);
   };
 
   // Handle Delete action
   const handleDelete = (courseId: string) => {
-    setArchivedCourses((prev) => prev.filter((course) => course.id !== courseId));
+    setArchivedCourses((prev) =>
+      prev.filter((course) => course.id !== courseId)
+    );
     console.log(`Deleted course with ID: ${courseId}`);
   };
 
@@ -83,7 +78,8 @@ const ArchivedPage: React.FC = () => {
             No Archived Courses
           </h3>
           <p className="text-sm text-gray-500 max-w-md mb-6">
-            You haven't archived any courses yet. Courses you archive will appear here.
+            You haven't archived any courses yet. Courses you archive will
+            appear here.
           </p>
         </div>
       ) : (
@@ -147,16 +143,13 @@ const ArchivedPage: React.FC = () => {
                     <p className="font-medium text-sm sm:text-md truncate">
                       {course.instructor.name}
                     </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {course.category}
-                    </p>
                   </div>
                 </div>
                 <p className="text-sm text-gray-600 line-clamp-2">
                   {course.description}
                 </p>
                 <p className="text-xs text-gray-500 mt-2 font-semibold">
-                  Archived on: {course.archivedDate}
+                  Archived on: {course.timestamp}
                 </p>
               </CardContent>
             </Card>
