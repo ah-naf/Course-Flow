@@ -106,6 +106,14 @@ const ClassroomChat: React.FC<{ course: Course }> = ({ course }) => {
                     : "bg-gray-200 text-gray-800 rounded-bl-none"
                 )}
               >
+                <p
+                  className={cn(
+                    "text-sm font-semibold",
+                    isCurrentUser ? "text-blue-100" : "text-gray-600"
+                  )}
+                >
+                  {msg.sender.username}
+                </p>
                 <p className="text-sm">{msg.text}</p>
                 <p
                   className={cn(

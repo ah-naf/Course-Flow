@@ -147,10 +147,10 @@ const ClassPage: React.FC = () => {
       {/* Floating Chat Button */}
       <div className="fixed bottom-6 right-6 z-50">
         <Button
-          className="relative bg-blue-600 hover:bg-blue-700 rounded-full p-3 shadow-lg"
+          className="relative bg-blue-600 hover:bg-blue-700 rounded-full p-3 cursor-pointer shadow-lg"
           onClick={() => setIsChatOpen(true)}
         >
-          <MessageCircle className="w-6 h-6 text-white" />
+          <MessageCircle className="w-10 h-10 text-white" />
           <Badge
             variant="destructive"
             className="absolute -top-1 -right-1 px-1.5 py-0.5 text-xs"
