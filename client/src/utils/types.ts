@@ -20,6 +20,7 @@ export interface User {
   email: string;
   avatar: string;
   initial: string;
+  timestamp?: string
 }
 
 export interface Comment {
@@ -36,4 +37,24 @@ export interface Post {
   timestamp: string;
   comments: Comment[];
   user: User;
+}
+
+export interface ChatMessage {
+  id: string;
+  sender: User;
+  text: string;
+  timestamp: string;
+}
+
+export interface GroupMember extends User {
+  role: "Instructor" | "Student" | "TA";
+}
+
+export interface FileStorage {
+  id: string;
+  name: string;
+  type: string;
+  size: string;
+  uploadedBy: string;
+  uploadDate: string;
 }
