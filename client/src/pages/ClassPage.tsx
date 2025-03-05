@@ -5,76 +5,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClassBanner } from "@/components/ClassBanner";
 import { CreatePostButton } from "@/components/CreatePostButton";
 import { PostList } from "@/components/PostList";
-import {
-  Course,
-  Post,
-  ChatMessage,
-  GroupMember,
-  FileStorage,
-} from "@/utils/types";
+import { Course, ChatMessage } from "@/utils/types";
 import { Badge } from "@/components/ui/badge";
 import GroupMembers from "@/components/GroupMembers";
 import Attachments from "@/components/Attachments";
-
-// Classroom Chat Component
-const ClassroomChat: React.FC<{ course: Course }> = ({ course }) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "1",
-      sender: {
-        id: course.instructor.id,
-        username: course.instructor.username,
-        initial: course.instructor.initial,
-        firstName: "",
-        lastName: "",
-        email: "",
-        avatar: "",
-      },
-      text: "Welcome to the classroom chat! Feel free to ask questions here.",
-      timestamp: new Date().toISOString(),
-    },
-    {
-      id: "2",
-      sender: {
-        id: "student1",
-        username: "AlexJohnson",
-        initial: "A",
-        firstName: "",
-        lastName: "",
-        email: "",
-        avatar: "",
-      },
-      text: "Hi everyone! Can someone help me understand the last lecture?",
-      timestamp: new Date(Date.now() - 3600000).toISOString(),
-    },
-  ]);
-
-  return (
-    <div className="p-4 sm:p-6 bg-white rounded-lg shadow-md w-full min-h-[300px]">
-      <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">
-        Classroom Chat
-      </h2>
-      <div className="space-y-4 sm:space-y-6">
-        {messages.map((msg) => (
-          <div key={msg.id} className="flex items-start space-x-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-500 flex items-center justify-center text-white">
-              {msg.sender.initial}
-            </div>
-            <div>
-              <p className="font-medium text-sm sm:text-base">
-                {msg.sender.username}
-              </p>
-              <p className="text-gray-700 text-sm sm:text-base">{msg.text}</p>
-              <p className="text-xs sm:text-sm text-gray-500">
-                {new Date(msg.timestamp).toLocaleString()}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
+import { Button } from "@/components/ui/button";
+import { MessageCircle, Send } from "lucide-react"; // Added Send icon
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import ClassroomChat from "@/components/ClassroomChat";
 
 // Main ClassPage Component
 const ClassPage: React.FC = () => {
@@ -83,8 +27,9 @@ const ClassPage: React.FC = () => {
 
   // State for dialogs
   const [isJoinDetailsDialogOpen, setIsJoinDetailsDialogOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
-  // Dummy data for the course (same as before)
+  // Dummy data for the course
   const allCourses: Course[] = [
     {
       id: "react-101",
@@ -110,7 +55,7 @@ const ClassPage: React.FC = () => {
       id: "ui-303",
       name: "UI/UX Design",
       description:
-        "Master the art of designing intuitive and visually appealing user interfaces. Master the art of designing intuitive and visually appealing user interfaces. Master the art of designing intuitive and visually appealing user interfaces. Master the art of designing intuitive and visually appealing user interfaces.",
+        "Master the art of designing intuitive and visually appealing user interfaces.",
       instructor: {
         id: "2",
         firstName: "ss",
@@ -139,7 +84,7 @@ const ClassPage: React.FC = () => {
   const showJoinDetails = !course.isPrivate;
 
   return (
-    <div className="p-1 md:p-6 flex justify-center">
+    <div className="p-1 md:p-6 flex justify-center relative">
       <div className="w-full max-w-5xl">
         {/* Banner */}
         <ClassBanner
@@ -151,47 +96,34 @@ const ClassPage: React.FC = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="posts" className="mt-4">
-          <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full h-24 sm:h-12 mb-4 bg-gray-100 rounded-lg overflow-hidden shadow-sm">
+          <TabsList className="grid grid-cols-3 w-full h-12 mb-4 bg-gray-100 rounded-lg overflow-hidden shadow-sm">
             <TabsTrigger
               value="posts"
               className="px-4 py-2 text-sm text-gray-700 
-        data-[state=active]:bg-white 
-        data-[state=active]:text-blue-600 
-        data-[state=active]:font-semibold 
-        transition-colors duration-200"
+                data-[state=active]:bg-white 
+                data-[state=active]:text-blue-600 
+                data-[state=active]:font-semibold 
+                transition-colors duration-200"
             >
               Posts
             </TabsTrigger>
             <TabsTrigger
-              value="chat"
-              className="px-4 py-2.5 text-sm text-gray-700 
-        data-[state=active]:bg-white 
-        data-[state=active]:text-blue-600 
-        data-[state=active]:font-semibold 
-        transition-colors duration-200"
-            >
-              Chat{" "}
-              <Badge variant="destructive" className="px-1.5 py-0.5">
-                3
-              </Badge>
-            </TabsTrigger>
-            <TabsTrigger
               value="members"
-              className="px-4 py-2.5 text-sm text-gray-700 
-        data-[state=active]:bg-white 
-        data-[state=active]:text-blue-600 
-        data-[state=active]:font-semibold 
-        transition-colors duration-200"
+              className="px-4 py-2 text-sm text-gray-700 
+                data-[state=active]:bg-white 
+                data-[state=active]:text-blue-600 
+                data-[state=active]:font-semibold 
+                transition-colors duration-200"
             >
               Members
             </TabsTrigger>
             <TabsTrigger
               value="files"
-              className="px-4 py-2.5 text-sm text-gray-700 
-        data-[state=active]:bg-white 
-        data-[state=active]:text-blue-600 
-        data-[state=active]:font-semibold 
-        transition-colors duration-200"
+              className="px-4 py-2 text-sm text-gray-700 
+                data-[state=active]:bg-white 
+                data-[state=active]:text-blue-600 
+                data-[state=active]:font-semibold 
+                transition-colors duration-200"
             >
               Attachments
             </TabsTrigger>
@@ -203,9 +135,6 @@ const ClassPage: React.FC = () => {
             {/* Posts Section */}
             <PostList course={course} classId={classId || ""} />
           </TabsContent>
-          <TabsContent value="chat">
-            <ClassroomChat course={course} />
-          </TabsContent>
           <TabsContent value="members">
             <GroupMembers course={course} />
           </TabsContent>
@@ -214,6 +143,32 @@ const ClassPage: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Floating Chat Button */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <Button
+          className="relative bg-blue-600 hover:bg-blue-700 rounded-full p-3 shadow-lg"
+          onClick={() => setIsChatOpen(true)}
+        >
+          <MessageCircle className="w-6 h-6 text-white" />
+          <Badge
+            variant="destructive"
+            className="absolute -top-1 -right-1 px-1.5 py-0.5 text-xs"
+          >
+            3
+          </Badge>
+        </Button>
+      </div>
+
+      {/* Chat Dialog */}
+      <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
+        <DialogContent className="sm:max-w-lg md:max-w-2xl w-[90vw] max-h-[80vh] p-0 bg-white rounded-xl shadow-2xl border border-gray-200">
+          <DialogHeader className="p-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-xl">
+            <DialogTitle>Classroom Chat</DialogTitle>
+          </DialogHeader>
+          <ClassroomChat course={course} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
