@@ -13,6 +13,7 @@ import {
   FileStorage,
 } from "@/utils/types";
 import { Badge } from "@/components/ui/badge";
+import GroupMembers from "@/components/GroupMembers";
 
 // Classroom Chat Component
 const ClassroomChat: React.FC<{ course: Course }> = ({ course }) => {
@@ -67,75 +68,6 @@ const ClassroomChat: React.FC<{ course: Course }> = ({ course }) => {
                 {new Date(msg.timestamp).toLocaleString()}
               </p>
             </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// Group Members Component
-const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
-  const [members, setMembers] = useState<GroupMember[]>([
-    {
-      id: course.instructor.id,
-      username: course.instructor.username,
-      initial: course.instructor.initial,
-      role: "Instructor",
-      timestamp: new Date().toISOString(),
-      firstName: "",
-      lastName: "",
-      email: "",
-      avatar: "",
-    },
-    {
-      id: "student1",
-      username: "AlexJohnson",
-      initial: "A",
-      role: "Student",
-      timestamp: new Date(Date.now() - 86400000).toISOString(),
-      firstName: "",
-      lastName: "",
-      email: "",
-      avatar: "",
-    },
-    {
-      id: "student2",
-      username: "EmilyWang",
-      initial: "E",
-      role: "Student",
-      timestamp: new Date(Date.now() - 172800000).toISOString(),
-      firstName: "",
-      lastName: "",
-      email: "",
-      avatar: "",
-    },
-  ]);
-
-  return (
-    <div className="p-4 sm:p-6 bg-white rounded-lg shadow-md w-full min-h-[300px]">
-      <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">
-        Group Members
-      </h2>
-      <div className="space-y-4 sm:space-y-6">
-        {members.map((member) => (
-          <div key={member.id} className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-500 flex items-center justify-center text-white">
-                {member.initial}
-              </div>
-              <div>
-                <p className="font-medium text-sm sm:text-base">
-                  {member.username}
-                </p>
-                <p className="text-xs sm:text-sm text-gray-500">
-                  {member.role}
-                </p>
-              </div>
-            </div>
-            <p className="text-xs sm:text-sm text-gray-500">
-              Joined: 12th Feb 2025
-            </p>
           </div>
         ))}
       </div>
@@ -302,10 +234,7 @@ const ClassPage: React.FC = () => {
         transition-colors duration-200"
             >
               Chat{" "}
-              <Badge
-                variant="destructive"
-                className="px-1.5 py-0.5"
-              >
+              <Badge variant="destructive" className="px-1.5 py-0.5">
                 3
               </Badge>
             </TabsTrigger>
