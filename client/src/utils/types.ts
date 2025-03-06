@@ -21,7 +21,7 @@ export interface User {
   email: string;
   avatar: string;
   initial: string;
-  timestamp?: string
+  timestamp?: string;
 }
 
 export interface Comment {
@@ -48,7 +48,7 @@ export interface ChatMessage {
 }
 
 export interface GroupMember extends User {
-  role: "Instructor" | "Student" | "TA";
+  role: "Instructor" | "Moderator" | "Member";
 }
 
 export interface FileStorage {

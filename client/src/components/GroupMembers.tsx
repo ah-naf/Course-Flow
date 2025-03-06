@@ -1,5 +1,5 @@
 // src/components/GroupMembers.tsx
-import React from "react";
+import React, { useState } from "react";
 import { Course, GroupMember } from "@/utils/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,30 +9,24 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { UserX } from "lucide-react"; // Assuming lucide-react for icons
+import { UserX, Search, ChevronDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { create } from "zustand";
-
-interface GroupMembersState {
-  members: GroupMember[];
-  setMembers: (members: GroupMember[]) => void;
-  removeMember: (memberId: string) => void;
-}
-
-// Zustand store for GroupMembers
-const useGroupMembersStore = create<GroupMembersState>((set) => ({
-  members: [],
-  setMembers: (members) => set({ members }),
-  removeMember: (memberId) =>
-    set((state) => ({
-      members: state.members.filter((member) => member.id !== memberId),
-    })),
-}));
+import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useGroupMembersStore } from "@/store/groupMemberStore";
+import { formatRelativeTime } from "@/utils/formatRelativeTime";
 
 const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
-  const { members, setMembers, removeMember } = useGroupMembersStore();
+  const { members, setMembers, removeMember, updateMemberRole } =
+    useGroupMembersStore();
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Initialize members data (could be fetched from an API in a real scenario)
   React.useEffect(() => {
     const initialMembers: GroupMember[] = [
       {
@@ -40,7 +34,7 @@ const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
         username: course.instructor.username,
         initial: course.instructor.initial,
         role: "Instructor",
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toLocaleDateString(),
         firstName: "Sarah",
         lastName: "Johnson",
         email: "sarah.johnson@example.com",
@@ -50,19 +44,19 @@ const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
         id: "student1",
         username: "AlexJohnson",
         initial: "A",
-        role: "Student",
-        timestamp: new Date(Date.now() - 86400000).toISOString(),
+        role: "Member",
+        timestamp: new Date(Date.now() - 86400000).toLocaleDateString(),
         firstName: "Alex",
         lastName: "Johnson",
         email: "alex.johnson@example.com",
-        avatar: "", // No avatar for this member
+        avatar: "",
       },
       {
         id: "student2",
         username: "EmilyWang",
         initial: "E",
-        role: "Student",
-        timestamp: new Date(Date.now() - 172800000).toISOString(),
+        role: "Member",
+        timestamp: new Date(Date.now() - 172800000).toLocaleDateString(),
         firstName: "Emily",
         lastName: "Wang",
         email: "emily.wang@example.com",
@@ -78,13 +72,34 @@ const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
     }
   };
 
+  const filteredMembers = members.filter(
+    (member: GroupMember) =>
+      member.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="p-4 sm:p-6 bg-white rounded-lg shadow-md w-full min-h-[300px]">
       <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">
         Group Members
       </h2>
+
+      {/* Search Bar */}
+      <div className="relative mb-6">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Input
+          type="text"
+          placeholder="Search members by name, username, or email..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10 w-full"
+        />
+      </div>
+
       <div className="space-y-4 sm:space-y-6">
-        {members.map((member) => (
+        {filteredMembers.map((member) => (
           <div
             key={member.id}
             className="flex items-center justify-between hover:bg-gray-50 p-2 rounded-md transition-colors"
@@ -115,10 +130,6 @@ const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
                               src={member.avatar}
                               alt={`${member.username}'s avatar`}
                               className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
-                              //   onError={(e) => {
-                              //     e.currentTarget.style.display = "none"; // Hide on error
-                              //     e.currentTarget.nextSibling!.style.display = "flex"; // Show initial
-                              //   }}
                             />
                           ) : (
                             <div className="w-24 h-24 rounded-full bg-green-500 flex items-center justify-center text-white text-4xl font-semibold border-2 border-gray-200">
@@ -143,7 +154,7 @@ const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
                             </p>
                             <p className="text-sm">
                               <span className="font-medium">Joined:</span>{" "}
-                              {member.timestamp}
+                              {formatRelativeTime(member.timestamp || "")}
                             </p>
                           </div>
                         </div>
@@ -160,6 +171,33 @@ const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
               <p className="text-xs sm:text-sm text-gray-500">
                 Joined: {member.timestamp}
               </p>
+              {/* Role Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8">
+                    {member.role}
+                    <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem
+                    onClick={() => updateMemberRole(member.id, "Instructor")}
+                  >
+                    Instructor
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => updateMemberRole(member.id, "Moderator")}
+                  >
+                    Moderator
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => updateMemberRole(member.id, "Member")}
+                  >
+                    Member
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              {/* Kick Button */}
               {member.role !== "Instructor" && (
                 <Button
                   variant="ghost"
@@ -174,6 +212,9 @@ const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
             </div>
           </div>
         ))}
+        {filteredMembers.length === 0 && (
+          <p className="text-center text-gray-500">No members found</p>
+        )}
       </div>
     </div>
   );
