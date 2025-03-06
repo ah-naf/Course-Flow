@@ -19,7 +19,7 @@ const AppLayout: React.FC = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header Component */}
-        <Header toggleSidebar={toggleSidebar} />
+        <Header toggleSidebar={toggleSidebar} pagePath={"ui-303"} />
 
         {/* Page Content Area */}
         <main className="flex-1 overflow-y-auto p-6 bg-gray-50">

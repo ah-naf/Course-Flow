@@ -24,11 +24,10 @@ import NotificationDialog from "@/components/NotificationDialog"; // Import the 
 
 interface HeaderProps {
   toggleSidebar: () => void;
-  pageTitle?: string;
-  pagePath?: string[];
+  pagePath?: string;
 }
 
-const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = [] }) => {
+const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = "" }) => {
   const { user, logout } = useUserStore();
 
   if (!user) return null;
@@ -51,20 +50,13 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = [] }) => {
       <div className="flex items-center text-lg font-medium">
         <span className="text-gray-600 flex items-center mx-1">
           <BookOpen className="h-6 w-6 mr-2 text-blue-600" />
-          Learning Hub
         </span>
-        {pagePath.map((item, index) => (
-          <React.Fragment key={index}>
-            {index < pagePath.length && (
-              <ChevronRight className="h-4 w-4 mx-1" />
-            )}
-            <span
-              className={index < pagePath.length - 1 ? "" : "text-gray-600"}
-            >
-              {item}
-            </span>
+        {pagePath && (
+          <React.Fragment>
+            <ChevronRight className="h-4 w-4 mx-1" />
+            <span className="text-gray-600">{pagePath}</span>
           </React.Fragment>
-        ))}
+        )}
       </div>
 
       <div className="ml-auto flex items-center space-x-3">
