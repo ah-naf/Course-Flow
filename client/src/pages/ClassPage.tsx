@@ -5,19 +5,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClassBanner } from "@/components/ClassBanner";
 import { CreatePostButton } from "@/components/CreatePostButton";
 import { PostList } from "@/components/PostList";
-import { Course, ChatMessage } from "@/utils/types";
+import { Course } from "@/utils/types";
 import { Badge } from "@/components/ui/badge";
 import GroupMembers from "@/components/GroupMembers";
 import Attachments from "@/components/Attachments";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, Send } from "lucide-react"; // Added Send icon
+import { MessageCircle } from "lucide-react"; // Added Send icon
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import ClassroomChat from "@/components/ClassroomChat";
 
 // Main ClassPage Component
@@ -50,6 +47,7 @@ const ClassPage: React.FC = () => {
       joinCode: "RCT-DEV-2025",
       inviteLink: "https://yourapp.com/join/react-101",
       isPrivate: false,
+      postPermission: "everyone",
     },
     {
       id: "ui-303",
@@ -69,6 +67,7 @@ const ClassPage: React.FC = () => {
       coverPic: "",
       joinCode: "UIX-303-2025",
       inviteLink: "https://yourapp.com/join/ui-303",
+      postPermission: "instructor",
       isPrivate: false,
     },
   ];
@@ -163,9 +162,6 @@ const ClassPage: React.FC = () => {
       {/* Chat Dialog */}
       <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
         <DialogContent className="min-w-[95vw] lg:min-w-5xl xl:min-w-6xl min-h-[97vh] lg:min-h-[70vh] p-0 bg-white rounded-xl shadow-2xl border border-gray-200">
-          {/* <DialogHeader className="p-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-xl">
-            <DialogTitle>Classroom Chat</DialogTitle>
-          </DialogHeader> */}
           <ClassroomChat course={course} />
         </DialogContent>
       </Dialog>

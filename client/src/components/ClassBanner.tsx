@@ -1,4 +1,4 @@
-// src/components/ClassBanner.tsx
+// ClassBanner.tsx
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Share2, Copy, Check, MoreHorizontal } from "lucide-react";
+import { Share2, Copy, Check, MoreHorizontal, Settings } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -17,6 +17,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Course } from "@/utils/types";
+import { ClassSettingsDialog } from "./ClassSettingsDialog";
 
 interface ClassBannerProps {
   course: Course;
@@ -33,8 +34,8 @@ export const ClassBanner: React.FC<ClassBannerProps> = ({
 }) => {
   const [copiedJoinCode, setCopiedJoinCode] = useState(false);
   const [copiedInviteLink, setCopiedInviteLink] = useState(false);
+  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
 
-  // Copy join code to clipboard
   const copyJoinCode = () => {
     if (course.joinCode) {
       navigator.clipboard.writeText(course.joinCode);
@@ -43,7 +44,6 @@ export const ClassBanner: React.FC<ClassBannerProps> = ({
     }
   };
 
-  // Copy invite link to clipboard
   const copyInviteLink = () => {
     if (course.inviteLink) {
       navigator.clipboard.writeText(course.inviteLink);
@@ -62,13 +62,37 @@ export const ClassBanner: React.FC<ClassBannerProps> = ({
         backgroundColor: !course.coverPic ? course.backgroundColor : undefined,
       }}
     >
+      <div className="absolute top-4 right-4 z-10">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="secondary"
+                size="icon"
+                className="bg-white/80 hover:bg-white text-gray-800 rounded-full h-10 w-10 cursor-pointer"
+                onClick={() => setIsSettingsDialogOpen(true)}
+              >
+                <Settings className="h-5 w-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Class Settings</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <ClassSettingsDialog
+          course={course}
+          isOpen={isSettingsDialogOpen}
+          onOpenChange={setIsSettingsDialogOpen}
+        />
+      </div>
+
       <div className="absolute inset-0 flex items-end p-6">
         <div className="w-full flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 sm:gap-0">
           <div className="flex-1">
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
               {course.name}
             </h1>
-            {/* "Learn More" Button with Tooltip */}
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -115,7 +139,6 @@ export const ClassBanner: React.FC<ClassBannerProps> = ({
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-6 mt-6">
-                        {/* Join Code */}
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between">
                           <div>
                             <h4 className="font-medium text-gray-700">
@@ -156,7 +179,6 @@ export const ClassBanner: React.FC<ClassBannerProps> = ({
                             </TooltipProvider>
                           </div>
                         </div>
-                        {/* Invitation Link */}
                         {course.inviteLink && (
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between">
                             <div>

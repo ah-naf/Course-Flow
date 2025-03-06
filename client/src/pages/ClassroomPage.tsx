@@ -43,6 +43,7 @@ const ClassroomPage: React.FC = () => {
         username: "Sarah Johnson",
         initial: "S",
       },
+      postPermission: "everyone",
       backgroundColor: "#4CAF50",
     },
     {
@@ -59,6 +60,7 @@ const ClassroomPage: React.FC = () => {
         username: "Sarah Johnson 1",
         initial: "S",
       },
+      postPermission: "everyone",
       backgroundColor: "#9C27B0",
     },
     {
@@ -75,6 +77,7 @@ const ClassroomPage: React.FC = () => {
         username: "Sarah Johnson 2",
         initial: "S",
       },
+      postPermission: "everyone",
       backgroundColor: "#2196F3",
     },
     {
@@ -91,6 +94,7 @@ const ClassroomPage: React.FC = () => {
         username: "Sarah Johnson 3",
         initial: "S",
       },
+      postPermission: "everyone",
       backgroundColor: "#FF9800",
     },
   ];

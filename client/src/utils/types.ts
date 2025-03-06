@@ -10,6 +10,7 @@ export interface Course {
   inviteLink?: string;
   isPrivate?: boolean;
   timestamp?: string;
+  postPermission: string;
 }
 
 export interface User {
