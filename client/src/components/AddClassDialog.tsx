@@ -8,12 +8,7 @@ import {
   DialogTrigger,
   DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -116,6 +111,33 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({ children }) => {
             <form onSubmit={handleCreateClass} className="space-y-6">
               <div>
                 <label
+                  htmlFor="classID"
+                  className="text-sm sm:text-base font-medium text-gray-700"
+                >
+                  Class ID
+                  <span className="text-red-500 ml-1" aria-hidden="true">
+                    *
+                  </span>
+                  <span className="sr-only"> (required)</span>
+                </label>
+                <Input
+                  id="classID"
+                  value={className}
+                  onChange={(e) => setClassName(e.target.value)}
+                  placeholder="Enter a unique id for your class"
+                  required
+                  className="mt-2 text-sm sm:text-base py-2 sm:py-3"
+                  aria-describedby="classIDHelp"
+                />
+                <p
+                  id="classIDHelp"
+                  className="mt-1 text-xs sm:text-sm text-gray-500"
+                >
+                  Give your class a unique id (e.g., "react-101", "node-404").
+                </p>
+              </div>
+              <div>
+                <label
                   htmlFor="className"
                   className="text-sm sm:text-base font-medium text-gray-700"
                 >
@@ -138,7 +160,8 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({ children }) => {
                   id="classNameHelp"
                   className="mt-1 text-xs sm:text-sm text-gray-500"
                 >
-                  Give your class a descriptive name (e.g., "Introduction to React").
+                  Give your class a descriptive name (e.g., "Introduction to
+                  React").
                 </p>
               </div>
               <div>
@@ -161,7 +184,8 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({ children }) => {
                   id="classDescriptionHelp"
                   className="mt-1 text-xs sm:text-sm text-gray-500"
                 >
-                  Provide a brief overview of the class content (e.g., topics, goals). This field is optional.
+                  Provide a brief overview of the class content (e.g., topics,
+                  goals). This field is optional.
                 </p>
               </div>
               <div>
@@ -213,7 +237,8 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({ children }) => {
                   id="coverPicHelp"
                   className="mt-1 text-xs sm:text-sm text-gray-500"
                 >
-                  Upload an image to represent your class (optional, PNG/JPG recommended).
+                  Upload an image to represent your class (optional, PNG/JPG
+                  recommended).
                 </p>
               </div>
               <Button
@@ -251,7 +276,8 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({ children }) => {
                   id="classIdHelp"
                   className="mt-1 text-xs sm:text-sm text-gray-500"
                 >
-                  Enter the unique class ID provided by the instructor (e.g., "CS101-2024").
+                  Enter the unique class ID provided by the instructor (e.g.,
+                  "CS101-2024").
                 </p>
               </div>
               <Button

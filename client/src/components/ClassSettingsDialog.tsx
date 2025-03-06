@@ -71,6 +71,14 @@ export const ClassSettingsDialog: React.FC<ClassSettingsDialogProps> = ({
           <TabsContent value="general" className="space-y-6">
             <div className="space-y-4">
               <div className="space-y-2">
+                <Label htmlFor="className">Class ID</Label>
+                <Input
+                  id="classId"
+                  value={classSettings.name}
+                  disabled
+                />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="className">Class Name</Label>
                 <Input
                   id="className"
