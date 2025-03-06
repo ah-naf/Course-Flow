@@ -1,14 +1,6 @@
 // src/components/Header.tsx
-import React from "react";
-import {
-  Menu,
-  ChevronRight,
-  Settings,
-  LogOut,
-  User,
-  BookOpen,
-  Plus,
-} from "lucide-react";
+import React, { useState } from "react";
+import { Menu, ChevronRight, LogOut, User, BookOpen, Plus } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +13,7 @@ import {
 import { useUserStore } from "@/store/userStore";
 import AddClassDialog from "@/components/AddClassDialog";
 import NotificationDialog from "@/components/NotificationDialog"; // Import the new component
+import ProfileDialog from "./ProfileDialog";
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -29,6 +22,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = "" }) => {
   const { user, logout } = useUserStore();
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
 
   if (!user) return null;
 
@@ -102,15 +96,13 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = "" }) => {
               </div>
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex items-center p-2 cursor-pointer">
+            <DropdownMenuItem
+              className="flex items-center p-2 cursor-pointer"
+              onClick={() => setIsProfileDialogOpen(true)}
+            >
               <User className="h-4 w-4 mr-3" />
               <span>Profile</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center p-2 cursor-pointer">
-              <Settings className="h-4 w-4 mr-3" />
-              <span>Settings</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={logout}
               className="flex items-center p-2 cursor-pointer text-red-500 hover:text-red-700"
@@ -121,6 +113,11 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = "" }) => {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <ProfileDialog
+        isOpen={isProfileDialogOpen}
+        onClose={() => setIsProfileDialogOpen(false)}
+      />
     </header>
   );
 };
