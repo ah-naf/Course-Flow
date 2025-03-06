@@ -162,10 +162,10 @@ const ClassPage: React.FC = () => {
 
       {/* Chat Dialog */}
       <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
-        <DialogContent className="sm:max-w-lg md:max-w-2xl w-[90vw] max-h-[80vh] p-0 bg-white rounded-xl shadow-2xl border border-gray-200">
-          <DialogHeader className="p-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-xl">
+        <DialogContent className="min-w-[95vw] lg:min-w-5xl xl:min-w-6xl min-h-[97vh] lg:min-h-[70vh] p-0 bg-white rounded-xl shadow-2xl border border-gray-200">
+          {/* <DialogHeader className="p-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-xl">
             <DialogTitle>Classroom Chat</DialogTitle>
-          </DialogHeader>
+          </DialogHeader> */}
           <ClassroomChat course={course} />
         </DialogContent>
       </Dialog>
