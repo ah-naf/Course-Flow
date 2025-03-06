@@ -13,6 +13,7 @@ type User struct {
 	CreatedAt    time.Time  `json:"created_at"` // Timestamp of account creation.
 	UpdatedAt    time.Time  `json:"updated_at"` // Timestamp of the last profile update.
 	LastLogin    *time.Time `json:"last_login"` // Pointer so nil can represent no login.
+	Avatar       string     `json:"avatar"`
 }
 
 type UserRequest struct {

@@ -36,10 +36,10 @@ func (s *UserStorage) GetAllUser() ([]*models.User, error) {
 
 func (s *UserStorage) SaveUser(user *models.User) error {
 	query := `
-	INSERT into users(email, username, password_hash, first_name, last_name, created_at, updated_at)
-	VALUES($1, $2, $3, $4, $5, $6, $7)
+	INSERT into users(email, username, password_hash, first_name, last_name, created_at, updated_at, avatar)
+	VALUES($1, $2, $3, $4, $5, $6, $7, $8)
 	`
-	_, err := s.DB.Query(query, user.Email, user.Username, user.PasswordHash, user.FirstName, user.LastName, user.CreatedAt, user.UpdatedAt)
+	_, err := s.DB.Query(query, user.Email, user.Username, user.PasswordHash, user.FirstName, user.LastName, user.CreatedAt, user.UpdatedAt, user.Avatar)
 	return err
 }
 
