@@ -1,6 +1,8 @@
 // src/components/Attachments.tsx
 import { Course, FileStorage } from "@/utils/types";
 import { useState } from "react";
+import { Download } from "lucide-react"; // Import Download icon
+import { Button } from "@/components/ui/button"; // Assuming ShadCN Button for styling
 
 const Attachments: React.FC<{ course: Course }> = ({ course }) => {
   const [files, setFiles] = useState<FileStorage[]>([
@@ -30,6 +32,16 @@ const Attachments: React.FC<{ course: Course }> = ({ course }) => {
     },
   ]);
 
+  const handleDownload = (file: FileStorage) => {
+    // Placeholder for download logic (e.g., fetch file from API or trigger download)
+    console.log(`Downloading ${file.name}`);
+    // In a real app, you might use something like:
+    // const link = document.createElement("a");
+    // link.href = `/api/download/${file.id}`;
+    // link.download = file.name;
+    // link.click();
+  };
+
   return (
     <div className="p-4 sm:p-6 bg-white rounded-lg shadow-md w-full min-h-[300px]">
       <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">
@@ -50,13 +62,23 @@ const Attachments: React.FC<{ course: Course }> = ({ course }) => {
                 <p className="text-xs sm:text-sm text-gray-500">{file.size}</p>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-xs sm:text-sm text-gray-500">
-                Uploaded by {file.uploadedBy}
-              </p>
-              <p className="text-xs sm:text-sm text-gray-500">
-                {new Date(file.uploadDate).toLocaleDateString()}
-              </p>
+            <div className="flex items-center space-x-4">
+              <div className="text-right">
+                <p className="text-xs sm:text-sm text-gray-500">
+                  Uploaded by {file.uploadedBy}
+                </p>
+                <p className="text-xs sm:text-sm text-gray-500">
+                  {new Date(file.uploadDate).toLocaleDateString()}
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleDownload(file)}
+                className="text-gray-600 hover:text-blue-600 hover:bg-gray-100 rounded-full cursor-pointer"
+              >
+                <Download className="w-5 h-5" />
+              </Button>
             </div>
           </div>
         ))}
