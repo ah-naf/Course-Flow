@@ -26,7 +26,7 @@ func (s *UserStorage) GetAllUser() ([]*models.User, error) {
 	var users []*models.User
 	for rows.Next() {
 		user := new(models.User)
-		if err := rows.Scan(&user.ID, &user.Email, &user.Username, &user.PasswordHash, &user.FirstName, &user.LastName, &user.CreatedAt, &user.UpdatedAt, &user.LastLogin); err != nil {
+		if err := rows.Scan(&user.ID, &user.Email, &user.Username, &user.PasswordHash, &user.FirstName, &user.LastName, &user.CreatedAt, &user.UpdatedAt, &user.LastLogin, &user.Avatar); err != nil {
 			return nil, err
 		}
 		users = append(users, user)
