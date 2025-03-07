@@ -7,52 +7,97 @@ import {
   DialogTitle,
   DialogDescription,
   DialogClose,
-} from "@/components/ui/dialog"; // Adjust the import based on your shadcn installation
+} from "@/components/ui/dialog";
 import { FaGoogle, FaGithub } from "react-icons/fa";
 import { useRegister } from "@/hooks/useAuth";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+export interface UserFormData {
+  firstName?: string;
+  lastName?: string;
+  email: string;
+  username: string;
+  password: string;
+}
+
+const initialData: UserFormData = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  username: "",
+  password: "",
+};
+
+// Single schema with conditional requirements
+const authSchema = yup.object().shape({
+  firstName: yup.string().when("$mode", {
+    is: "register",
+    then: (schema) => schema.required("First name is required"),
+    otherwise: (schema) => schema.notRequired(),
+  }),
+  lastName: yup.string().when("$mode", {
+    is: "register",
+    then: (schema) => schema.required("Last name is required"),
+    otherwise: (schema) => schema.notRequired(),
+  }),
+  email: yup
+    .string()
+    .required("Email is required")
+    .email("Invalid email address"),
+  username: yup.string().required("Username is required"),
+  password: yup
+    .string()
+    .required("Password is required")
+    .min(6, "Password must be at least 6 characters"),
+});
+
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [mode, setMode] = useState<"login" | "register">("login");
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    username: "",
-    password: "",
-  });
-
   const registerMutation = useRegister();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<UserFormData>({
+    resolver: yupResolver(authSchema),
+    defaultValues: initialData,
+    context: { mode }, // Pass mode as context to schema
+  });
+
+  const onSubmit: SubmitHandler<UserFormData> = (data) => {
+    if (mode === "register") {
+      registerMutation.mutate(
+        {
+          ...data,
+          firstName: data.firstName || "",
+          lastName: data.lastName || "",
+        },
+        {
+          onSuccess: () => {
+            reset();
+          },
+        }
+      );
+    } else {
+      // Placeholder for login logic
+      console.log("Login data:", data);
+      reset();
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    registerMutation.mutate(
-      { ...formData },
-      {
-        onSuccess: () => {
-          setFormData({
-            firstName: "",
-            lastName: "",
-            email: "",
-            username: "",
-            password: "",
-          });
-        },
-      }
-    );
+  const getInputBorderClass = (field: keyof UserFormData) => {
+    return errors[field]
+      ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+      : "border-gray-300 focus:ring-blue-500 focus:border-blue-500";
   };
 
   return (
@@ -66,7 +111,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               : "Fill in the details to create a new account."}
           </DialogDescription>
         </DialogHeader>
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           {mode === "register" && (
             <>
               <div>
@@ -75,12 +120,17 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 </label>
                 <input
                   type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleInputChange}
                   placeholder="Your first name"
-                  className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+                  {...register("firstName")}
+                  className={`mt-1 block w-full rounded-md border p-2 focus:ring-2 focus:outline-none ${getInputBorderClass(
+                    "firstName"
+                  )}`}
                 />
+                {errors.firstName && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.firstName.message}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">
@@ -88,12 +138,17 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 </label>
                 <input
                   type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
                   placeholder="Your last name"
-                  className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+                  {...register("lastName")}
+                  className={`mt-1 block w-full rounded-md border p-2 focus:ring-2 focus:outline-none ${getInputBorderClass(
+                    "lastName"
+                  )}`}
                 />
+                {errors.lastName && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.lastName.message}
+                  </p>
+                )}
               </div>
             </>
           )}
@@ -103,12 +158,17 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             </label>
             <input
               type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
               placeholder="you@example.com"
-              className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+              {...register("email")}
+              className={`mt-1 block w-full rounded-md border p-2 focus:ring-2 focus:outline-none ${getInputBorderClass(
+                "email"
+              )}`}
             />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.email.message}
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
@@ -116,12 +176,17 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             </label>
             <input
               type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleInputChange}
               placeholder="username"
-              className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+              {...register("username")}
+              className={`mt-1 block w-full rounded-md border p-2 focus:ring-2 focus:outline-none ${getInputBorderClass(
+                "username"
+              )}`}
             />
+            {errors.username && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.username.message}
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
@@ -129,25 +194,33 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             </label>
             <input
               type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleInputChange}
               placeholder="********"
-              className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+              {...register("password")}
+              className={`mt-1 block w-full rounded-md border p-2 focus:ring-2 focus:outline-none ${getInputBorderClass(
+                "password"
+              )}`}
             />
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.password.message}
+              </p>
+            )}
           </div>
           <button
             type="submit"
-            className="w-full py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+            disabled={mode === "register" && registerMutation.isPending}
+            className="w-full py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition disabled:bg-blue-300"
           >
-            {mode === "login" ? "Login" : "Register"}
+            {mode === "register" && registerMutation.isPending
+              ? "Processing..."
+              : mode === "login"
+              ? "Login"
+              : "Register"}
           </button>
         </form>
-
-        <span className="text-center text-lg font-medium text-gray-600">
+        <span className="text-center text-lg font-medium text-gray-600 block my-4">
           or
         </span>
-        {/* Social Login Section */}
         <div className="space-y-2">
           <button className="flex items-center justify-center w-full py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-100">
             <FaGoogle className="mr-2" size={20} />
@@ -158,13 +231,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             Sign in with GitHub
           </button>
         </div>
-
         <div className="mt-4 text-center">
           {mode === "login" ? (
             <p>
               Don't have an account?{" "}
               <button
-                className="text-blue-500 hover:underline"
+                className="text-blue-500 hover:underline cursor-pointer"
                 onClick={() => setMode("register")}
               >
                 Register
@@ -174,7 +246,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <p>
               Already have an account?{" "}
               <button
-                className="text-blue-500 hover:underline"
+                className="text-blue-500 hover:underline cursor-pointer"
                 onClick={() => setMode("login")}
               >
                 Login
