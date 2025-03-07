@@ -7,9 +7,11 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/github"
 	"golang.org/x/oauth2/google"
 )
 
@@ -152,6 +154,129 @@ func (h *AuthHandler) HandleGoogleCallback(w http.ResponseWriter, r *http.Reques
 		LastName:  userInfo.FamilyName,
 		Avatar:    userInfo.Picture,
 		Username:  userInfo.Email,
+		UpdatedAt: time.Now(),
+		CreatedAt: time.Now(),
+	})
+	if err != nil {
+		return err
+	}
+
+	return utils.WriteJSON(w, http.StatusOK, loginResp)
+}
+
+var GithubOAuthConfig = &oauth2.Config{
+	RedirectURL:  utils.GetEnv("GITHUB_REDIRECT_URL"),
+	ClientID:     utils.GetEnv("GITHUB_CLIENT_ID"),
+	ClientSecret: utils.GetEnv("GITHUB_CLIENT_SECRET"),
+	Scopes: []string{
+		"user:email",
+		"read:user",
+	},
+	Endpoint: github.Endpoint,
+}
+
+// HandleGitHubLogin redirects the client to GitHub's OAuth2 consent screen.
+func (h *AuthHandler) HandleGitHubLogin(w http.ResponseWriter, r *http.Request) error {
+	// Generate a state value for CSRF protection and store it in a cookie.
+	state := utils.GenerateStateOauthCookie(w)
+
+	// Generate the OAuth2 URL for GitHub.
+	url := GithubOAuthConfig.AuthCodeURL(state)
+
+	// Redirect the user to GitHub's OAuth consent page.
+	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+	return nil
+}
+
+// HandleGitHubCallback handles the OAuth2 callback from GitHub.
+func (h *AuthHandler) HandleGitHubCallback(w http.ResponseWriter, r *http.Request) error {
+	// Retrieve the state from the cookie.
+	stateCookie, err := r.Cookie("oauthstate")
+	if err != nil {
+		return &utils.ApiError{Code: http.StatusBadRequest, Message: "State cookie not found"}
+	}
+
+	// Verify that the state parameter matches the stored state.
+	if r.FormValue("state") != stateCookie.Value {
+		return &utils.ApiError{Code: http.StatusUnauthorized, Message: "Invalid OAuth state"}
+	}
+
+	// Exchange the code for an access token.
+	code := r.FormValue("code")
+	token, err := GithubOAuthConfig.Exchange(context.Background(), code)
+	if err != nil {
+		return &utils.ApiError{Code: http.StatusInternalServerError, Message: "Failed to exchange token"}
+	}
+
+	// Create an HTTP client using the obtained token.
+	client := GithubOAuthConfig.Client(context.Background(), token)
+
+	// Fetch user info from GitHub's API.
+	resp, err := client.Get("https://api.github.com/user")
+	if err != nil {
+		return &utils.ApiError{Code: http.StatusInternalServerError, Message: "Failed to get user info from GitHub"}
+	}
+	defer resp.Body.Close()
+
+	var userInfo struct {
+		ID        int    `json:"id"`
+		Login     string `json:"login"`
+		Name      string `json:"name"`
+		Email     string `json:"email"`
+		AvatarURL string `json:"avatar_url"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
+		return &utils.ApiError{Code: http.StatusInternalServerError, Message: "Failed to decode GitHub user info"}
+	}
+
+	// If email is not returned in the primary call, get email separately
+	// (GitHub doesn't always return email in the main profile endpoint)
+	if userInfo.Email == "" {
+		emailResp, err := client.Get("https://api.github.com/user/emails")
+		if err == nil {
+			defer emailResp.Body.Close()
+			var emails []struct {
+				Email    string `json:"email"`
+				Primary  bool   `json:"primary"`
+				Verified bool   `json:"verified"`
+			}
+			if err := json.NewDecoder(emailResp.Body).Decode(&emails); err == nil {
+				// Find primary email
+				for _, email := range emails {
+					if email.Primary && email.Verified {
+						userInfo.Email = email.Email
+						break
+					}
+				}
+				// If no primary email, take the first verified one
+				if userInfo.Email == "" {
+					for _, email := range emails {
+						if email.Verified {
+							userInfo.Email = email.Email
+							break
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Split name into first and last name if provided
+	nameParts := strings.Fields(userInfo.Name)
+	firstName, lastName := strings.Join(nameParts[0:len(nameParts)-1], " "), nameParts[len(nameParts)-1]
+
+	// // Use GitHub email as username if username is not available
+	username := userInfo.Login
+	if username == "" {
+		username = userInfo.Email
+	}
+
+	loginResp, err := h.Service.SocialLogin(models.User{
+		Email:     userInfo.Email,
+		FirstName: firstName,
+		LastName:  lastName,
+		Avatar:    userInfo.AvatarURL,
+		Username:  username,
 		UpdatedAt: time.Now(),
 		CreatedAt: time.Now(),
 	})

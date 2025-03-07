@@ -25,4 +25,8 @@ func (r *Router) setupAuthRoutes(router *mux.Router) {
 	router.HandleFunc("/api/auth/google/login", middleware.ConvertToHandlerFunc(authHandler.HandleGoogleLogin)).Methods("GET")
 	router.HandleFunc("/api/auth/google/callback", middleware.ConvertToHandlerFunc(authHandler.HandleGoogleCallback)).Methods("GET")
 
+	// Github OAuth
+	router.HandleFunc("/api/auth/github/login", middleware.ConvertToHandlerFunc(authHandler.HandleGitHubLogin)).Methods("GET")
+	router.HandleFunc("/api/auth/github/callback", middleware.ConvertToHandlerFunc(authHandler.HandleGitHubCallback)).Methods("GET")
+
 }

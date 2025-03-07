@@ -48,14 +48,12 @@ func (s *AuthService) SocialLogin(userReq models.User) (*models.LoginResponse, e
 	exp := 7 * 24 * time.Hour
 	refreshToken, err := utils.GenerateToken(userReq.ID, exp)
 	if err != nil {
-		log.Fatal(err)
 		return nil, err
 	}
 
 	// Save refresh token to database.
 	err = s.AuthStorage.SaveRefreshToken(userReq.ID, refreshToken, time.Now().Add(exp))
 	if err != nil {
-		log.Fatal(err)
 		return nil, err
 	}
 
