@@ -45,14 +45,15 @@ func (h *AuthHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) er
 	}
 
 	// convert userReq to model.User
-	if err := h.Service.CreateUser(&userReq); err != nil {
+	user, err := h.Service.CreateUser(&userReq)
+	if err != nil {
 		return err
 	}
 
 	// Respond with the created user details (excluding password)
 	return utils.WriteJSON(w, http.StatusCreated, map[string]interface{}{
 		"message": "User created successfully",
-		"user":    userReq,
+		"user":    user,
 	})
 }
 

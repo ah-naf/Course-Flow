@@ -9,6 +9,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"; // Adjust the import based on your shadcn installation
 import { FaGoogle, FaGithub } from "react-icons/fa";
+import { useRegister } from "@/hooks/useAuth";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -17,6 +18,42 @@ interface AuthModalProps {
 
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [mode, setMode] = useState<"login" | "register">("login");
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    username: "",
+    password: "",
+  });
+
+  const registerMutation = useRegister();
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    registerMutation.mutate(
+      { ...formData },
+      {
+        onSuccess: () => {
+          setFormData({
+            firstName: "",
+            lastName: "",
+            email: "",
+            username: "",
+            password: "",
+          });
+        },
+      }
+    );
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -29,7 +66,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               : "Fill in the details to create a new account."}
           </DialogDescription>
         </DialogHeader>
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={handleSubmit}>
           {mode === "register" && (
             <>
               <div>
@@ -38,6 +75,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 </label>
                 <input
                   type="text"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleInputChange}
                   placeholder="Your first name"
                   className="mt-1 block w-full rounded-md border border-gray-300 p-2"
                 />
@@ -48,6 +88,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 </label>
                 <input
                   type="text"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleInputChange}
                   placeholder="Your last name"
                   className="mt-1 block w-full rounded-md border border-gray-300 p-2"
                 />
@@ -60,6 +103,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             </label>
             <input
               type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
               placeholder="you@example.com"
               className="mt-1 block w-full rounded-md border border-gray-300 p-2"
             />
@@ -70,6 +116,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             </label>
             <input
               type="text"
+              name="username"
+              value={formData.username}
+              onChange={handleInputChange}
               placeholder="username"
               className="mt-1 block w-full rounded-md border border-gray-300 p-2"
             />
@@ -80,6 +129,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             </label>
             <input
               type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
               placeholder="********"
               className="mt-1 block w-full rounded-md border border-gray-300 p-2"
             />
@@ -92,7 +144,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           </button>
         </form>
 
-        <span className="text-center text-lg font-medium text-gray-600">or</span>
+        <span className="text-center text-lg font-medium text-gray-600">
+          or
+        </span>
         {/* Social Login Section */}
         <div className="space-y-2">
           <button className="flex items-center justify-center w-full py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-100">

@@ -102,7 +102,7 @@ func (s *AuthService) Login(user *models.LoginRequest) (*models.LoginResponse, e
 }
 
 // Creates new user on registration
-func (s *AuthService) CreateUser(userReq *models.UserRequest) error {
+func (s *AuthService) CreateUser(userReq *models.UserRequest) (*models.User, error) {
 	// Trim space
 	userReq.Email, userReq.FirstName, userReq.LastName, userReq.Username = strings.TrimSpace(userReq.Email), strings.TrimSpace(userReq.FirstName), strings.TrimSpace(userReq.LastName), strings.TrimSpace(userReq.Username)
 
@@ -111,13 +111,13 @@ func (s *AuthService) CreateUser(userReq *models.UserRequest) error {
 	if err := validate.Struct(userReq); err != nil {
 		if validationErrors, ok := err.(validator.ValidationErrors); ok {
 			for _, err := range validationErrors {
-				return &utils.ApiError{
+				return nil, &utils.ApiError{
 					Code:    http.StatusBadRequest,
 					Message: getValidationMessage(err),
 				}
 			}
 		} else {
-			return err
+			return nil, err
 		}
 	}
 
@@ -132,20 +132,23 @@ func (s *AuthService) CreateUser(userReq *models.UserRequest) error {
 	// Check if user with same email or username exist
 	err := s.UserStorage.CheckForUsernameOrEmail(user)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	hashedPassword, err := hashPassword(user.PasswordHash)
 	if err != nil {
-		return fmt.Errorf("error encrypting password: %s", err.Error())
+		return nil, fmt.Errorf("error encrypting password: %s", err.Error())
 	}
 
 	user.PasswordHash = string(hashedPassword)
 	user.CreatedAt = time.Now().UTC()
 	user.UpdatedAt = time.Now().UTC()
 
+	if err := s.UserStorage.SaveUser(user); err != nil {
+		return nil, err
+	}
 	// save the user
-	return s.UserStorage.SaveUser(user)
+	return user, nil
 }
 
 // handle logout
