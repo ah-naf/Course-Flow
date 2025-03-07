@@ -1,15 +1,17 @@
 import React, { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
-import { useUserStore } from "@/store/userStore";
 import { Navigate, Outlet } from "react-router-dom";
+import { useUserStore } from "@/store/userStore";
 
 const AppLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
-  const { user } = useUserStore(); // Get the user from Zustand store
+  const { user } = useUserStore();
 
-  if (!user) return <Navigate to={"/"} replace />;
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="flex h-screen bg-gray-50">

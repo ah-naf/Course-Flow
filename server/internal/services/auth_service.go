@@ -64,41 +64,41 @@ func (s *AuthService) SocialLogin(userReq models.User) (*models.LoginResponse, e
 }
 
 // validate the user and generate JWT token
-func (s *AuthService) Login(user *models.LoginRequest) (*models.LoginResponse, error) {
+func (s *AuthService) Login(userReq *models.LoginRequest) (*models.LoginResponse, *models.User, error) {
 	// retrieve the hashed password fromm db
-	userID, storedHash, err := s.AuthStorage.RetrieveUserPassword(user.Username)
+	user, err := s.AuthStorage.RetrieveUserPassword(userReq.Username)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// compare the login password with the hashed password
-	if err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(user.Password)); err != nil {
-		return nil, &utils.ApiError{Code: http.StatusUnauthorized, Message: "Invalid username or password"}
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(userReq.Password)); err != nil {
+		return nil, nil, &utils.ApiError{Code: http.StatusUnauthorized, Message: "Invalid username or password"}
 	}
 
 	// create access and refresh token
-	accessToken, err := utils.GenerateToken(userID, 15*time.Minute)
+	accessToken, err := utils.GenerateToken(user.ID, 15*time.Minute)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	exp := 7 * 24 * time.Hour
-	refreshToken, err := utils.GenerateToken(userID, exp) // 7 days
+	refreshToken, err := utils.GenerateToken(user.ID, exp) // 7 days
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// save the refresh token in db with a expiration value
-	err = s.AuthStorage.SaveRefreshToken(userID, refreshToken, time.Now().Add(exp))
+	err = s.AuthStorage.SaveRefreshToken(user.ID, refreshToken, time.Now().Add(exp))
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// if the token is successfully saved, send it to user
 	return &models.LoginResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
-	}, nil
+	}, user, nil
 }
 
 // Creates new user on registration

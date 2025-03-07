@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"collab-editor/internal/models"
 	"collab-editor/internal/utils"
 	"database/sql"
 	"errors"
@@ -20,20 +21,20 @@ func NewAuthStorage(db *sql.DB) *AuthStorage {
 }
 
 // Retrieve password for
-func (s *AuthStorage) RetrieveUserPassword(username string) (string, string, error) {
-	var hashedPass, userID string
+func (s *AuthStorage) RetrieveUserPassword(username string) (*models.User, error) {
+	var user models.User
 	query := `
-	SELECT id, password_hash FROM users
+	SELECT id, password_hash, username, first_name, last_name, avatar, updated_at FROM users
 	WHERE username = $1
 	`
-	err := s.DB.QueryRow(query, username).Scan(&userID, &hashedPass)
+	err := s.DB.QueryRow(query, username).Scan(&user.ID, &user.PasswordHash, &user.Username, &user.FirstName, &user.LastName, &user.Avatar, &user.UpdatedAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return "", "", &utils.ApiError{Code: http.StatusUnauthorized, Message: "Invalid username or password"}
+			return nil, &utils.ApiError{Code: http.StatusUnauthorized, Message: "Invalid username or password"}
 		}
-		return "", "", err
+		return nil, err
 	}
-	return userID, hashedPass, nil
+	return &user, nil
 }
 
 // Stores a refresh token in the database

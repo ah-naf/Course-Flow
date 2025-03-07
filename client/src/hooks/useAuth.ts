@@ -1,3 +1,4 @@
+import { useUserStore } from "@/store/userStore";
 import { User } from "@/utils/types";
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
@@ -21,7 +22,7 @@ interface LoginData {
   password: string;
 }
 
-interface LoginResponse {
+interface LoginResponse extends User {
   access_token: string;
   refresh_token: string;
 }
@@ -60,6 +61,8 @@ export const useRegister = () => {
 };
 
 export const useLogin = () => {
+  const { setUser } = useUserStore();
+  
   return useMutation<LoginResponse, Error, LoginData>({
     mutationFn: async (data: LoginData) => {
       try {
@@ -80,9 +83,12 @@ export const useLogin = () => {
       toast.success("Login successful!", {
         description: "Welcome back!",
       });
+
       setTimeout(() => {
+        const { access_token, refresh_token, ...user } = data;
         localStorage.setItem("access_token", data.access_token);
         localStorage.setItem("refresh_token", data.refresh_token);
+        setUser(user);
       }, 2000);
     },
     onError: (error) => {

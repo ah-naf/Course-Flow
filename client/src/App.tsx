@@ -3,14 +3,14 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "@/pages/Home";
 import ClassroomPage from "./pages/ClassroomPage";
-import { useUserStore } from "./store/userStore";
 import AppLayout from "./layout/AppLayout";
 import ArchivedPage from "./pages/ArchivedPage";
 import ClassPage from "./pages/ClassPage";
+import { useUserStore } from "./store/userStore";
 
 const App: React.FC = () => {
-  const { user } = useUserStore(); // Get the user from Zustand store
-  
+  const { user } = useUserStore();
+
   return (
     <Router>
       <Routes>

@@ -6,6 +6,7 @@ import (
 	"collab-editor/internal/utils"
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -30,11 +31,18 @@ func (h *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) error
 		return err
 	}
 
-	tokens, err := h.Service.Login(&req)
+	tokens, user, err := h.Service.Login(&req)
 	if err != nil {
+		log.Fatal(err)
 		return err
 	}
-	return utils.WriteJSON(w, http.StatusOK, tokens)
+
+	resp := struct {
+		models.LoginResponse
+		models.User
+	}{*tokens, *user}
+
+	return utils.WriteJSON(w, http.StatusOK, resp)
 }
 
 // Handles POST /api/auth/register requests to register a new user.

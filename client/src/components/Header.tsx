@@ -78,7 +78,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = "" }) => {
               </AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 p-2">
+          <DropdownMenuContent align="end" className="w-64 p-2">
             <div className="flex items-center p-2 mb-2">
               <Avatar className="h-10 w-10 mr-3">
                 <AvatarImage src="/api/placeholder/40/40" />
@@ -90,9 +90,9 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = "" }) => {
                 <p className="font-medium">
                   {user.firstName} {user.lastName}
                 </p>
-                <p className="text-xs text-gray-500 mt-1 bg-gray-200 p-1 rounded font-semibold">
+                <span className="text-xs text-gray-500 mt-1 bg-gray-200 p-1 rounded font-semibold">
                   @{user.username}
-                </p>
+                </span>
               </div>
             </div>
             <DropdownMenuSeparator />
