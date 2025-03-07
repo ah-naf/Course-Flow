@@ -9,7 +9,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { FaGoogle, FaGithub } from "react-icons/fa";
-import { useRegister } from "@/hooks/useAuth";
+import { useLogin, useRegister } from "@/hooks/useAuth";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -22,7 +22,7 @@ interface AuthModalProps {
 export interface UserFormData {
   firstName?: string;
   lastName?: string;
-  email: string;
+  email?: string;
   username: string;
   password: string;
 }
@@ -47,10 +47,12 @@ const authSchema = yup.object().shape({
     then: (schema) => schema.required("Last name is required"),
     otherwise: (schema) => schema.notRequired(),
   }),
-  email: yup
-    .string()
-    .required("Email is required")
-    .email("Invalid email address"),
+  email: yup.string().when("$mode", {
+    is: "register",
+    then: (schema) =>
+      schema.required("Email is required").email("Invalid email address"),
+    otherwise: (schema) => schema.notRequired(),
+  }),
   username: yup.string().required("Username is required"),
   password: yup
     .string()
@@ -61,6 +63,7 @@ const authSchema = yup.object().shape({
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [mode, setMode] = useState<"login" | "register">("login");
   const registerMutation = useRegister();
+  const loginMutation = useLogin();
 
   const {
     register,
@@ -80,6 +83,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           ...data,
           firstName: data.firstName || "",
           lastName: data.lastName || "",
+          email: data.email || "",
         },
         {
           onSuccess: () => {
@@ -88,9 +92,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         }
       );
     } else {
-      // Placeholder for login logic
-      console.log("Login data:", data);
-      reset();
+      loginMutation.mutate(data, {
+        onSuccess: () => {
+          reset();
+        },
+      });
     }
   };
 
@@ -150,26 +156,27 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   </p>
                 )}
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  placeholder="you@example.com"
+                  {...register("email")}
+                  className={`mt-1 block w-full rounded-md border p-2 focus:ring-2 focus:outline-none ${getInputBorderClass(
+                    "email"
+                  )}`}
+                />
+                {errors.email && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.email.message}
+                  </p>
+                )}
+              </div>
             </>
           )}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Email
-            </label>
-            <input
-              type="email"
-              placeholder="you@example.com"
-              {...register("email")}
-              className={`mt-1 block w-full rounded-md border p-2 focus:ring-2 focus:outline-none ${getInputBorderClass(
-                "email"
-              )}`}
-            />
-            {errors.email && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.email.message}
-              </p>
-            )}
-          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Username
@@ -237,7 +244,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               Don't have an account?{" "}
               <button
                 className="text-blue-500 hover:underline cursor-pointer"
-                onClick={() => setMode("register")}
+                onClick={() => {
+                  setMode("register");
+                  reset();
+                }}
               >
                 Register
               </button>
@@ -247,7 +257,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               Already have an account?{" "}
               <button
                 className="text-blue-500 hover:underline cursor-pointer"
-                onClick={() => setMode("login")}
+                onClick={() => {
+                  setMode("login");
+                  reset();
+                }}
               >
                 Login
               </button>
