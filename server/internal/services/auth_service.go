@@ -5,6 +5,7 @@ import (
 	"collab-editor/internal/storage"
 	"collab-editor/internal/utils"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -23,6 +24,45 @@ func NewAuthService(userStorage *storage.UserStorage, authStorage *storage.AuthS
 		UserStorage: userStorage,
 		AuthStorage: authStorage,
 	}
+}
+
+func (s *AuthService) SocialLogin(userReq models.User) (*models.LoginResponse, error) {
+	err := s.UserStorage.CheckForUsernameOrEmail(&userReq)
+	if err == nil {
+		// if user not found, create new one.
+		if err := s.UserStorage.SaveUser(&userReq); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := s.UserStorage.GetUserWithEmail(&userReq); err != nil {
+			return nil, err
+		}
+	}
+
+	// Generate access and Refresh token
+	accessToken, err := utils.GenerateToken(userReq.ID, 15*time.Minute)
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+	exp := 7 * 24 * time.Hour
+	refreshToken, err := utils.GenerateToken(userReq.ID, exp)
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+
+	// Save refresh token to database.
+	err = s.AuthStorage.SaveRefreshToken(userReq.ID, refreshToken, time.Now().Add(exp))
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+
+	return &models.LoginResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
 }
 
 // validate the user and generate JWT token

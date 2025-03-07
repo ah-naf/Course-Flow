@@ -4,6 +4,7 @@ import (
 	"collab-editor/internal/utils"
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 )
@@ -41,6 +42,7 @@ func (s *AuthStorage) SaveRefreshToken(userID, refreshToken string, expiresAt ti
 	INSERT INTO refresh_tokens (user_id, refresh_token, expires_at)
 	VALUES ($1, $2, $3)
 	`
+	fmt.Println("userid", userID)
 	_, err := s.DB.Query(query, userID, refreshToken, expiresAt)
 	if err != nil {
 		return &utils.ApiError{Code: http.StatusInternalServerError, Message: "Failed to save refresh token"}

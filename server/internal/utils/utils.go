@@ -2,6 +2,8 @@ package utils
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -17,6 +19,28 @@ import (
 type contextKey string
 
 const userIDKey contextKey = "userID"
+
+// GenerateStateOauthCookie creates a random state string for OAuth and stores it in a cookie.
+func GenerateStateOauthCookie(w http.ResponseWriter) string {
+	b := make([]byte, 16)
+	_, err := rand.Read(b)
+	if err != nil {
+		// Fallback if random generation fails.
+		b = []byte(GetEnv("OAUTH_COOKIE_FALLBACK"))
+	}
+
+	state := base64.URLEncoding.EncodeToString(b)
+	cookie := http.Cookie{
+		Name:     "oauthstate",
+		Value:    state,
+		Expires:  time.Now().Add(1 * time.Hour),
+		HttpOnly: true,
+		Secure:   false, // TODO: use true in production
+	}
+
+	http.SetCookie(w, &cookie)
+	return state
+}
 
 func ExtractUserIDFromToken(r *http.Request) (string, error) {
 	secret_key := GetEnv("SECRET_KEY")

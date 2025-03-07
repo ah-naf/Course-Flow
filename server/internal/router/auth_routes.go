@@ -20,4 +20,9 @@ func (r *Router) setupAuthRoutes(router *mux.Router) {
 	router.HandleFunc("/api/auth/register", middleware.ConvertToHandlerFunc(authHandler.RegisterHandler)).Methods("POST")
 	router.HandleFunc("/api/auth/login", middleware.ConvertToHandlerFunc(authHandler.LoginHandler)).Methods("POST")
 	router.HandleFunc("/api/auth/logout", middleware.ConvertToHandlerFunc(authHandler.Logout, middleware.AuthMiddleware)).Methods("POST")
+
+	// Google OAuth
+	router.HandleFunc("/api/auth/google/login", middleware.ConvertToHandlerFunc(authHandler.HandleGoogleLogin)).Methods("GET")
+	router.HandleFunc("/api/auth/google/callback", middleware.ConvertToHandlerFunc(authHandler.HandleGoogleCallback)).Methods("GET")
+
 }

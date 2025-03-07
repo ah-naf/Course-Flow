@@ -4,6 +4,7 @@ import (
 	"collab-editor/internal/models"
 	"collab-editor/internal/utils"
 	"database/sql"
+	"errors"
 	"net/http"
 )
 
@@ -15,6 +16,36 @@ func NewUserStorage(db *sql.DB) *UserStorage {
 	return &UserStorage{
 		DB: db,
 	}
+}
+
+func (s *UserStorage) GetUserWithEmail(user *models.User) error {
+	query := `
+		SELECT id, email, username, password_hash, first_name, last_name, created_at, updated_at, last_login, avatar
+		FROM users
+		WHERE email = $1
+	`
+	err := s.DB.QueryRow(query, user.Email).Scan(
+		&user.ID,
+		&user.Email,
+		&user.Username,
+		&user.PasswordHash,
+		&user.FirstName,
+		&user.LastName,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+		&user.LastLogin,
+		&user.Avatar,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return &utils.ApiError{
+				Code:    http.StatusNotFound,
+				Message: "User not found with the provided email",
+			}
+		}
+		return err
+	}
+	return nil
 }
 
 func (s *UserStorage) GetAllUser() ([]*models.User, error) {
@@ -36,10 +67,21 @@ func (s *UserStorage) GetAllUser() ([]*models.User, error) {
 
 func (s *UserStorage) SaveUser(user *models.User) error {
 	query := `
-	INSERT into users(email, username, password_hash, first_name, last_name, created_at, updated_at, avatar)
+	INSERT INTO users(email, username, password_hash, first_name, last_name, created_at, updated_at, avatar)
 	VALUES($1, $2, $3, $4, $5, $6, $7, $8)
+	RETURNING id, email, username, password_hash, first_name, last_name, created_at, updated_at, avatar
 	`
-	_, err := s.DB.Query(query, user.Email, user.Username, user.PasswordHash, user.FirstName, user.LastName, user.CreatedAt, user.UpdatedAt, user.Avatar)
+	err := s.DB.QueryRow(query, user.Email, user.Username, user.PasswordHash, user.FirstName, user.LastName, user.CreatedAt, user.UpdatedAt, user.Avatar).Scan(
+		&user.ID,
+		&user.Email,
+		&user.Username,
+		&user.PasswordHash,
+		&user.FirstName,
+		&user.LastName,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+		&user.Avatar,
+	)
 	return err
 }
 
