@@ -1,6 +1,6 @@
 import { User } from "@/utils/types";
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 interface UserState {
   user: User | null;
@@ -14,8 +14,11 @@ export const useUserStore = create<UserState>()(
     (set) => ({
       user: null, // Initial state: no user
       setUser: (user) => set({ user }),
-      logout: () => set({ user: null }),
+      logout: () => {
+        set({ user: null });
+        localStorage.removeItem("user-storage");
+      },
     }),
-    { name: "user-storage" }
+    { name: "user-storage", storage: createJSONStorage(() => localStorage) }
   )
 );

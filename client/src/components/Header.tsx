@@ -14,6 +14,7 @@ import { useUserStore } from "@/store/userStore";
 import AddClassDialog from "@/components/AddClassDialog";
 import NotificationDialog from "@/components/NotificationDialog"; // Import the new component
 import ProfileDialog from "./ProfileDialog";
+import { useLogout } from "@/hooks/useAuth";
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -23,6 +24,25 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = "" }) => {
   const { user, logout } = useUserStore();
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+  const logoutMutation = useLogout();
+
+  const handleLogout = () => {
+    const token = localStorage.getItem("refresh_token");
+    if (!token) {
+      logout();
+      return;
+    }
+    logoutMutation.mutate(
+      {
+        refresh_token: token,
+      },
+      {
+        onSuccess: () => {
+          logout();
+        },
+      }
+    );
+  };
 
   if (!user) return null;
 
@@ -104,7 +124,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = "" }) => {
               <span>Profile</span>
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={logout}
+              onClick={handleLogout}
               className="flex items-center p-2 cursor-pointer text-red-500 hover:text-red-700"
             >
               <LogOut className="h-4 w-4 mr-3" />

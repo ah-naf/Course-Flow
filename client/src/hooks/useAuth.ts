@@ -1,3 +1,4 @@
+import axiosInstance from "@/api/axiosInstance";
 import { useUserStore } from "@/store/userStore";
 import { User } from "@/utils/types";
 import { useMutation } from "@tanstack/react-query";
@@ -27,12 +28,16 @@ interface LoginResponse extends User {
   refresh_token: string;
 }
 
+interface LogoutData {
+  refresh_token: string;
+}
+
 export const useRegister = () => {
   return useMutation<RegisterResponse, Error, RegisterData>({
     mutationFn: async (data: RegisterData) => {
       try {
-        const response = await axios.post<RegisterResponse>(
-          "http://localhost:8080/api/auth/register",
+        const response = await axiosInstance.post<RegisterResponse>(
+          "/api/auth/register",
           data
         );
         return response.data;
@@ -62,12 +67,12 @@ export const useRegister = () => {
 
 export const useLogin = () => {
   const { setUser } = useUserStore();
-  
+
   return useMutation<LoginResponse, Error, LoginData>({
     mutationFn: async (data: LoginData) => {
       try {
-        const response = await axios.post<LoginResponse>(
-          "http://localhost:8080/api/auth/login",
+        const response = await axiosInstance.post<LoginResponse>(
+          "/api/auth/login",
           data
         );
         return response.data;
@@ -81,7 +86,7 @@ export const useLogin = () => {
     },
     onSuccess: (data) => {
       toast.success("Login successful!", {
-        description: "Welcome back!",
+        description: `Welcome Back, ${data.lastName}!`,
       });
 
       setTimeout(() => {
@@ -89,13 +94,50 @@ export const useLogin = () => {
         localStorage.setItem("access_token", data.access_token);
         localStorage.setItem("refresh_token", data.refresh_token);
         setUser(user);
-      }, 2000);
+      }, 1000);
     },
     onError: (error) => {
       console.error(error);
       toast.error(error.message || "Login failed", {
         description: "Please check your credentials and try again.",
       });
+    },
+  });
+};
+
+export const useLogout = () => {
+  const { logout } = useUserStore();
+  return useMutation<{ message: string }, Error, LogoutData>({
+    mutationFn: async (data: LogoutData) => {
+      try {
+        const response = await axiosInstance.post<{ message: string }>(
+          "/api/auth/logout",
+          data
+        );
+        return response.data;
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          const axiosError = error as AxiosError<{ error: string }>;
+          throw new Error(axiosError.response?.data?.error || "Logout failed");
+        }
+        throw new Error("Logout failed");
+      }
+    },
+    onSuccess: (data) => {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+
+      toast.success(data.message || "Logged out successfully!", {
+        description: "You've been signed out of your account.",
+      });
+      logout();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Logout failed", {
+        description:
+          "An error occurred while trying to log out. Please try again.",
+      });
+      // logout();
     },
   });
 };

@@ -59,3 +59,8 @@ export interface FileStorage {
   uploadedBy: string;
   uploadDate: string;
 }
+
+export interface RefreshTokenResponse {
+  access_token: string;
+  refresh_token: string;
+}
