@@ -6,7 +6,6 @@ import (
 	"collab-editor/internal/utils"
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -102,13 +101,12 @@ func (h *AuthHandler) RefreshTokenHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	// Call the service to handle token refresh
-	loginResp, err := h.Service.RefreshToken(req.RefreshToken)
+	loginResp, err := h.Service.RefreshAccessToken(req.RefreshToken)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("successfully refresh")
-	return utils.WriteJSON(w, http.StatusOK, loginResp)
+	return utils.WriteJSON(w, http.StatusOK, map[string]string{"access_token": loginResp})
 }
 
 var GoogleOAuthConfig = &oauth2.Config{

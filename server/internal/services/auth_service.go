@@ -163,43 +163,21 @@ func (s *AuthService) Logout(refreshToken string) error {
 // RefreshToken verifies the provided refresh token, deletes the old one,
 // generates new access and refresh tokens, saves the new refresh token,
 // and returns a LoginResponse.
-func (s *AuthService) RefreshToken(oldRefreshToken string) (*models.LoginResponse, error) {
+func (s *AuthService) RefreshAccessToken(oldRefreshToken string) (string, error) {
 	// Verify the old refresh token and get the user ID
 	userID, err := s.AuthStorage.VerifyRefreshToken(oldRefreshToken)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	// Generate a new access token (15 minutes expiry)
 	accessToken, err := utils.GenerateToken(userID, 15*time.Minute)
 	if err != nil {
-		return nil, err
-	}
-
-	// Set refresh token expiry (e.g., 1 day)
-	expiration := 24 * time.Hour
-	newRefreshToken, err := utils.GenerateToken(userID, expiration)
-	if err != nil {
-		return nil, err
-	}
-
-	// Delete the old refresh token from the database
-	err = s.AuthStorage.DeleteRefreshToken(oldRefreshToken)
-	if err != nil {
-		return nil, err
-	}
-
-	// Save the new refresh token with its expiration timestamp
-	err = s.AuthStorage.SaveRefreshToken(userID, newRefreshToken, time.Now().Add(expiration))
-	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	// Return the new tokens as a LoginResponse
-	return &models.LoginResponse{
-		AccessToken:  accessToken,
-		RefreshToken: newRefreshToken,
-	}, nil
+	return accessToken, nil
 }
 
 func hashPassword(pw string) ([]byte, error) {

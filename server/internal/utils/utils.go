@@ -51,7 +51,7 @@ func ExtractUserIDFromToken(r *http.Request) (string, error) {
 	}
 
 	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-	fmt.Println("access token", tokenString)
+
 	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 		return []byte(secret_key), nil
 	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Name}))
