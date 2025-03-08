@@ -6,6 +6,7 @@ import (
 	"collab-editor/internal/utils"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -87,6 +88,27 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	return utils.WriteJSON(w, http.StatusOK, map[string]string{"message": "Logged out successfully"})
+}
+
+func (h *AuthHandler) RefreshTokenHandler(w http.ResponseWriter, r *http.Request) error {
+	var req struct {
+		RefreshToken string `json:"refresh_token"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return utils.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid request payload"})
+	}
+	if req.RefreshToken == "" {
+		return utils.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "Refresh token is required"})
+	}
+
+	// Call the service to handle token refresh
+	loginResp, err := h.Service.RefreshToken(req.RefreshToken)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("successfully refresh")
+	return utils.WriteJSON(w, http.StatusOK, loginResp)
 }
 
 var GoogleOAuthConfig = &oauth2.Config{
