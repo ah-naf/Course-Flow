@@ -2,8 +2,12 @@ package storage
 
 import (
 	"collab-editor/internal/models"
+	"collab-editor/internal/utils"
 	"database/sql"
 	"fmt"
+	"net/http"
+
+	"github.com/lib/pq"
 )
 
 type CourseStorage struct {
@@ -49,7 +53,11 @@ func (s *CourseStorage) CreateNewCourse(course *models.Course) error {
 		course.UpdatedAt,
 	).Scan(&course.ID)
 	if err != nil {
-		return fmt.Errorf("failed to create course: %w", err)
+		// Check if the error is a PostgreSQL unique constraint violation
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" && pqErr.Constraint == "unique_joincode" {
+			return &utils.ApiError{Code: http.StatusConflict, Message: fmt.Sprintf("class id '%s' already exists", course.JoinCode)}
+		}
+		return err
 	}
 	return nil
 }

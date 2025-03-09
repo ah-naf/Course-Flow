@@ -69,17 +69,7 @@ func (s *CourseService) CreateNewCourseService(course *models.Course, r *http.Re
 
 	err = s.CourseStorage.CreateNewCourse(course)
 	if err != nil {
-		// Check if it's a duplicate join_code error (PostgreSQL-specific)
-		if err.Error() == "pq: duplicate key value violates unique constraint \"unique_join_code\"" {
-			return &utils.ApiError{
-				Code:    http.StatusConflict,
-				Message: "Class ID must be unique",
-			}
-		}
-		return &utils.ApiError{
-			Code:    http.StatusInternalServerError,
-			Message: "Failed to create course: " + err.Error(),
-		}
+		return err
 	}
 
 	return nil
