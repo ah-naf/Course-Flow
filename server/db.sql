@@ -25,8 +25,7 @@ CREATE TABLE courses (
     instructor_id UUID REFERENCES users(id) ON DELETE SET NULL,
     background_color VARCHAR(50),
     cover_pic VARCHAR(255),
-    join_code VARCHAR(50),
-    invite_link VARCHAR(255),
+    join_code VARCHAR(50) UNIQUE,
     is_private BOOLEAN DEFAULT TRUE,
     archived BOOLEAN DEFAULT FALSE,
     post_permission VARCHAR(50) DEFAULT 'Instructor', -- Intstructor | Moderator | All
