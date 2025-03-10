@@ -17,6 +17,16 @@ func NewCourseHandler(service *services.CourseService) *CourseHandler {
 	return &CourseHandler{Service: service}
 }
 
+// GetCoursesByInstructorHandler handles GET requests to fetch courses for a given instructor.
+func (h *CourseHandler) GetCoursesByInstructorHandler(w http.ResponseWriter, r *http.Request) error {
+	courses, err := h.Service.GetCoursesByInstructor(r)
+	if err != nil {
+		return err
+	}
+
+	return utils.WriteJSON(w, http.StatusOK, courses)
+}
+
 func (h *CourseHandler) CreateCourseHandler(w http.ResponseWriter, r *http.Request) error {
 	var courseReq models.Course
 	if err := json.NewDecoder(r.Body).Decode(&courseReq); err != nil {

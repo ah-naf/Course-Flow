@@ -20,6 +20,50 @@ func NewCourseStorage(db *sql.DB) *CourseStorage {
 	}
 }
 
+func (s *CourseStorage) GetCoursesByInstructor(userID string) ([]*models.CourseListResponse, error) {
+	query := `
+		SELECT 
+			c.id, 
+			c.name, 
+			c.description, 
+			c.background_color, 
+			c.cover_pic, 
+			u.id, 
+			u.first_name, 
+			u.last_name, 
+			u.avatar 
+		FROM courses AS c 
+		JOIN users AS u ON c.instructor_id = u.id
+		WHERE c.instructor_id = $1
+	`
+
+	rows, err := s.DB.Query(query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var courses []*models.CourseListResponse
+	for rows.Next() {
+		var course models.CourseListResponse
+		if err := rows.Scan(
+			&course.ID,
+			&course.Name,
+			&course.Description,
+			&course.BackgroundColor,
+			&course.CoverPic,
+			&course.Instructor.ID,
+			&course.Instructor.FirstName,
+			&course.Instructor.LastName,
+			&course.Instructor.Avatar,
+		); err != nil {
+			return nil, err
+		}
+		courses = append(courses, &course)
+	}
+	return courses, nil
+}
+
 func (s *CourseStorage) CreateNewCourse(course *models.Course) error {
 	query := `
 	INSERT INTO courses (

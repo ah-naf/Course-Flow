@@ -17,6 +17,8 @@ export const useUserStore = create<UserState>()(
       logout: () => {
         set({ user: null });
         localStorage.removeItem("user-storage");
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
       },
     }),
     { name: "user-storage", storage: createJSONStorage(() => localStorage) }

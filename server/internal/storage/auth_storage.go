@@ -88,7 +88,7 @@ func (s *AuthStorage) DeleteAllTokensForUser(userID string) error {
 	query := `DELETE FROM refresh_tokens WHERE user_id = $1`
 	result, err := s.DB.Exec(query, userID)
 	if err != nil {
-		return errors.New("internal server error") // Return plain error for 500
+		return err // Return plain error for 500
 	}
 
 	rowsAffected, _ := result.RowsAffected()

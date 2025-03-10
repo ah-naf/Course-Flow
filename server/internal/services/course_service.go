@@ -29,6 +29,16 @@ func NewCourseService(courseStorage *storage.CourseStorage) *CourseService {
 	return &CourseService{CourseStorage: courseStorage}
 }
 
+// GetCoursesByInstructor fetches all courses where the given user is the instructor.
+func (s *CourseService) GetCoursesByInstructor(r *http.Request) ([]*models.CourseListResponse, error) {
+	ctx := r.Context()
+	userID, err := utils.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return s.CourseStorage.GetCoursesByInstructor(userID)
+}
+
 func (s *CourseService) CreateNewCourseService(course *models.Course, r *http.Request) error {
 	ctx := r.Context()
 	instructorID, err := utils.GetUserIDFromContext(ctx)

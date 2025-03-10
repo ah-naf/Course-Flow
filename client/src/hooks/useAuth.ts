@@ -118,26 +118,26 @@ export const useLogout = () => {
       } catch (error) {
         if (axios.isAxiosError(error)) {
           const axiosError = error as AxiosError<{ error: string }>;
+          if (axiosError.response?.status === 403) {
+            return { message: "Logged out successfully!" };
+          }
           throw new Error(axiosError.response?.data?.error || "Logout failed");
         }
         throw new Error("Logout failed");
       }
     },
     onSuccess: (data) => {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
-
       toast.success(data.message || "Logged out successfully!", {
         description: "You've been signed out of your account.",
       });
       logout();
     },
-    onError: (error) => {
-      toast.error(error.message || "Logout failed", {
-        description:
-          "An error occurred while trying to log out. Please try again.",
+    onError: () => {
+      toast.error("Your session is expired!", {
+        description: "Please log in again.",
       });
-      // logout();
+
+      logout();
     },
   });
 };
