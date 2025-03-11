@@ -24,4 +24,5 @@ type CourseListResponse struct {
 	BackgroundColor string `json:"background_color" validate:"max=7"`
 	CoverPic        string `json:"cover_pic"`
 	Admin           User   `json:"admin"`
+	Role            string `json:"role"`
 }

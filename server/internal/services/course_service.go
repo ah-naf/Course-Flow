@@ -29,6 +29,16 @@ func NewCourseService(courseStorage *storage.CourseStorage) *CourseService {
 	return &CourseService{CourseStorage: courseStorage}
 }
 
+func (s *CourseService) GetCourseOfSingleUser(r *http.Request) ([]*models.CourseListResponse, error) {
+	ctx := r.Context()
+	userID, err := utils.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.CourseStorage.GetCourseByUserID(userID)
+}
+
 func (s *CourseService) JoinCourseService(joinCode string, r *http.Request) error {
 	ctx := r.Context()
 	userID, err := utils.GetUserIDFromContext(ctx)

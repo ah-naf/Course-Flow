@@ -8,7 +8,6 @@ CREATE TABLE users (
     avatar VARCHAR(255),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    last_login TIMESTAMP
 );
 
 CREATE TABLE refresh_tokens (

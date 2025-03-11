@@ -17,6 +17,15 @@ func NewCourseHandler(service *services.CourseService) *CourseHandler {
 	return &CourseHandler{Service: service}
 }
 
+func (h *CourseHandler) GetCourseForSingleUserHandler(w http.ResponseWriter, r *http.Request) error {
+	courses, err := h.Service.GetCourseOfSingleUser(r)
+	if err != nil {
+		return err
+	}
+
+	return utils.WriteJSON(w, http.StatusOK, courses)
+}
+
 func (h *CourseHandler) JoinCourseHandler(w http.ResponseWriter, r *http.Request) error {
 	var joinReq struct {
 		JoinCode string `json:"course_id"`

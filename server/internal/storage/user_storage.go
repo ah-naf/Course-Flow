@@ -20,7 +20,7 @@ func NewUserStorage(db *sql.DB) *UserStorage {
 
 func (s *UserStorage) GetUserWithEmail(user *models.User) error {
 	query := `
-		SELECT id, email, username, password_hash, first_name, last_name, created_at, updated_at, last_login, avatar
+		SELECT id, email, username, password_hash, first_name, last_name, created_at, updated_at, avatar
 		FROM users
 		WHERE email = $1
 	`
@@ -33,7 +33,6 @@ func (s *UserStorage) GetUserWithEmail(user *models.User) error {
 		&user.LastName,
 		&user.CreatedAt,
 		&user.UpdatedAt,
-		&user.LastLogin,
 		&user.Avatar,
 	)
 	if err != nil {
@@ -57,7 +56,7 @@ func (s *UserStorage) GetAllUser() ([]*models.User, error) {
 	var users []*models.User
 	for rows.Next() {
 		user := new(models.User)
-		if err := rows.Scan(&user.ID, &user.Email, &user.Username, &user.PasswordHash, &user.FirstName, &user.LastName, &user.CreatedAt, &user.UpdatedAt, &user.LastLogin, &user.Avatar); err != nil {
+		if err := rows.Scan(&user.ID, &user.Email, &user.Username, &user.PasswordHash, &user.FirstName, &user.LastName, &user.CreatedAt, &user.UpdatedAt, &user.Avatar); err != nil {
 			return nil, err
 		}
 		users = append(users, user)

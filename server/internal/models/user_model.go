@@ -10,9 +10,8 @@ type User struct {
 	PasswordHash string     `json:"-"`          // Do NOT expose this in JSON responses.
 	FirstName    string     `json:"firstName"`  // Optional first name.
 	LastName     string     `json:"lastName"`   // Optional last name.
-	CreatedAt    time.Time  `json:"created_at"` // Timestamp of account creation.
-	UpdatedAt    time.Time  `json:"updated_at"` // Timestamp of the last profile update.
-	LastLogin    *time.Time `json:"last_login"` // Pointer so nil can represent no login.
+	CreatedAt    time.Time  `json:"-"`          // Timestamp of account creation.
+	UpdatedAt    time.Time  `json:"-"`          // Timestamp of the last profile update.
 	Avatar       string     `json:"avatar"`
 }
 

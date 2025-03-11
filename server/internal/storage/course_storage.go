@@ -20,6 +20,59 @@ func NewCourseStorage(db *sql.DB) *CourseStorage {
 	}
 }
 
+func (s *CourseStorage) GetCourseByUserID(userID string) ([]*models.CourseListResponse, error) {
+	query := `
+        SELECT 
+            c.id, 
+            c.name, 
+            c.description, 
+            c.background_color, 
+            c.cover_pic, 
+            u.id AS admin_id, 
+            u.first_name, 
+            u.last_name, 
+            u.avatar,
+			cm.role
+        FROM courses AS c 
+        JOIN users AS u ON c.admin_id = u.id
+        JOIN course_members AS cm ON c.id = cm.course_id
+        WHERE cm.user_id = $1
+        AND c.archived = FALSE
+    `
+
+	rows, err := s.DB.Query(query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var courses []*models.CourseListResponse
+	for rows.Next() {
+		var course models.CourseListResponse
+		if err := rows.Scan(
+			&course.ID,
+			&course.Name,
+			&course.Description,
+			&course.BackgroundColor,
+			&course.CoverPic,
+			&course.Admin.ID,
+			&course.Admin.FirstName,
+			&course.Admin.LastName,
+			&course.Admin.Avatar,
+			&course.Role,
+		); err != nil {
+			return nil, err
+		}
+		courses = append(courses, &course)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return courses, nil
+}
+
 func (s *CourseStorage) JoinCourse(joinCode, userID string) error {
 	// Check if course exists
 	courseID, err := s.CheckCourseExists(joinCode)
@@ -128,6 +181,8 @@ func (s *CourseStorage) CreateNewCourse(course *models.Course) error {
 		}
 		return err
 	}
+
+	err = s.AddCourseMember(course.ID, course.AdminID, "Instructor")
 	return nil
 }
 
