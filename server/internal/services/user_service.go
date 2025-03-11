@@ -1,8 +1,8 @@
 package services
 
 import (
-	"collab-editor/internal/models"
-	"collab-editor/internal/storage"
+	"course-flow/internal/models"
+	"course-flow/internal/storage"
 )
 
 type UserService struct {

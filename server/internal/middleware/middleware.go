@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"collab-editor/internal/utils"
+	"course-flow/internal/utils"
 	"log"
 	"net/http"
 )

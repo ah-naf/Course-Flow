@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"collab-editor/internal/services"
-	"collab-editor/internal/utils"
+	"course-flow/internal/services"
+	"course-flow/internal/utils"
 	"net/http"
 )
 

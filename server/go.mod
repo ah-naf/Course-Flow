@@ -1,4 +1,4 @@
-module collab-editor
+module course-flow
 
 go 1.23.0
 

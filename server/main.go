@@ -1,8 +1,8 @@
 package main
 
 import (
-	"collab-editor/internal/router"
-	"collab-editor/pkg/database"
+	"course-flow/internal/router"
+	"course-flow/pkg/database"
 	"fmt"
 	"log"
 	"net/http"

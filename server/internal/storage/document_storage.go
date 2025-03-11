@@ -1,8 +1,8 @@
 package storage
 
 import (
-	"collab-editor/internal/models"
-	"collab-editor/internal/utils"
+	"course-flow/internal/models"
+	"course-flow/internal/utils"
 	"database/sql"
 	"net/http"
 )

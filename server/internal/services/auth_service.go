@@ -1,9 +1,9 @@
 package services
 
 import (
-	"collab-editor/internal/models"
-	"collab-editor/internal/storage"
-	"collab-editor/internal/utils"
+	"course-flow/internal/models"
+	"course-flow/internal/storage"
+	"course-flow/internal/utils"
 	"fmt"
 	"log"
 	"net/http"

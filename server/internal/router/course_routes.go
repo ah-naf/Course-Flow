@@ -1,10 +1,10 @@
 package router
 
 import (
-	"collab-editor/internal/handlers"
-	"collab-editor/internal/middleware"
-	"collab-editor/internal/services"
-	"collab-editor/internal/storage"
+	"course-flow/internal/handlers"
+	"course-flow/internal/middleware"
+	"course-flow/internal/services"
+	"course-flow/internal/storage"
 
 	"github.com/gorilla/mux"
 )

@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"collab-editor/internal/models"
-	"collab-editor/internal/services"
-	"collab-editor/internal/utils"
+	"course-flow/internal/models"
+	"course-flow/internal/services"
+	"course-flow/internal/utils"
 	"context"
 	"encoding/json"
 	"log"

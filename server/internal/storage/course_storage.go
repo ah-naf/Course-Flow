@@ -1,8 +1,8 @@
 package storage
 
 import (
-	"collab-editor/internal/models"
-	"collab-editor/internal/utils"
+	"course-flow/internal/models"
+	"course-flow/internal/utils"
 	"database/sql"
 	"fmt"
 	"net/http"
@@ -18,6 +18,21 @@ func NewCourseStorage(db *sql.DB) *CourseStorage {
 	return &CourseStorage{
 		DB: db,
 	}
+}
+
+func (s *CourseStorage) ArchiveCourse(courseID, adminID string) error {
+	query := `
+		UPDATE courses
+		SET archived = true
+		WHERE id = $1 AND admin_id = $2
+	`
+
+	_, err := s.DB.Exec(query, courseID, adminID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *CourseStorage) GetCourseByUserID(userID string) ([]*models.CourseListResponse, error) {
