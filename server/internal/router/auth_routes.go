@@ -9,25 +9,27 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func (r *Router) setupAuthRoutes(router *mux.Router) {
+func (r *Router) setupAuthRouter(router *mux.Router) {
 	// Initialize auth-related components
 	userStorage := storage.NewUserStorage(r.DB)
 	authStorage := storage.NewAuthStorage(r.DB)
 	authService := services.NewAuthService(userStorage, authStorage)
 	authHandler := handlers.NewAuthHandler(authService)
 
+	authRouter := router.PathPrefix("/auth").Subrouter()
+
 	// Auth routes
-	router.HandleFunc("/api/auth/register", middleware.ConvertToHandlerFunc(authHandler.RegisterHandler)).Methods("POST")
-	router.HandleFunc("/api/auth/login", middleware.ConvertToHandlerFunc(authHandler.LoginHandler)).Methods("POST")
-	router.HandleFunc("/api/auth/refresh", middleware.ConvertToHandlerFunc(authHandler.RefreshTokenHandler)).Methods("POST")
-	router.HandleFunc("/api/auth/logout", middleware.ConvertToHandlerFunc(authHandler.Logout, middleware.AuthMiddleware)).Methods("POST")
+	authRouter.HandleFunc("/register", middleware.ConvertToHandlerFunc(authHandler.RegisterHandler)).Methods("POST")
+	authRouter.HandleFunc("/login", middleware.ConvertToHandlerFunc(authHandler.LoginHandler)).Methods("POST")
+	authRouter.HandleFunc("/refresh", middleware.ConvertToHandlerFunc(authHandler.RefreshTokenHandler)).Methods("POST")
+	authRouter.HandleFunc("/logout", middleware.ConvertToHandlerFunc(authHandler.Logout, middleware.AuthMiddleware)).Methods("POST")
 
 	// Google OAuth
-	router.HandleFunc("/api/auth/google/login", middleware.ConvertToHandlerFunc(authHandler.HandleGoogleLogin)).Methods("GET")
-	router.HandleFunc("/api/auth/google/callback", middleware.ConvertToHandlerFunc(authHandler.HandleGoogleCallback)).Methods("GET")
+	authRouter.HandleFunc("/google/login", middleware.ConvertToHandlerFunc(authHandler.HandleGoogleLogin)).Methods("GET")
+	authRouter.HandleFunc("/google/callback", middleware.ConvertToHandlerFunc(authHandler.HandleGoogleCallback)).Methods("GET")
 
 	// Github OAuth
-	router.HandleFunc("/api/auth/github/login", middleware.ConvertToHandlerFunc(authHandler.HandleGitHubLogin)).Methods("GET")
-	router.HandleFunc("/api/auth/github/callback", middleware.ConvertToHandlerFunc(authHandler.HandleGitHubCallback)).Methods("GET")
+	authRouter.HandleFunc("/github/login", middleware.ConvertToHandlerFunc(authHandler.HandleGitHubLogin)).Methods("GET")
+	authRouter.HandleFunc("/github/callback", middleware.ConvertToHandlerFunc(authHandler.HandleGitHubCallback)).Methods("GET")
 
 }

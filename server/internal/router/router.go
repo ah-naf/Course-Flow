@@ -17,10 +17,12 @@ func NewRouter(db *sql.DB) *Router {
 func (r *Router) Setup() *mux.Router {
 	router := mux.NewRouter()
 
-	r.setupUserRouter(router)
-	r.setupAuthRoutes(router)
-	r.setupDocumentRouter(router)
-	r.setupCourseRouter(router)
+	apiRouter_v1 := router.PathPrefix("/api/v1").Subrouter()
+
+	r.setupUserRouter(apiRouter_v1)
+	r.setupAuthRouter(apiRouter_v1)
+	r.setupDocumentRouter(apiRouter_v1)
+	r.setupCourseRouter(apiRouter_v1)
 
 	return router
 }

@@ -10,7 +10,7 @@ interface CustomAxiosRequestConfig extends AxiosRequestConfig {
 }
 
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:8080", // your API base URL
+  baseURL: "http://localhost:8080/api/v1", // your API base URL
 });
 
 // Add a request interceptor to set the Authorization header from localStorage

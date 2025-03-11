@@ -10,7 +10,7 @@ export const refreshAccessToken = async (): Promise<RefreshTokenResponse> => {
 
   try {
     const response = await axios.post<RefreshTokenResponse>(
-      "http://localhost:8080/api/auth/refresh",
+      "http://localhost:8080/api/v1/auth/refresh",
       { refresh_token }
     );
 

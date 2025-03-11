@@ -15,6 +15,8 @@ func (r *Router) setupUserRouter(router *mux.Router) {
 	userService := services.NewUserService(userStorage)
 	userHandler := handlers.NewUserHandler(userService)
 
+	userRouter := router.PathPrefix("/users").Subrouter()
+
 	// User routes
-	router.HandleFunc("/api/users", middleware.ConvertToHandlerFunc(userHandler.GetUserHandler)).Methods("GET")
+	userRouter.HandleFunc("/", middleware.ConvertToHandlerFunc(userHandler.GetUserHandler)).Methods("GET")
 }

@@ -14,7 +14,9 @@ func (r *Router) setupCourseRouter(router *mux.Router) {
 	courseService := services.NewCourseService(courseStorage)
 	courseHandler := handlers.NewCourseHandler(courseService)
 
+	courseRouter := router.PathPrefix("/courses").Subrouter()
+
 	// Document routes
-	router.HandleFunc("/api/courses", middleware.ConvertToHandlerFunc(courseHandler.CreateCourseHandler, middleware.AuthMiddleware)).Methods("POST")
-	router.HandleFunc("/api/courses/instructor", middleware.ConvertToHandlerFunc(courseHandler.GetCoursesByInstructorHandler, middleware.AuthMiddleware)).Methods("GET")
+	courseRouter.HandleFunc("/courses", middleware.ConvertToHandlerFunc(courseHandler.CreateCourseHandler, middleware.AuthMiddleware)).Methods("POST")
+	courseRouter.HandleFunc("/courses/instructor", middleware.ConvertToHandlerFunc(courseHandler.GetCoursesByInstructorHandler, middleware.AuthMiddleware)).Methods("GET")
 }

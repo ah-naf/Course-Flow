@@ -15,6 +15,8 @@ func (r *Router) setupDocumentRouter(router *mux.Router) {
 	documentService := services.NewDocumentService(documentStorage)
 	documentHandler := handlers.NewDocumentHandler(documentService)
 
+	documentRouter := router.PathPrefix("/documents").Subrouter()
+
 	// Document routes
-	router.HandleFunc("/api/document", middleware.ConvertToHandlerFunc(documentHandler.UploadDocumentHandler)).Methods("POST")
+	documentRouter.HandleFunc("/", middleware.ConvertToHandlerFunc(documentHandler.UploadDocumentHandler)).Methods("POST")
 }

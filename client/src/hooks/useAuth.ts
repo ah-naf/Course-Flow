@@ -37,7 +37,7 @@ export const useRegister = () => {
     mutationFn: async (data: RegisterData) => {
       try {
         const response = await axiosInstance.post<RegisterResponse>(
-          "/api/auth/register",
+          "/auth/register",
           data
         );
         return response.data;
@@ -72,7 +72,7 @@ export const useLogin = () => {
     mutationFn: async (data: LoginData) => {
       try {
         const response = await axiosInstance.post<LoginResponse>(
-          "/api/auth/login",
+          "/auth/login",
           data
         );
         return response.data;
@@ -111,7 +111,7 @@ export const useLogout = () => {
     mutationFn: async (data: LogoutData) => {
       try {
         const response = await axiosInstance.post<{ message: string }>(
-          "/api/auth/logout",
+          "/auth/logout",
           data
         );
         return response.data;
