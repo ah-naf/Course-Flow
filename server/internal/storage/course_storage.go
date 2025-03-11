@@ -33,8 +33,8 @@ func (s *CourseStorage) GetCoursesByInstructor(userID string) ([]*models.CourseL
 			u.last_name, 
 			u.avatar 
 		FROM courses AS c 
-		JOIN users AS u ON c.instructor_id = u.id
-		WHERE c.instructor_id = $1
+		JOIN users AS u ON c.admin_id = u.id
+		WHERE c.admin_id = $1
 	`
 
 	rows, err := s.DB.Query(query, userID)
@@ -52,10 +52,10 @@ func (s *CourseStorage) GetCoursesByInstructor(userID string) ([]*models.CourseL
 			&course.Description,
 			&course.BackgroundColor,
 			&course.CoverPic,
-			&course.Instructor.ID,
-			&course.Instructor.FirstName,
-			&course.Instructor.LastName,
-			&course.Instructor.Avatar,
+			&course.Admin.ID,
+			&course.Admin.FirstName,
+			&course.Admin.LastName,
+			&course.Admin.Avatar,
 		); err != nil {
 			return nil, err
 		}
@@ -69,7 +69,7 @@ func (s *CourseStorage) CreateNewCourse(course *models.Course) error {
 	INSERT INTO courses (
 		name,
 		description,
-		instructor_id,
+		admin_id,
 		background_color,
 		cover_pic,
 		join_code,
@@ -86,7 +86,7 @@ func (s *CourseStorage) CreateNewCourse(course *models.Course) error {
 	err := s.DB.QueryRow(query,
 		course.Name,
 		course.Description,
-		course.InstructorID,
+		course.AdminID,
 		course.BackgroundColor,
 		course.CoverPic,
 		course.JoinCode,

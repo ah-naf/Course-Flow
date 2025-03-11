@@ -40,7 +40,8 @@ func (s *AuthService) SocialLogin(userReq models.User) (*models.LoginResponse, e
 	}
 
 	// Generate access and Refresh token
-	accessToken, err := utils.GenerateToken(userReq.ID, 15*time.Minute)
+	// TODO: make it expire in 15 minute
+	accessToken, err := utils.GenerateToken(userReq.ID, 7*24*time.Hour)
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
@@ -77,7 +78,8 @@ func (s *AuthService) Login(userReq *models.LoginRequest) (*models.LoginResponse
 	}
 
 	// create access and refresh token
-	accessToken, err := utils.GenerateToken(user.ID, 15*time.Minute)
+	// TODO: make it expire in 15 minute
+	accessToken, err := utils.GenerateToken(user.ID, 7*24*time.Hour)
 	if err != nil {
 		return nil, nil, err
 	}

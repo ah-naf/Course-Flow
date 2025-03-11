@@ -45,7 +45,7 @@ func (s *CourseService) CreateNewCourseService(course *models.Course, r *http.Re
 	if err != nil {
 		return err
 	}
-	course.InstructorID = instructorID
+	course.AdminID = instructorID
 
 	validate := validator.New()
 	if err := validate.Struct(course); err != nil {

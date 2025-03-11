@@ -22,7 +22,7 @@ CREATE TABLE courses (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    instructor_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    admin_id UUID REFERENCES users(id) ON DELETE SET NULL,
     background_color VARCHAR(50),
     cover_pic VARCHAR(255),
     join_code VARCHAR(50) UNIQUE,
