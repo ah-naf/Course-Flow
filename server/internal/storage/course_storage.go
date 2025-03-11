@@ -20,6 +20,31 @@ func NewCourseStorage(db *sql.DB) *CourseStorage {
 	}
 }
 
+func (s *CourseStorage) JoinCourse(joinCode, userID string) error {
+	// Check if course exists
+	courseID, err := s.CheckCourseExists(joinCode)
+	if err != nil {
+		return err
+	}
+
+	// Check if user is already a member
+	isMember, err := s.CheckCourseMembership(courseID, userID)
+	if err != nil {
+		return err
+	}
+	if isMember {
+		return &utils.ApiError{Code: http.StatusConflict, Message: "User is already a member of this course"}
+	}
+
+	// Add user as a member
+	err = s.AddCourseMember(courseID, userID, "Member")
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *CourseStorage) GetCoursesByInstructor(userID string) ([]*models.CourseListResponse, error) {
 	query := `
 		SELECT 
@@ -103,5 +128,55 @@ func (s *CourseStorage) CreateNewCourse(course *models.Course) error {
 		}
 		return err
 	}
+	return nil
+}
+
+// CheckCourseExists checks if a course exists with the given join code and is not archived
+func (s *CourseStorage) CheckCourseExists(joinCode string) (string, error) {
+	query := `SELECT id FROM courses WHERE join_code = $1 AND archived = FALSE`
+	var courseID string
+
+	err := s.DB.QueryRow(query, joinCode).Scan(&courseID)
+	if err == sql.ErrNoRows {
+		return "", &utils.ApiError{Code: http.StatusNotFound, Message: "Course not found or is archived"}
+	}
+	if err != nil {
+		return "", err
+	}
+
+	return courseID, nil
+}
+
+// CheckCourseMembership checks if a user is already a member of a course
+func (s *CourseStorage) CheckCourseMembership(courseID, userID string) (bool, error) {
+	checkQuery := `
+        SELECT EXISTS (
+            SELECT 1 
+            FROM course_members 
+            WHERE course_id = $1 AND user_id = $2
+        )
+    `
+	var isMember bool
+
+	err := s.DB.QueryRow(checkQuery, courseID, userID).Scan(&isMember)
+	if err != nil {
+		return false, err
+	}
+
+	return isMember, nil
+}
+
+// AddCourseMember inserts a new member into a course with the specified role
+func (s *CourseStorage) AddCourseMember(courseID, userID, role string) error {
+	insertQuery := `
+        INSERT INTO course_members (course_id, user_id, role)
+        VALUES ($1, $2, $3)
+    `
+
+	_, err := s.DB.Exec(insertQuery, courseID, userID, role)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

@@ -29,6 +29,16 @@ func NewCourseService(courseStorage *storage.CourseStorage) *CourseService {
 	return &CourseService{CourseStorage: courseStorage}
 }
 
+func (s *CourseService) JoinCourseService(joinCode string, r *http.Request) error {
+	ctx := r.Context()
+	userID, err := utils.GetUserIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	return s.CourseStorage.JoinCourse(joinCode, userID)
+}
+
 // GetCoursesByInstructor fetches all courses where the given user is the instructor.
 func (s *CourseService) GetCoursesByInstructor(r *http.Request) ([]*models.CourseListResponse, error) {
 	ctx := r.Context()
