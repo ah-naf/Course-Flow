@@ -46,7 +46,7 @@ func (s *CourseStorage) ArchiveCourse(courseID, adminID string) error {
 	return nil
 }
 
-func (s *CourseStorage) GetCourseByUserID(userID string) ([]*models.CourseListResponse, error) {
+func (s *CourseStorage) GetCourseByUserID(userID string, archieved bool) ([]*models.CourseListResponse, error) {
 	query := `
         SELECT 
             c.id, 
@@ -63,10 +63,10 @@ func (s *CourseStorage) GetCourseByUserID(userID string) ([]*models.CourseListRe
         JOIN users AS u ON c.admin_id = u.id
         JOIN course_members AS cm ON c.id = cm.course_id
         WHERE cm.user_id = $1
-        AND c.archived = FALSE
+        AND c.archived = $2
     `
 
-	rows, err := s.DB.Query(query, userID)
+	rows, err := s.DB.Query(query, userID, archieved)
 	if err != nil {
 		return nil, err
 	}

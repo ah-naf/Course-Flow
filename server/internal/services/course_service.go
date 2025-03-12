@@ -4,8 +4,10 @@ import (
 	"course-flow/internal/models"
 	"course-flow/internal/storage"
 	"course-flow/internal/utils"
+	"fmt"
 	"math/rand"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/go-playground/validator"
@@ -46,7 +48,21 @@ func (s *CourseService) GetCourseOfSingleUser(r *http.Request) ([]*models.Course
 		return nil, err
 	}
 
-	return s.CourseStorage.GetCourseByUserID(userID)
+	archivedStr := r.URL.Query().Get("archived")
+	archived := false
+	if archivedStr != "" {
+		var err error
+		archived, err = strconv.ParseBool(archivedStr)
+		if err != nil {
+			return nil, &utils.ApiError{
+				Code:    http.StatusBadRequest,
+				Message: "invalid archived parameter, must be true or false",
+			}
+		}
+	}
+	fmt.Println("archive", archived)
+
+	return s.CourseStorage.GetCourseByUserID(userID, archived)
 }
 
 func (s *CourseService) JoinCourseService(joinCode string, r *http.Request) error {
