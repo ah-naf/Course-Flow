@@ -1,5 +1,5 @@
 // src/pages/ClassPage.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClassBanner } from "@/components/ClassBanner";
@@ -11,16 +11,16 @@ import GroupMembers from "@/components/GroupMembers";
 import Attachments from "@/components/Attachments";
 import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react"; // Added Send icon
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import ClassroomChat from "@/components/ClassroomChat";
+import { fetchCourse } from "@/hooks/useCourse";
 
 // Main ClassPage Component
 const ClassPage: React.FC = () => {
   const { classId } = useParams<{ classId: string }>();
   const navigate = useNavigate();
+
+  
 
   // State for dialogs
   const [isJoinDetailsDialogOpen, setIsJoinDetailsDialogOpen] = useState(false);
@@ -42,12 +42,11 @@ const ClassPage: React.FC = () => {
         username: "Sarah Johnson",
         initial: "S",
       },
-      backgroundColor: "#4CAF50",
-      coverPic: "https://via.placeholder.com/1200x400?text=React+Development",
+      background_color: "#4CAF50",
+      cover_pic: "https://via.placeholder.com/1200x400?text=React+Development",
       joinCode: "RCT-DEV-2025",
-      inviteLink: "https://yourapp.com/join/react-101",
-      isPrivate: false,
-      postPermission: "everyone",
+      post_permission: "everyone",
+      role: "",
     },
     {
       id: "ui-303",
@@ -63,12 +62,11 @@ const ClassPage: React.FC = () => {
         username: "Priya Patel",
         initial: "P",
       },
-      backgroundColor: "#9C27B0",
-      coverPic: "",
+      background_color: "#9C27B0",
+      cover_pic: "",
       joinCode: "UIX-303-2025",
-      inviteLink: "https://yourapp.com/join/ui-303",
-      postPermission: "instructor",
-      isPrivate: false,
+      post_permission: "instructor",
+      role: "",
     },
   ];
 
@@ -80,7 +78,7 @@ const ClassPage: React.FC = () => {
   }
 
   // Flag to control visibility of join details
-  const showJoinDetails = !course.isPrivate;
+  const showJoinDetails = true;
 
   return (
     <div className="p-1 md:p-6 flex justify-center relative">

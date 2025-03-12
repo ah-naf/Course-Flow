@@ -4,13 +4,12 @@ export interface Course {
   name: string;
   description: string;
   instructor: User;
-  backgroundColor: string;
-  coverPic?: string;
+  background_color: string;
+  cover_pic?: string;
   joinCode?: string;
-  inviteLink?: string;
-  isPrivate?: boolean;
-  timestamp?: string;
-  postPermission: string;
+  updated_at?: string;
+  post_permission: string;
+  role: string;
 }
 
 export interface User {
@@ -21,7 +20,6 @@ export interface User {
   email: string;
   avatar: string;
   initial: string;
-  timestamp?: string;
 }
 
 export interface Comment {

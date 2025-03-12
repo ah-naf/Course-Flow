@@ -58,7 +58,10 @@ func (s *CourseStorage) GetCourseByUserID(userID string, archieved bool) ([]*mod
             u.first_name, 
             u.last_name, 
             u.avatar,
-			cm.role
+			cm.role,
+			c.post_permission,
+			c.created_at,
+			c.updated_at
         FROM courses AS c 
         JOIN users AS u ON c.admin_id = u.id
         JOIN course_members AS cm ON c.id = cm.course_id
@@ -86,6 +89,9 @@ func (s *CourseStorage) GetCourseByUserID(userID string, archieved bool) ([]*mod
 			&course.Admin.LastName,
 			&course.Admin.Avatar,
 			&course.Role,
+			&course.PostPermission,
+			&course.CreatedAt,
+			&course.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
