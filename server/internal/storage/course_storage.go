@@ -27,10 +27,21 @@ func (s *CourseStorage) ArchiveCourse(courseID, adminID string) error {
 		WHERE id = $1 AND admin_id = $2
 	`
 
-	_, err := s.DB.Exec(query, courseID, adminID)
+	result, err := s.DB.Exec(query, courseID, adminID)
 	if err != nil {
 		return err
 	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+        return &utils.ApiError{
+            Code:    404,
+            Message: "course not found or user not authorized to archive it",
+        }
+    }
 
 	return nil
 }

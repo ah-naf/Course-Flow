@@ -17,6 +17,23 @@ func NewCourseHandler(service *services.CourseService) *CourseHandler {
 	return &CourseHandler{Service: service}
 }
 
+func(h *CourseHandler) ArchiveCourseHandler(w http.ResponseWriter, r *http.Request) error {
+	var req struct {
+		CourseID string `json:"course_id"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return err
+	}
+
+	err := h.Service.ArchiveCourse(req.CourseID, r)
+	if err != nil {
+		return err
+	}
+
+	return utils.WriteJSON(w, http.StatusOK, map[string]string{"message": "Course archieved successfully!"})
+}
+
 func (h *CourseHandler) GetCourseForSingleUserHandler(w http.ResponseWriter, r *http.Request) error {
 	courses, err := h.Service.GetCourseOfSingleUser(r)
 	if err != nil {
@@ -38,7 +55,7 @@ func (h *CourseHandler) JoinCourseHandler(w http.ResponseWriter, r *http.Request
 		return err
 	}
 
-	return utils.WriteJSON(w, http.StatusOK, map[string]string{"message": "You have successfully join the class."})
+	return utils.WriteJSON(w, http.StatusOK, map[string]string{"message": "You have successfully joined the class."})
 }
 
 // GetCoursesByInstructorHandler handles GET requests to fetch courses for a given instructor.
