@@ -21,3 +21,18 @@ export const fetchCourse = (
     retry: 1,
   });
 };
+
+export const fetchTeachingCourses = (): UseQueryResult<
+  CourseResponse[],
+  Error
+> => {
+  return useQuery<CourseResponse[], Error>({
+    queryKey: ["teachingCourses"],
+    queryFn: async () => {
+      const response = await axiosInstance.get("/courses/instructor");
+      return response.data;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1,
+  });
+};

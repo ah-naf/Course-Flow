@@ -20,14 +20,14 @@ func NewCourseStorage(db *sql.DB) *CourseStorage {
 	}
 }
 
-func (s *CourseStorage) ArchiveCourse(courseID, adminID string) error {
+func (s *CourseStorage) ArchiveCourse(courseID, adminID string, archived bool) error {
 	query := `
 		UPDATE courses
-		SET archived = true
+		SET archived = $3
 		WHERE id = $1 AND admin_id = $2
 	`
 
-	result, err := s.DB.Exec(query, courseID, adminID)
+	result, err := s.DB.Exec(query, courseID, adminID, archived)
 	if err != nil {
 		return err
 	}
@@ -37,11 +37,11 @@ func (s *CourseStorage) ArchiveCourse(courseID, adminID string) error {
 		return err
 	}
 	if rowsAffected == 0 {
-        return &utils.ApiError{
-            Code:    404,
-            Message: "course not found or user not authorized to archive it",
-        }
-    }
+		return &utils.ApiError{
+			Code:    404,
+			Message: "course not found or user not authorized to archive/restore it",
+		}
+	}
 
 	return nil
 }
@@ -144,7 +144,7 @@ func (s *CourseStorage) GetCoursesByInstructor(userID string) ([]*models.CourseL
 			u.avatar 
 		FROM courses AS c 
 		JOIN users AS u ON c.admin_id = u.id
-		WHERE c.admin_id = $1
+		WHERE c.admin_id = $1 AND c.archived = false
 	`
 
 	rows, err := s.DB.Query(query, userID)

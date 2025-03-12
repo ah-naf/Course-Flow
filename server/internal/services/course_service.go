@@ -31,6 +31,16 @@ func NewCourseService(courseStorage *storage.CourseStorage) *CourseService {
 	return &CourseService{CourseStorage: courseStorage}
 }
 
+func (s *CourseService) RestoreArchivedCourse(courseID string, r *http.Request) error {
+	ctx := r.Context()
+	AdminID, err := utils.GetUserIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	return s.CourseStorage.ArchiveCourse(courseID, AdminID, false)
+}
+
 func (s *CourseService) ArchiveCourse(courseID string, r *http.Request) error {
 	ctx := r.Context()
 	AdminID, err := utils.GetUserIDFromContext(ctx)
@@ -38,7 +48,7 @@ func (s *CourseService) ArchiveCourse(courseID string, r *http.Request) error {
 		return err
 	}
 
-	return s.CourseStorage.ArchiveCourse(courseID, AdminID)
+	return s.CourseStorage.ArchiveCourse(courseID, AdminID, true)
 }
 
 func (s *CourseService) GetCourseOfSingleUser(r *http.Request) ([]*models.CourseListResponse, error) {

@@ -1,3 +1,4 @@
+// src/pages/Sidebar.tsx
 import React, { useState } from "react";
 import { ChevronRight, Home, BookOpen, Archive } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,7 +10,9 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useNavigate } from "react-router-dom";
-import { Course } from "@/utils/types";
+import { fetchCourse } from "@/hooks/useCourse"; // For enrolled courses
+import { fetchTeachingCourses } from "@/hooks/useCourse"; // New hook for teaching courses
+import { Loader2 } from "lucide-react"; // For loading spinner
 
 interface SidebarProps {
   isOpen: boolean;
@@ -20,46 +23,19 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
   const [enrolledOpen, setEnrolledOpen] = useState(true);
   const navigate = useNavigate();
 
-  // Dummy data for courses the user is teaching
-  const teachingCourses: Course[] = [
-    {
-      id: "react-101",
-      name: "React Development",
-      instructor: { id: "1", name: "Sarah Johnson", avatar: "", initial: "S" },
-      backgroundColor: "#4CAF50",
-      description: "Web",
-    },
-    {
-      id: "ui-303",
-      name: "UI/UX Design",
-      instructor: { id: "1", name: "Priya Patel", avatar: "", initial: "P" },
-      backgroundColor: "#9C27B0",
-      description: "Design",
-    },
-  ];
+  // Fetch teaching courses
+  const {
+    data: teachingCourses,
+    isLoading: isTeachingLoading,
+    error: teachingError,
+  } = fetchTeachingCourses();
 
-  // Dummy data for courses the user is enrolled in
-  const enrolledCourses: Course[] = [
-    {
-      id: "ts-202",
-      name: "TypeScript Mastery",
-      instructor: { id: "1", name: "Michael Chen", avatar: "", initial: "M" },
-      backgroundColor: "#2196F3",
-      description: "Programming",
-    },
-    {
-      id: "node-404",
-      name: "Node.js Backend",
-      instructor: {
-        id: "1",
-        name: "Carlos Rodriguez",
-        avatar: "",
-        initial: "C",
-      },
-      backgroundColor: "#FF9800",
-      description: "Backend",
-    },
-  ];
+  // Fetch enrolled courses (non-archived)
+  const {
+    data: enrolledCourses,
+    isLoading: isEnrolledLoading,
+    error: enrolledError,
+  } = fetchCourse(false);
 
   return (
     <div
@@ -106,25 +82,38 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
             </div>
           </CollapsibleTrigger>
           <CollapsibleContent className="pl-4 space-y-1">
-            {teachingCourses.map((course) => (
-              <Button
-                key={course.id}
-                variant="ghost"
-                className="w-full justify-start text-sm gap-2"
-                title={course.name}
-              >
-                <Avatar className="h-6 w-6">
-                  <AvatarImage src={course.instructor.avatar} />
-                  <AvatarFallback
-                    style={{ backgroundColor: course.backgroundColor }}
-                    className="text-white text-xs"
-                  >
-                    {course.name.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="truncate">{course.name}</span>
-              </Button>
-            ))}
+            {isTeachingLoading ? (
+              <div className="flex items-center justify-center py-2">
+                <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+              </div>
+            ) : teachingError ? (
+              <p className="text-sm text-red-600 text-center">Failed to load</p>
+            ) : teachingCourses && teachingCourses.length > 0 ? (
+              teachingCourses.map((course) => (
+                <Button
+                  key={course.id}
+                  variant="ghost"
+                  className="w-full justify-start text-sm gap-2"
+                  title={course.name}
+                  onClick={() => navigate(`/class/${course.id}`)} // Navigate to course page
+                >
+                  <Avatar className="h-6 w-6">
+                    <AvatarImage src={course.admin.avatar} />
+                    <AvatarFallback
+                      style={{ backgroundColor: course.background_color }}
+                      className="text-white text-xs"
+                    >
+                      {course.name.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="truncate">{course.name}</span>
+                </Button>
+              ))
+            ) : (
+              <p className="text-sm text-gray-500 text-center">
+                No teaching courses
+              </p>
+            )}
           </CollapsibleContent>
         </Collapsible>
 
@@ -149,25 +138,38 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
             </div>
           </CollapsibleTrigger>
           <CollapsibleContent className="pl-4 space-y-1">
-            {enrolledCourses.map((course) => (
-              <Button
-                key={course.id}
-                variant="ghost"
-                className="w-full justify-start text-sm gap-2"
-                title={course.name}
-              >
-                <Avatar className="h-6 w-6">
-                  <AvatarImage src={course.instructor.avatar} />
-                  <AvatarFallback
-                    style={{ backgroundColor: course.backgroundColor }}
-                    className="text-white text-xs"
-                  >
-                    {course.name.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="truncate">{course.name}</span>
-              </Button>
-            ))}
+            {isEnrolledLoading ? (
+              <div className="flex items-center justify-center py-2">
+                <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+              </div>
+            ) : enrolledError ? (
+              <p className="text-sm text-red-600 text-center">Failed to load</p>
+            ) : enrolledCourses && enrolledCourses.length > 0 ? (
+              enrolledCourses.map((course) => (
+                <Button
+                  key={course.id}
+                  variant="ghost"
+                  className="w-full justify-start text-sm gap-2"
+                  title={course.name}
+                  onClick={() => navigate(`/class/${course.id}`)} // Navigate to course page
+                >
+                  <Avatar className="h-6 w-6">
+                    <AvatarImage src={course.admin.avatar} />
+                    <AvatarFallback
+                      style={{ backgroundColor: course.background_color }}
+                      className="text-white text-xs"
+                    >
+                      {course.name.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="truncate">{course.name}</span>
+                </Button>
+              ))
+            ) : (
+              <p className="text-sm text-gray-500 text-center">
+                No enrolled courses
+              </p>
+            )}
           </CollapsibleContent>
         </Collapsible>
 

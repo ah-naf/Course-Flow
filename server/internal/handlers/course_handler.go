@@ -17,6 +17,23 @@ func NewCourseHandler(service *services.CourseService) *CourseHandler {
 	return &CourseHandler{Service: service}
 }
 
+func(h *CourseHandler) RestoreArchivedCourseHandler(w http.ResponseWriter, r *http.Request) error {
+	var req struct {
+		CourseID string `json:"course_id"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return err
+	}
+
+	err := h.Service.RestoreArchivedCourse(req.CourseID, r)
+	if err != nil {
+		return err
+	}
+
+	return utils.WriteJSON(w, http.StatusOK, map[string]string{"message": "Course restored successfully!"})
+}
+
 func(h *CourseHandler) ArchiveCourseHandler(w http.ResponseWriter, r *http.Request) error {
 	var req struct {
 		CourseID string `json:"course_id"`
