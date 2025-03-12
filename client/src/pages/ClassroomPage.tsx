@@ -106,7 +106,7 @@ const ClassroomPage: React.FC = () => {
                 onClick={() => navigate(`/class/${course.id}`)}
               >
                 <div
-                  className="h-24 sm:h-28 flex items-center justify-center relative"
+                  className="h-24 sm:h-28 lg:h-32 flex items-center justify-center relative"
                   style={{ backgroundColor: course.background_color }} // Updated to match Course type
                 >
                   <h3 className="text-xl sm:text-2xl font-bold text-white px-3 text-center line-clamp-2">

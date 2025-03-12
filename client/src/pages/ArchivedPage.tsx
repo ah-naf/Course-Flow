@@ -1,5 +1,5 @@
 // src/pages/ArchivedPage.tsx
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -10,56 +10,49 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Archive, MoreVertical, Trash, RefreshCw } from "lucide-react";
-import { Course } from "@/utils/types";
+import { fetchCourse } from "@/hooks/useCourse";
+import { toast } from "sonner"; // Using standalone sonner
+import { Loader2 } from "lucide-react"; // For loading spinner
+import { formatRelativeTime } from "@/utils/formatRelativeTime";
 
 const ArchivedPage: React.FC = () => {
-  // Dummy data for archived courses
-  const [archivedCourses, setArchivedCourses] = useState<Course[]>([
-    {
-      id: "web-101",
-      name: "Web Fundamentals",
-      description:
-        "Learn the basics of web development with HTML, CSS, and JavaScript.",
-      instructor: { id: "1", name: "Emma Watson", avatar: "", initial: "E" },
-      backgroundColor: "#FF5722",
-      // category: "Web",
-      timestamp: "2024-10-15",
-    },
-    {
-      id: "graphql-202",
-      name: "GraphQL Basics",
-      description: "Introduction to GraphQL for building efficient APIs.",
-      instructor: { id: "2", name: "Liam Brown", avatar: "", initial: "L" },
-      backgroundColor: "#E91E63",
-      // category: "Backend",
-      timestamp: "2024-09-20",
-    },
-    {
-      id: "figma-303",
-      name: "Figma for Beginners",
-      description: "Get started with Figma to design stunning user interfaces.",
-      instructor: { id: "3", name: "Olivia Smith", avatar: "", initial: "O" },
-      backgroundColor: "#673AB7",
-      // category: "Design",
-      timestamp: "2024-08-10",
-    },
-  ]);
+  const { data: archivedCourses, isLoading, error } = fetchCourse(true);
 
-  // Handle Restore action
+  // Handle error with sonner toast
+  useEffect(() => {
+    if (error) {
+      toast.error("Failed to load archived courses", {
+        description: error.message || "An unexpected error occurred",
+        duration: 5000,
+      });
+    }
+  }, [error]);
+
+  // Handle Restore action (placeholder for now)
   const handleRestore = (courseId: string) => {
-    setArchivedCourses((prev) =>
-      prev.filter((course) => course.id !== courseId)
-    );
     console.log(`Restored course with ID: ${courseId}`);
+    // TODO: Implement actual restore logic with API call
   };
 
-  // Handle Delete action
+  // Handle Delete action (placeholder for now)
   const handleDelete = (courseId: string) => {
-    setArchivedCourses((prev) =>
-      prev.filter((course) => course.id !== courseId)
-    );
     console.log(`Deleted course with ID: ${courseId}`);
+    // TODO: Implement actual delete logic with API call
   };
+
+  // Loading container
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-lg font-medium text-gray-600">
+            Loading archived courses...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -69,7 +62,7 @@ const ArchivedPage: React.FC = () => {
       </h1>
 
       {/* Empty State */}
-      {archivedCourses.length === 0 ? (
+      {archivedCourses && archivedCourses.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
           <div className="bg-gray-100 p-6 rounded-full mb-4">
             <Archive className="h-10 w-10 text-gray-400" />
@@ -84,7 +77,7 @@ const ArchivedPage: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-          {archivedCourses.map((course) => (
+          {archivedCourses?.map((course) => (
             <Card
               key={course.id}
               className="overflow-hidden hover:shadow-lg pt-0 transition-all duration-200 cursor-pointer transform hover:-translate-y-1 border border-gray-200 rounded-xl"
@@ -92,7 +85,7 @@ const ArchivedPage: React.FC = () => {
             >
               <div
                 className="h-24 sm:h-28 flex items-center justify-center relative"
-                style={{ backgroundColor: course.backgroundColor }}
+                style={{ backgroundColor: course.background_color }}
               >
                 <h3 className="text-2xl sm:text-xl md:text-2xl font-bold text-white px-3 text-center line-clamp-2">
                   {course.name}
@@ -131,25 +124,26 @@ const ArchivedPage: React.FC = () => {
               <CardContent className="pt-3 pb-3">
                 <div className="flex items-center mb-2">
                   <Avatar className="h-8 w-8 sm:h-10 sm:w-10 mr-2 sm:mr-3 ring-2 ring-gray-200">
-                    <AvatarImage src="/api/placeholder/40/40" />
+                    <AvatarImage src={course.admin.avatar} />
                     <AvatarFallback
-                      style={{ backgroundColor: course.backgroundColor }}
+                      style={{ backgroundColor: course.background_color }}
                       className="text-white text-xs sm:text-sm"
                     >
-                      {course.instructor.initial}
+                      {course.admin.firstName.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-sm sm:text-md truncate">
-                      {course.instructor.name}
+                      {course.admin.firstName} {course.admin.lastName}
                     </p>
                   </div>
                 </div>
                 <p className="text-sm text-gray-600 line-clamp-2">
                   {course.description}
                 </p>
+                {/* Note: timestamp isn't in your Course type, remove or adjust if needed */}
                 <p className="text-xs text-gray-500 mt-2 font-semibold">
-                  Archived on: {course.timestamp}
+                  Archived on: {formatRelativeTime(course.updated_at || "")}
                 </p>
               </CardContent>
             </Card>
