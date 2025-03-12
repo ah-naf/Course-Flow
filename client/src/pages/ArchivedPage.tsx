@@ -10,13 +10,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Archive, MoreVertical, Trash, RefreshCw } from "lucide-react";
-import { fetchCourse } from "@/hooks/useCourse";
+import { fetchCourse, useRestoreCourse } from "@/hooks/useCourse";
 import { toast } from "sonner"; // Using standalone sonner
 import { Loader2 } from "lucide-react"; // For loading spinner
 import { formatRelativeTime } from "@/utils/formatRelativeTime";
 
 const ArchivedPage: React.FC = () => {
   const { data: archivedCourses, isLoading, error } = fetchCourse(true);
+  const restoreMutation = useRestoreCourse();
 
   // Handle error with sonner toast
   useEffect(() => {
@@ -30,8 +31,16 @@ const ArchivedPage: React.FC = () => {
 
   // Handle Restore action (placeholder for now)
   const handleRestore = (courseId: string) => {
-    console.log(`Restored course with ID: ${courseId}`);
-    // TODO: Implement actual restore logic with API call
+    restoreMutation.mutate(courseId, {
+      onSuccess: () => {
+        toast.success("Course restored successfully!");
+      },
+      onError: (err) => {
+        toast.error("Failed to restore course", {
+          description: err.message,
+        });
+      },
+    });
   };
 
   // Handle Delete action (placeholder for now)
@@ -62,7 +71,7 @@ const ArchivedPage: React.FC = () => {
       </h1>
 
       {/* Empty State */}
-      {archivedCourses && archivedCourses.length === 0 ? (
+      {!archivedCourses || (archivedCourses && archivedCourses.length === 0) ? (
         <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
           <div className="bg-gray-100 p-6 rounded-full mb-4">
             <Archive className="h-10 w-10 text-gray-400" />

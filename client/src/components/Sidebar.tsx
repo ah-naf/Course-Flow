@@ -89,7 +89,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
             ) : teachingError ? (
               <p className="text-sm text-red-600 text-center">Failed to load</p>
             ) : teachingCourses && teachingCourses.length > 0 ? (
-              teachingCourses.map((course) => (
+              teachingCourses.slice(0, 5).map((course) => (
                 <Button
                   key={course.id}
                   variant="ghost"
@@ -145,7 +145,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
             ) : enrolledError ? (
               <p className="text-sm text-red-600 text-center">Failed to load</p>
             ) : enrolledCourses && enrolledCourses.length > 0 ? (
-              enrolledCourses.map((course) => (
+              enrolledCourses.slice(0, 5).map((course) => (
                 <Button
                   key={course.id}
                   variant="ghost"
