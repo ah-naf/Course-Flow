@@ -6,6 +6,8 @@ import {
   useQueryClient,
   UseQueryResult,
 } from "@tanstack/react-query";
+import axios, { AxiosError } from "axios";
+import { toast } from "sonner";
 
 interface CourseResponse extends Course {
   admin: User;
@@ -55,6 +57,21 @@ export const archiveCourse = () => {
       queryClient.invalidateQueries({ queryKey: ["courses", false] }); // Refresh ClassroomPage
       queryClient.invalidateQueries({ queryKey: ["courses", true] }); // Refresh ArchivedPage
       queryClient.invalidateQueries({ queryKey: ["teachingCourses"] });
+      toast.success("Course archived successfully!");
+    },
+    onError: (error) => {
+      // Check if it's an Axios error and safely cast it
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<{ error?: string }>;
+        toast.error("Failed to archive course", {
+          description:
+            axiosError.response?.data?.error || "An unknown error occurred",
+        });
+      } else {
+        toast.error("Failed to archive course", {
+          description: "An unknown error occurred",
+        });
+      }
     },
   });
 };
@@ -72,6 +89,20 @@ export const restoreCourse = () => {
       queryClient.invalidateQueries({ queryKey: ["courses", false] }); // Refresh ClassroomPage
       queryClient.invalidateQueries({ queryKey: ["courses", true] }); // Refresh ArchivedPage
       queryClient.invalidateQueries({ queryKey: ["teachingCourses"] });
+      toast.success("Course restored successfully!");
+    },
+    onError: (error) => {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<{ error?: string }>;
+        toast.error("Failed to restore course", {
+          description:
+            axiosError.response?.data?.error || "An unknown error occurred",
+        });
+      } else {
+        toast.error("Failed to restore course", {
+          description: "An unknown error occurred",
+        });
+      }
     },
   });
 };
@@ -87,6 +118,20 @@ export const deleteCourse = () => {
       queryClient.invalidateQueries({ queryKey: ["courses", false] }); // Refresh ClassroomPage
       queryClient.invalidateQueries({ queryKey: ["courses", true] }); // Refresh ArchivedPage
       queryClient.invalidateQueries({ queryKey: ["teachingCourses"] });
+      toast.success("Course deleted successfully!");
+    },
+    onError: (error) => {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<{ error?: string }>;
+        toast.error("Failed to delete course", {
+          description:
+            axiosError.response?.data?.error || "An unknown error occurred",
+        });
+      } else {
+        toast.error("Failed to delete course", {
+          description: "An unknown error occurred",
+        });
+      }
     },
   });
 };

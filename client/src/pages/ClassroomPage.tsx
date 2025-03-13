@@ -24,7 +24,6 @@ import { useNavigate } from "react-router-dom";
 import { archiveCourse, fetchCourse } from "@/hooks/useCourse";
 import { toast } from "sonner"; // shadcn/ui sonner
 import { Loader2 } from "lucide-react"; // For loading spinner
-import axios, { AxiosError } from "axios";
 
 const ClassroomPage: React.FC = () => {
   const { getUnreadCountForClass } = useNotificationStore();
@@ -40,12 +39,8 @@ const ClassroomPage: React.FC = () => {
         description: error.message || "An unexpected error occurred",
         duration: 5000,
       });
-      // Optionally navigate to login if it's an auth error
-      if (error.message.includes("401")) {
-        navigate("/login");
-      }
     }
-  }, [error, navigate]);
+  }, [error]);
 
   // Handler functions for dropdown menu actions
   const handleEditCourse = (courseId: string, e: React.MouseEvent) => {
@@ -75,26 +70,7 @@ const ClassroomPage: React.FC = () => {
 
   const handleArchiveCourse = (courseId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log(`Archive course: ${courseId}`);
-    archiveCourseMutation.mutate(courseId, {
-      onSuccess: () => {
-        toast.success("Course archived successfully!");
-      },
-      onError: (error) => {
-        // Check if it's an Axios error and safely cast it
-        if (axios.isAxiosError(error)) {
-          const axiosError = error as AxiosError<{ error?: string }>;
-          toast.error("Failed to archive course", {
-            description:
-              axiosError.response?.data?.error || "An unknown error occurred",
-          });
-        } else {
-          toast.error("Failed to archive course", {
-            description: "An unknown error occurred",
-          });
-        }
-      },
-    });
+    archiveCourseMutation.mutate(courseId);
   };
 
   // Loading container

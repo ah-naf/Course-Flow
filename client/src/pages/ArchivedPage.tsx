@@ -22,7 +22,6 @@ import { deleteCourse, fetchCourse, restoreCourse } from "@/hooks/useCourse";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { formatRelativeTime } from "@/utils/formatRelativeTime";
-import axios, { AxiosError } from "axios";
 
 const ArchivedPage: React.FC = () => {
   const { data: archivedCourses, isLoading, error } = fetchCourse(true);
@@ -44,44 +43,13 @@ const ArchivedPage: React.FC = () => {
   }, [error]);
 
   const handleRestore = (courseId: string) => {
-    restoreMutation.mutate(courseId, {
-      onSuccess: () => {
-        toast.success("Course restored successfully!");
-      },
-      onError: (error) => {
-        if (axios.isAxiosError(error)) {
-          const axiosError = error as AxiosError<{ error?: string }>;
-          toast.error("Failed to restore course", {
-            description:
-              axiosError.response?.data?.error || "An unknown error occurred",
-          });
-        } else {
-          toast.error("Failed to restore course", {
-            description: "An unknown error occurred",
-          });
-        }
-      },
-    });
+    restoreMutation.mutate(courseId);
   };
 
   const handleDelete = (courseId: string) => {
     deleteCourseMutation.mutate(courseId, {
       onSuccess: () => {
-        toast.success("Course deleted successfully!");
         setIsDeleteModalOpen(false); // Close the modal on success
-      },
-      onError: (error) => {
-        if (axios.isAxiosError(error)) {
-          const axiosError = error as AxiosError<{ error?: string }>;
-          toast.error("Failed to delete course", {
-            description:
-              axiosError.response?.data?.error || "An unknown error occurred",
-          });
-        } else {
-          toast.error("Failed to delete course", {
-            description: "An unknown error occurred",
-          });
-        }
       },
     });
   };
