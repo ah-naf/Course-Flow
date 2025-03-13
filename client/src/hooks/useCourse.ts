@@ -59,7 +59,7 @@ export const archiveCourse = () => {
   });
 };
 
-export const useRestoreCourse = () => {
+export const restoreCourse = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -67,6 +67,21 @@ export const useRestoreCourse = () => {
       await axiosInstance.put(`/courses/restore`, {
         course_id: courseId,
       });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["courses", false] }); // Refresh ClassroomPage
+      queryClient.invalidateQueries({ queryKey: ["courses", true] }); // Refresh ArchivedPage
+      queryClient.invalidateQueries({ queryKey: ["teachingCourses"] });
+    },
+  });
+};
+
+export const deleteCourse = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (courseId: string) => {
+      await axiosInstance.delete(`/courses/${courseId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["courses", false] }); // Refresh ClassroomPage

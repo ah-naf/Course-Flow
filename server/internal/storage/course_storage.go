@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/lib/pq"
 )
@@ -59,13 +60,14 @@ func (s *CourseStorage) DeleteCourse(courseID, adminID string) error {
 }
 
 func (s *CourseStorage) ArchiveCourse(courseID, adminID string, archived bool) error {
+	now := time.Now().UTC()
 	query := `
 		UPDATE courses
-		SET archived = $3
+		SET archived = $3, updated_at = $4
 		WHERE id = $1 AND admin_id = $2
 	`
 
-	result, err := s.DB.Exec(query, courseID, adminID, archived)
+	result, err := s.DB.Exec(query, courseID, adminID, archived, now)
 	if err != nil {
 		return err
 	}

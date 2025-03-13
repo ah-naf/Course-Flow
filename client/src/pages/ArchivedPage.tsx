@@ -1,5 +1,4 @@
-// src/pages/ArchivedPage.tsx
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -9,15 +8,30 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Archive, MoreVertical, Trash, RefreshCw } from "lucide-react";
-import { fetchCourse, useRestoreCourse } from "@/hooks/useCourse";
-import { toast } from "sonner"; // Using standalone sonner
-import { Loader2 } from "lucide-react"; // For loading spinner
+import { deleteCourse, fetchCourse, restoreCourse } from "@/hooks/useCourse";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import { formatRelativeTime } from "@/utils/formatRelativeTime";
+import axios, { AxiosError } from "axios";
 
 const ArchivedPage: React.FC = () => {
   const { data: archivedCourses, isLoading, error } = fetchCourse(true);
-  const restoreMutation = useRestoreCourse();
+  const restoreMutation = restoreCourse();
+  const deleteCourseMutation = deleteCourse();
+
+  // State for managing the confirmation modal
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [courseToDelete, setCourseToDelete] = useState<string | null>(null);
 
   // Handle error with sonner toast
   useEffect(() => {
@@ -29,27 +43,59 @@ const ArchivedPage: React.FC = () => {
     }
   }, [error]);
 
-  // Handle Restore action (placeholder for now)
   const handleRestore = (courseId: string) => {
     restoreMutation.mutate(courseId, {
       onSuccess: () => {
         toast.success("Course restored successfully!");
       },
-      onError: (err) => {
-        toast.error("Failed to restore course", {
-          description: err.message,
-        });
+      onError: (error) => {
+        if (axios.isAxiosError(error)) {
+          const axiosError = error as AxiosError<{ error?: string }>;
+          toast.error("Failed to restore course", {
+            description:
+              axiosError.response?.data?.error || "An unknown error occurred",
+          });
+        } else {
+          toast.error("Failed to restore course", {
+            description: "An unknown error occurred",
+          });
+        }
       },
     });
   };
 
-  // Handle Delete action (placeholder for now)
   const handleDelete = (courseId: string) => {
-    console.log(`Deleted course with ID: ${courseId}`);
-    // TODO: Implement actual delete logic with API call
+    deleteCourseMutation.mutate(courseId, {
+      onSuccess: () => {
+        toast.success("Course deleted successfully!");
+        setIsDeleteModalOpen(false); // Close the modal on success
+      },
+      onError: (error) => {
+        if (axios.isAxiosError(error)) {
+          const axiosError = error as AxiosError<{ error?: string }>;
+          toast.error("Failed to delete course", {
+            description:
+              axiosError.response?.data?.error || "An unknown error occurred",
+          });
+        } else {
+          toast.error("Failed to delete course", {
+            description: "An unknown error occurred",
+          });
+        }
+      },
+    });
   };
 
-  // Loading container
+  const openDeleteModal = (courseId: string) => {
+    setCourseToDelete(courseId);
+    setIsDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setCourseToDelete(null);
+    setIsDeleteModalOpen(false);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -116,17 +162,58 @@ const ArchivedPage: React.FC = () => {
                     <DropdownMenuItem
                       onClick={() => handleRestore(course.id)}
                       className="flex items-center text-green-600 hover:text-green-700 cursor-pointer"
+                      disabled={restoreMutation.isPending}
                     >
                       <RefreshCw className="h-4 w-4 mr-2" />
-                      Restore
+                      <span>
+                        {restoreMutation.isPending ? "Restoring..." : "Restore"}
+                      </span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => handleDelete(course.id)}
-                      className="flex items-center text-red-600 hover:text-red-700 cursor-pointer"
+                    <Dialog
+                      open={isDeleteModalOpen}
+                      onOpenChange={setIsDeleteModalOpen}
                     >
-                      <Trash className="h-4 w-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
+                      <DialogTrigger asChild>
+                        <DropdownMenuItem
+                          onClick={() => openDeleteModal(course.id)}
+                          className="flex items-center text-red-600 hover:text-red-700 cursor-pointer"
+                          onSelect={(e) => e.preventDefault()} // Prevent dropdown from closing
+                        >
+                          <Trash className="h-4 w-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Delete Course</DialogTitle>
+                          <DialogDescription>
+                            Are you sure you want to delete "{course.name}"?
+                            This action cannot be undone.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={closeDeleteModal}>
+                            Cancel
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            onClick={() =>
+                              courseToDelete && handleDelete(courseToDelete)
+                            }
+                            disabled={deleteCourseMutation.isPending}
+                          >
+                            {deleteCourseMutation.isPending ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Deleting...
+                              </>
+                            ) : (
+                              "Delete"
+                            )}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -150,7 +237,6 @@ const ArchivedPage: React.FC = () => {
                 <p className="text-sm text-gray-600 line-clamp-2">
                   {course.description}
                 </p>
-                {/* Note: timestamp isn't in your Course type, remove or adjust if needed */}
                 <p className="text-xs text-gray-500 mt-2 font-semibold">
                   Archived on: {formatRelativeTime(course.updated_at || "")}
                 </p>

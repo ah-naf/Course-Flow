@@ -24,6 +24,7 @@ import { useNavigate } from "react-router-dom";
 import { archiveCourse, fetchCourse } from "@/hooks/useCourse";
 import { toast } from "sonner"; // shadcn/ui sonner
 import { Loader2 } from "lucide-react"; // For loading spinner
+import axios, { AxiosError } from "axios";
 
 const ClassroomPage: React.FC = () => {
   const { getUnreadCountForClass } = useNotificationStore();
@@ -31,7 +32,7 @@ const ClassroomPage: React.FC = () => {
 
   const { data: courses, isLoading, error } = fetchCourse();
   const archiveCourseMutation = archiveCourse();
-  console.log(courses)
+
   // Handle error with shadcn/ui sonner toast
   useEffect(() => {
     if (error) {
@@ -79,10 +80,19 @@ const ClassroomPage: React.FC = () => {
       onSuccess: () => {
         toast.success("Course archived successfully!");
       },
-      onError: (err) => {
-        toast.error("Failed to archive course", {
-          description: err.message,
-        });
+      onError: (error) => {
+        // Check if it's an Axios error and safely cast it
+        if (axios.isAxiosError(error)) {
+          const axiosError = error as AxiosError<{ error?: string }>;
+          toast.error("Failed to archive course", {
+            description:
+              axiosError.response?.data?.error || "An unknown error occurred",
+          });
+        } else {
+          toast.error("Failed to archive course", {
+            description: "An unknown error occurred",
+          });
+        }
       },
     });
   };
