@@ -17,7 +17,16 @@ func NewCourseHandler(service *services.CourseService) *CourseHandler {
 	return &CourseHandler{Service: service}
 }
 
-func(h *CourseHandler) RestoreArchivedCourseHandler(w http.ResponseWriter, r *http.Request) error {
+func (h *CourseHandler) DeleteCourseHandler(w http.ResponseWriter, r *http.Request) error {
+	err := h.Service.DeleteCourse(r)
+	if err != nil {
+		return err
+	}
+
+	return utils.WriteJSON(w, http.StatusOK, map[string]string{"message": "Course deleted successfully!"})
+}
+
+func (h *CourseHandler) RestoreArchivedCourseHandler(w http.ResponseWriter, r *http.Request) error {
 	var req struct {
 		CourseID string `json:"course_id"`
 	}
@@ -34,7 +43,7 @@ func(h *CourseHandler) RestoreArchivedCourseHandler(w http.ResponseWriter, r *ht
 	return utils.WriteJSON(w, http.StatusOK, map[string]string{"message": "Course restored successfully!"})
 }
 
-func(h *CourseHandler) ArchiveCourseHandler(w http.ResponseWriter, r *http.Request) error {
+func (h *CourseHandler) ArchiveCourseHandler(w http.ResponseWriter, r *http.Request) error {
 	var req struct {
 		CourseID string `json:"course_id"`
 	}

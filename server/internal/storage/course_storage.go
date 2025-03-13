@@ -20,6 +20,44 @@ func NewCourseStorage(db *sql.DB) *CourseStorage {
 	}
 }
 
+func (s *CourseStorage) DeleteCourse(courseID, adminID string) error {
+	tx, err := s.DB.Begin()
+	if err != nil {
+		return err
+	}
+
+	query := `
+		DELETE FROM courses
+		WHERE id = $1 AND admin_id = $2
+	`
+
+	result, err := tx.Exec(query, courseID, adminID)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	if rowsAffected == 0 {
+		tx.Rollback()
+		return &utils.ApiError{
+			Code:    404,
+			Message: "course not found or user not authorized to delete it",
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
+}
+
 func (s *CourseStorage) ArchiveCourse(courseID, adminID string, archived bool) error {
 	query := `
 		UPDATE courses

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/go-playground/validator"
+	"github.com/gorilla/mux"
 )
 
 var backgroundColors = []string{
@@ -29,6 +30,25 @@ type CourseService struct {
 
 func NewCourseService(courseStorage *storage.CourseStorage) *CourseService {
 	return &CourseService{CourseStorage: courseStorage}
+}
+
+func (s *CourseService) DeleteCourse(r *http.Request) error {
+	ctx := r.Context()
+	AdminID, err := utils.GetUserIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	vars := mux.Vars(r)
+	courseID := vars["id"]
+	if courseID == "" {
+		return &utils.ApiError{
+			Code:    http.StatusBadRequest,
+			Message: "course_id is required",
+		}
+	}
+
+	return s.CourseStorage.DeleteCourse(courseID, AdminID)
 }
 
 func (s *CourseService) RestoreArchivedCourse(courseID string, r *http.Request) error {
