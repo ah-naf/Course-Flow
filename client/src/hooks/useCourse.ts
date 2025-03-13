@@ -22,7 +22,7 @@ export const fetchCourse = (
       });
       return response.data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 2 * 60 * 1000, // 5 minutes
     retry: 1,
   });
 };
@@ -37,8 +37,25 @@ export const fetchTeachingCourses = (): UseQueryResult<
       const response = await axiosInstance.get("/courses/instructor");
       return response.data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 2 * 60 * 1000, // 5 minutes
     retry: 1,
+  });
+};
+
+export const archiveCourse = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (courseId: string) => {
+      await axiosInstance.put(`/courses/archive`, {
+        course_id: courseId,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["courses", false] }); // Refresh ClassroomPage
+      queryClient.invalidateQueries({ queryKey: ["courses", true] }); // Refresh ArchivedPage
+      queryClient.invalidateQueries({ queryKey: ["teachingCourses"] });
+    },
   });
 };
 
@@ -54,7 +71,7 @@ export const useRestoreCourse = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["courses", false] }); // Refresh ClassroomPage
       queryClient.invalidateQueries({ queryKey: ["courses", true] }); // Refresh ArchivedPage
-    //   queryClient.invalidateQueries({ queryKey: [[""]] }); // Refresh ArchivedPage
+      queryClient.invalidateQueries({ queryKey: ["teachingCourses"] });
     },
   });
 };

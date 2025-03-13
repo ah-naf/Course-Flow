@@ -21,7 +21,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useNotificationStore } from "@/store/notificationStore";
 import { useNavigate } from "react-router-dom";
-import { fetchCourse } from "@/hooks/useCourse";
+import { archiveCourse, fetchCourse } from "@/hooks/useCourse";
 import { toast } from "sonner"; // shadcn/ui sonner
 import { Loader2 } from "lucide-react"; // For loading spinner
 
@@ -30,7 +30,8 @@ const ClassroomPage: React.FC = () => {
   const navigate = useNavigate();
 
   const { data: courses, isLoading, error } = fetchCourse();
-
+  const archiveCourseMutation = archiveCourse();
+  console.log(courses)
   // Handle error with shadcn/ui sonner toast
   useEffect(() => {
     if (error) {
@@ -46,15 +47,18 @@ const ClassroomPage: React.FC = () => {
   }, [error, navigate]);
 
   // Handler functions for dropdown menu actions
-  const handleEditCourse = (courseId: string) => {
+  const handleEditCourse = (courseId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     console.log(`Edit course: ${courseId}`);
   };
 
-  const handleLeaveCourse = (courseId: string) => {
+  const handleLeaveCourse = (courseId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     console.log(`Leave course: ${courseId}`);
   };
 
-  const handleCopyLink = (courseId: string) => {
+  const handleCopyLink = (courseId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     const link = `https://yourapp.com/classroom/${courseId}`;
     navigator.clipboard
       .writeText(link)
@@ -68,8 +72,19 @@ const ClassroomPage: React.FC = () => {
       });
   };
 
-  const handleArchiveCourse = (courseId: string) => {
+  const handleArchiveCourse = (courseId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     console.log(`Archive course: ${courseId}`);
+    archiveCourseMutation.mutate(courseId, {
+      onSuccess: () => {
+        toast.success("Course archived successfully!");
+      },
+      onError: (err) => {
+        toast.error("Failed to archive course", {
+          description: err.message,
+        });
+      },
+    });
   };
 
   // Loading container
@@ -107,7 +122,7 @@ const ClassroomPage: React.FC = () => {
               >
                 <div
                   className="h-24 sm:h-28 lg:h-32 flex items-center justify-center relative"
-                  style={{ backgroundColor: course.background_color }} // Updated to match Course type
+                  style={{ backgroundColor: course.background_color }}
                 >
                   <h3 className="text-xl sm:text-2xl font-bold text-white px-3 text-center line-clamp-2">
                     {course.name}
@@ -121,7 +136,10 @@ const ClassroomPage: React.FC = () => {
                     </Badge>
                   )}
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
+                    <DropdownMenuTrigger
+                      asChild
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <Button
                         variant="ghost"
                         size="icon"
@@ -134,14 +152,14 @@ const ClassroomPage: React.FC = () => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
                       <DropdownMenuItem
-                        onClick={() => handleEditCourse(course.id)}
+                        onClick={(e) => handleEditCourse(course.id, e)}
                         className="cursor-pointer"
                       >
                         <Edit className="mr-2 h-4 w-4" />
                         <span>Edit</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => handleLeaveCourse(course.id)}
+                        onClick={(e) => handleLeaveCourse(course.id, e)}
                         className="cursor-pointer"
                       >
                         <LogOut className="mr-2 h-4 w-4" />
@@ -149,14 +167,14 @@ const ClassroomPage: React.FC = () => {
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        onClick={() => handleCopyLink(course.id)}
+                        onClick={(e) => handleCopyLink(course.id, e)}
                         className="cursor-pointer"
                       >
                         <Link className="mr-2 h-4 w-4" />
                         <span>Copy class link</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => handleArchiveCourse(course.id)}
+                        onClick={(e) => handleArchiveCourse(course.id, e)}
                         className="cursor-pointer"
                       >
                         <Archive className="mr-2 h-4 w-4" />
@@ -168,19 +186,17 @@ const ClassroomPage: React.FC = () => {
                 <CardContent className="pb-4">
                   <div className="flex items-center mb-3">
                     <Avatar className="h-8 w-8 sm:h-10 sm:w-10 mr-3 ring-2 ring-gray-200">
-                      <AvatarImage src={course.admin.avatar} />{" "}
-                      {/* Updated to match Course type */}
+                      <AvatarImage src={course.admin.avatar} />
                       <AvatarFallback
-                        style={{ backgroundColor: course.background_color }} // Updated
+                        style={{ backgroundColor: course.background_color }}
                         className="text-white text-sm"
                       >
-                        {course.admin.firstName.charAt(0)} {/* Updated */}
+                        {course.admin.firstName.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-sm sm:text-base">
-                        {course.admin.firstName} {course.admin.lastName}{" "}
-                        {/* Updated */}
+                        {course.admin.firstName} {course.admin.lastName}
                       </p>
                     </div>
                   </div>
