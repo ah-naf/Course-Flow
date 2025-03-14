@@ -1,5 +1,5 @@
 // src/components/AddClassDialog.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -14,49 +14,113 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Image as ImageIcon, Plus, X } from "lucide-react";
 import { useJoinCourse } from "@/hooks/useCourse";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
+import { cn } from "@/lib/utils"; // Assuming you have a utility for classNames
 
 interface AddClassDialogProps {
-  children?: React.ReactNode; // For the DialogTrigger (e.g., the Plus button)
+  children?: React.ReactNode;
 }
 
-const AddClassDialog: React.FC<AddClassDialogProps> = ({ children }) => {
-  // State for class creation form
-  const [className, setClassName] = useState("");
-  const [classDescription, setClassDescription] = useState("");
-  const [coverPic, setCoverPic] = useState<File | null>(null);
-  const [classId, setClassId] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const joinCourseMutation = useJoinCourse();
+const classSchema = yup.object().shape({
+  id: yup
+    .string()
+    .required("Class ID is required")
+    .min(4, "Class ID must be at least 4 characters")
+    .max(20, "Class ID must not exceed 20 characters")
+    .matches(/^[a-zA-Z0-9]+$/, "Class ID must be alphanumeric"),
+  name: yup
+    .string()
+    .required("Class name is required")
+    .min(3, "Class name must be at least 3 characters")
+    .max(100, "Class name must not exceed 100 characters"),
+  description: yup.string().optional(),
+  cover_pic: yup
+    .mixed()
+    .optional()
+    .test(
+      "fileType",
+      "Invalid image format. Supported formats: jpg, jpeg, png, gif",
+      (value) => {
+        if (!value) return true;
+        if (value instanceof File) {
+          const validTypes = [
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/jpg",
+          ];
+          return validTypes.includes(value.type);
+        }
+        return false;
+      }
+    ),
+});
 
-  // Handle file input for cover image
+type ClassFormData = yup.InferType<typeof classSchema>;
+
+const AddClassDialog: React.FC<AddClassDialogProps> = ({ children }) => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [coverPicPreview, setCoverPicPreview] = useState<string | null>(null);
+  const joinCourseMutation = useJoinCourse();
+  const [classId, setClassId] = useState("");
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setValue,
+    watch,
+    setError,
+  } = useForm<ClassFormData>({
+    resolver: yupResolver(classSchema),
+    defaultValues: {
+      id: "",
+      name: "",
+      description: "",
+      cover_pic: undefined,
+    },
+  });
+
+  const coverPic = watch("cover_pic");
+
   const handleCoverPicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setCoverPic(file);
+      const validTypes = ["image/jpeg", "image/png", "image/gif", "image/jpg"];
+
+      if (validTypes.includes(file.type)) {
+        setValue("cover_pic", file);
+        setCoverPicPreview(URL.createObjectURL(file));
+      } else {
+        // Set error manually
+        setError("cover_pic", {
+          type: "manual",
+          message:
+            "Invalid image format. Supported formats: jpg, jpeg, png, gif",
+        });
+        // Clear any existing preview
+        setCoverPicPreview(null);
+        // Clear the file input
+        e.target.value = "";
+      }
     }
   };
 
-  // Handle removing the cover image
   const handleRemoveCoverPic = () => {
-    setCoverPic(null);
+    setValue("cover_pic", undefined);
+    setCoverPicPreview(null);
   };
 
-  // Handle class creation
-  const handleCreateClass = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Creating class:", {
-      name: className,
-      description: classDescription,
-      coverPic,
-    });
-    // Reset form and close dialog
-    setClassName("");
-    setClassDescription("");
-    setCoverPic(null);
+  const onSubmit = (data: ClassFormData) => {
+    console.log("Creating class:", data);
+    reset();
+    setCoverPicPreview(null);
     setIsDialogOpen(false);
   };
 
-  // Handle class join
   const handleJoinClass = (e: React.FormEvent) => {
     e.preventDefault();
     joinCourseMutation.mutate(classId, {
@@ -69,7 +133,6 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({ children }) => {
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      {/* Dialog Trigger (e.g., the Plus button) */}
       {children ? (
         <DialogTrigger asChild>{children}</DialogTrigger>
       ) : (
@@ -79,7 +142,6 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({ children }) => {
             size="icon"
             className="rounded-full hover:bg-gray-100"
             title="Add New Class"
-            aria-label="Add a new class or join an existing one"
           >
             <Plus className="h-6 w-6" />
           </Button>
@@ -99,117 +161,117 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({ children }) => {
           <TabsList className="grid w-full grid-cols-2 h-auto rounded-lg bg-gray-100 p-1">
             <TabsTrigger
               value="create"
-              className="text-xs sm:text-sm py-2 sm:py-2.5 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm truncate"
+              className="text-xs sm:text-sm py-2 sm:py-2.5"
             >
               Create Class
             </TabsTrigger>
             <TabsTrigger
               value="join"
-              className="text-xs sm:text-sm py-2 sm:py-2.5 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm truncate"
+              className="text-xs sm:text-sm py-2 sm:py-2.5"
             >
               Join Class
             </TabsTrigger>
           </TabsList>
-          {/* Create Class Tab */}
+
           <TabsContent value="create" className="mt-6">
-            <form onSubmit={handleCreateClass} className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div>
                 <label
-                  htmlFor="classID"
+                  htmlFor="id"
                   className="text-sm sm:text-base font-medium text-gray-700"
                 >
-                  Class ID
-                  <span className="text-red-500 ml-1" aria-hidden="true">
-                    *
-                  </span>
-                  <span className="sr-only"> (required)</span>
+                  Class ID <span className="text-red-500 ml-1">*</span>
                 </label>
                 <Input
-                  id="classID"
-                  value={className}
-                  onChange={(e) => setClassName(e.target.value)}
+                  id="id"
+                  {...register("id")}
                   placeholder="Enter a unique id for your class"
-                  required
-                  className="mt-2 text-sm sm:text-base py-2 sm:py-3"
-                  aria-describedby="classIDHelp"
+                  className={cn(
+                    "mt-2 text-sm sm:text-base py-2 sm:py-3",
+                    errors.id && "border-red-500 focus:ring-red-500"
+                  )}
                 />
-                <p
-                  id="classIDHelp"
-                  className="mt-1 text-xs sm:text-sm text-gray-500"
-                >
+                {errors.id && (
+                  <p className="mt-1 text-xs sm:text-sm text-red-500">
+                    {errors.id.message}
+                  </p>
+                )}
+                <p className="mt-1 text-xs sm:text-sm text-gray-500">
                   Give your class a unique id (e.g., "react-101", "node-404").
                 </p>
               </div>
+
               <div>
                 <label
-                  htmlFor="className"
+                  htmlFor="name"
                   className="text-sm sm:text-base font-medium text-gray-700"
                 >
-                  Class Name
-                  <span className="text-red-500 ml-1" aria-hidden="true">
-                    *
-                  </span>
-                  <span className="sr-only"> (required)</span>
+                  Class Name <span className="text-red-500 ml-1">*</span>
                 </label>
                 <Input
-                  id="className"
-                  value={className}
-                  onChange={(e) => setClassName(e.target.value)}
+                  id="name"
+                  {...register("name")}
                   placeholder="Enter the name of your class"
-                  required
-                  className="mt-2 text-sm sm:text-base py-2 sm:py-3"
-                  aria-describedby="classNameHelp"
+                  className={cn(
+                    "mt-2 text-sm sm:text-base py-2 sm:py-3",
+                    errors.name && "border-red-500 focus:ring-red-500"
+                  )}
                 />
-                <p
-                  id="classNameHelp"
-                  className="mt-1 text-xs sm:text-sm text-gray-500"
-                >
+                {errors.name && (
+                  <p className="mt-1 text-xs sm:text-sm text-red-500">
+                    {errors.name.message}
+                  </p>
+                )}
+                <p className="mt-1 text-xs sm:text-sm text-gray-500">
                   Give your class a descriptive name (e.g., "Introduction to
                   React").
                 </p>
               </div>
+
               <div>
                 <label
-                  htmlFor="classDescription"
+                  htmlFor="description"
                   className="text-sm sm:text-base font-medium text-gray-700"
                 >
                   Description
                 </label>
                 <Textarea
-                  id="classDescription"
-                  value={classDescription}
-                  onChange={(e) => setClassDescription(e.target.value)}
+                  id="description"
+                  {...register("description")}
                   placeholder="Describe what this class is about"
                   rows={4}
-                  className="mt-2 text-sm sm:text-base py-2 sm:py-3"
-                  aria-describedby="classDescriptionHelp"
+                  className={cn(
+                    "mt-2 text-sm sm:text-base py-2 sm:py-3",
+                    errors.description && "border-red-500 focus:ring-red-500"
+                  )}
                 />
-                <p
-                  id="classDescriptionHelp"
-                  className="mt-1 text-xs sm:text-sm text-gray-500"
-                >
-                  Provide a brief overview of the class content (e.g., topics,
-                  goals). This field is optional.
+                {errors.description && (
+                  <p className="mt-1 text-xs sm:text-sm text-red-500">
+                    {errors.description.message}
+                  </p>
+                )}
+                <p className="mt-1 text-xs sm:text-sm text-gray-500">
+                  Provide a brief overview of the class content (optional).
                 </p>
               </div>
+
               <div>
                 <label
-                  htmlFor="coverPic"
+                  htmlFor="cover_pic"
                   className="text-sm sm:text-base font-medium text-gray-700"
                 >
                   Cover Image
                 </label>
                 <div className="mt-2 flex items-center">
                   <Input
-                    id="coverPic"
+                    id="cover_pic"
                     type="file"
                     accept="image/*"
                     onChange={handleCoverPicChange}
                     className="hidden"
-                    aria-describedby="coverPicHelp"
                   />
                   <label
-                    htmlFor="coverPic"
+                    htmlFor="cover_pic"
                     className="cursor-pointer inline-flex items-center px-4 py-2 sm:px-5 sm:py-3 border border-gray-300 rounded-md shadow-sm text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50"
                   >
                     <ImageIcon className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-gray-500" />
@@ -222,29 +284,31 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({ children }) => {
                       size="sm"
                       onClick={handleRemoveCoverPic}
                       className="ml-3 text-gray-500 hover:text-red-500"
-                      aria-label="Remove cover image"
                     >
                       <X className="h-5 w-5" />
                     </Button>
                   )}
                 </div>
-                {coverPic && (
+                {errors.cover_pic && (
+                  <p className="mt-1 text-xs sm:text-sm text-red-500">
+                    {errors.cover_pic.message}
+                  </p>
+                )}
+                {coverPicPreview && (
                   <div className="mt-3">
                     <img
-                      src={URL.createObjectURL(coverPic)}
+                      src={coverPicPreview}
                       alt="Cover Image Preview"
                       className="h-32 w-full object-contain object-center rounded-md"
                     />
                   </div>
                 )}
-                <p
-                  id="coverPicHelp"
-                  className="mt-1 text-xs sm:text-sm text-gray-500"
-                >
+                <p className="mt-1 text-xs sm:text-sm text-gray-500">
                   Upload an image to represent your class (optional, PNG/JPG
                   recommended).
                 </p>
               </div>
+
               <Button
                 type="submit"
                 className="w-full text-sm sm:text-base py-2 sm:py-3"
@@ -253,7 +317,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({ children }) => {
               </Button>
             </form>
           </TabsContent>
-          {/* Join Class Tab */}
+
           <TabsContent value="join" className="mt-6">
             <form onSubmit={handleJoinClass} className="space-y-6">
               <div>
@@ -261,11 +325,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({ children }) => {
                   htmlFor="classId"
                   className="text-sm sm:text-base font-medium text-gray-700"
                 >
-                  Class ID
-                  <span className="text-red-500 ml-1" aria-hidden="true">
-                    *
-                  </span>
-                  <span className="sr-only"> (required)</span>
+                  Class ID <span className="text-red-500 ml-1">*</span>
                 </label>
                 <Input
                   id="classId"
@@ -274,12 +334,8 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({ children }) => {
                   placeholder="Enter the class ID to join"
                   required
                   className="mt-2 text-sm sm:text-base py-2 sm:py-3"
-                  aria-describedby="classIdHelp"
                 />
-                <p
-                  id="classIdHelp"
-                  className="mt-1 text-xs sm:text-sm text-gray-500"
-                >
+                <p className="mt-1 text-xs sm:text-sm text-gray-500">
                   Enter the unique class ID provided by the instructor (e.g.,
                   "CS101-2024").
                 </p>
