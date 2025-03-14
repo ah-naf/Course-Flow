@@ -13,7 +13,7 @@ interface CourseResponse extends Course {
   admin: User;
 }
 
-export const fetchCourse = (
+export const useFetchCourse = (
   archived: boolean = false
 ): UseQueryResult<CourseResponse[], Error> => {
   return useQuery<CourseResponse[], Error>({
@@ -29,7 +29,7 @@ export const fetchCourse = (
   });
 };
 
-export const fetchTeachingCourses = (): UseQueryResult<
+export const useFetchTeachingCourses = (): UseQueryResult<
   CourseResponse[],
   Error
 > => {
@@ -44,7 +44,7 @@ export const fetchTeachingCourses = (): UseQueryResult<
   });
 };
 
-export const archiveCourse = () => {
+export const useArchiveCourse = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -76,7 +76,7 @@ export const archiveCourse = () => {
   });
 };
 
-export const restoreCourse = () => {
+export const useRestoreCourse = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -107,7 +107,7 @@ export const restoreCourse = () => {
   });
 };
 
-export const deleteCourse = () => {
+export const useDeleteCourse = () => {
   const queryClient = useQueryClient();
 
   return useMutation({

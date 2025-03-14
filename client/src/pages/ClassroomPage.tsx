@@ -21,7 +21,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useNotificationStore } from "@/store/notificationStore";
 import { useNavigate } from "react-router-dom";
-import { archiveCourse, fetchCourse, useLeaveCourse } from "@/hooks/useCourse";
+import { useArchiveCourse, useFetchCourse, useLeaveCourse } from "@/hooks/useCourse";
 import { toast } from "sonner"; // shadcn/ui sonner
 import { Loader2 } from "lucide-react"; // For loading spinner
 import { useUserStore } from "@/store/userStore";
@@ -39,8 +39,8 @@ const ClassroomPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useUserStore();
 
-  const { data: courses, isLoading, error } = fetchCourse();
-  const archiveCourseMutation = archiveCourse();
+  const { data: courses, isLoading, error } = useFetchCourse();
+  const archiveCourseMutation = useArchiveCourse();
 
   const [leaveCourseDialogOpen, setLeaveCourseDialogOpen] =
     React.useState(false);

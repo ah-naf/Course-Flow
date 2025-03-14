@@ -18,15 +18,19 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Archive, MoreVertical, Trash, RefreshCw } from "lucide-react";
-import { deleteCourse, fetchCourse, restoreCourse } from "@/hooks/useCourse";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { formatRelativeTime } from "@/utils/formatRelativeTime";
+import {
+  useDeleteCourse,
+  useFetchCourse,
+  useRestoreCourse,
+} from "@/hooks/useCourse";
 
 const ArchivedPage: React.FC = () => {
-  const { data: archivedCourses, isLoading, error } = fetchCourse(true);
-  const restoreMutation = restoreCourse();
-  const deleteCourseMutation = deleteCourse();
+  const { data: archivedCourses, isLoading, error } = useFetchCourse(true);
+  const restoreMutation = useRestoreCourse();
+  const deleteCourseMutation = useDeleteCourse();
 
   // State for managing the confirmation modal
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);

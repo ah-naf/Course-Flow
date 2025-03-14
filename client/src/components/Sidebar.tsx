@@ -10,9 +10,8 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useNavigate } from "react-router-dom";
-import { fetchCourse } from "@/hooks/useCourse"; // For enrolled courses
-import { fetchTeachingCourses } from "@/hooks/useCourse"; // New hook for teaching courses
 import { Loader2 } from "lucide-react"; // For loading spinner
+import { useFetchCourse, useFetchTeachingCourses } from "@/hooks/useCourse";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -28,14 +27,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     data: teachingCourses,
     isLoading: isTeachingLoading,
     error: teachingError,
-  } = fetchTeachingCourses();
+  } = useFetchTeachingCourses();
 
   // Fetch enrolled courses (non-archived)
   const {
     data: enrolledCourses,
     isLoading: isEnrolledLoading,
     error: enrolledError,
-  } = fetchCourse(false);
+  } = useFetchCourse(false);
 
   return (
     <div

@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react"; // Added Send icon
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import ClassroomChat from "@/components/ClassroomChat";
-import { fetchCourse } from "@/hooks/useCourse";
 
 // Main ClassPage Component
 const ClassPage: React.FC = () => {
