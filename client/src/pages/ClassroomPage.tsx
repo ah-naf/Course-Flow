@@ -21,16 +21,33 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useNotificationStore } from "@/store/notificationStore";
 import { useNavigate } from "react-router-dom";
-import { archiveCourse, fetchCourse } from "@/hooks/useCourse";
+import { archiveCourse, fetchCourse, useLeaveCourse } from "@/hooks/useCourse";
 import { toast } from "sonner"; // shadcn/ui sonner
 import { Loader2 } from "lucide-react"; // For loading spinner
+import { useUserStore } from "@/store/userStore";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const ClassroomPage: React.FC = () => {
   const { getUnreadCountForClass } = useNotificationStore();
   const navigate = useNavigate();
+  const { user } = useUserStore();
 
   const { data: courses, isLoading, error } = fetchCourse();
   const archiveCourseMutation = archiveCourse();
+
+  const [leaveCourseDialogOpen, setLeaveCourseDialogOpen] =
+    React.useState(false);
+  const [selectedCourse, setSelectedCourse] = React.useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   // Handle error with shadcn/ui sonner toast
   useEffect(() => {
@@ -48,14 +65,19 @@ const ClassroomPage: React.FC = () => {
     console.log(`Edit course: ${courseId}`);
   };
 
-  const handleLeaveCourse = (courseId: string, e: React.MouseEvent) => {
+  const handleLeaveCourse = (
+    courseId: string,
+    courseName: string,
+    e: React.MouseEvent
+  ) => {
     e.stopPropagation();
-    console.log(`Leave course: ${courseId}`);
+    setSelectedCourse({ id: courseId, name: courseName });
+    setLeaveCourseDialogOpen(true);
   };
 
-  const handleCopyLink = (courseId: string, e: React.MouseEvent) => {
+  const handleCopyLink = (joinCode: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const link = `https://yourapp.com/classroom/${courseId}`;
+    const link = `https://localhost:5173/join/${joinCode}`;
     navigator.clipboard
       .writeText(link)
       .then(() => {
@@ -137,35 +159,33 @@ const ClassroomPage: React.FC = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
+                      {user?.id !== course.admin.id && (
+                        <DropdownMenuItem
+                          onClick={(e) =>
+                            handleLeaveCourse(course.id, course.name, e)
+                          }
+                          className="cursor-pointer"
+                        >
+                          <LogOut className="mr-2 h-4 w-4" />
+                          <span>Leave</span>
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem
-                        onClick={(e) => handleEditCourse(course.id, e)}
-                        className="cursor-pointer"
-                      >
-                        <Edit className="mr-2 h-4 w-4" />
-                        <span>Edit</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={(e) => handleLeaveCourse(course.id, e)}
-                        className="cursor-pointer"
-                      >
-                        <LogOut className="mr-2 h-4 w-4" />
-                        <span>Leave</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={(e) => handleCopyLink(course.id, e)}
+                        onClick={(e) => handleCopyLink(course.joinCode, e)}
                         className="cursor-pointer"
                       >
                         <Link className="mr-2 h-4 w-4" />
                         <span>Copy class link</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={(e) => handleArchiveCourse(course.id, e)}
-                        className="cursor-pointer"
-                      >
-                        <Archive className="mr-2 h-4 w-4" />
-                        <span>Archive</span>
-                      </DropdownMenuItem>
+                      {user?.id === course.admin.id && (
+                        <DropdownMenuItem
+                          onClick={(e) => handleArchiveCourse(course.id, e)}
+                          className="cursor-pointer text-red-500 "
+                        >
+                          <Archive className="mr-2 h-4 w-4 text-red-500" />
+                          <span className="hover:text-red-500">Archive</span>
+                        </DropdownMenuItem>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -208,8 +228,80 @@ const ClassroomPage: React.FC = () => {
           <Button>Join Courses</Button>
         </div>
       )}
+      {selectedCourse && (
+        <LeaveCourseDialog
+          isOpen={leaveCourseDialogOpen}
+          onClose={() => setLeaveCourseDialogOpen(false)}
+          courseId={selectedCourse.id}
+          courseName={selectedCourse.name}
+        />
+      )}
     </div>
   );
 };
 
 export default ClassroomPage;
+
+interface LeaveCourseDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  courseId: string;
+  courseName: string;
+}
+
+const LeaveCourseDialog: React.FC<LeaveCourseDialogProps> = ({
+  isOpen,
+  onClose,
+  courseId,
+  courseName,
+}) => {
+  const [isLeaving, setIsLeaving] = React.useState(false);
+  const leaveCourseMutation = useLeaveCourse();
+
+  const handleLeave = async () => {
+    setIsLeaving(true);
+    leaveCourseMutation.mutate(
+      { courseId, courseName },
+      {
+        onSuccess: () => onClose(),
+      }
+    );
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center">
+            <LogOut className="mr-2 h-5 w-5 text-red-500" />
+            Leave Course
+          </DialogTitle>
+          <DialogDescription>
+            Are you sure you want to leave "{courseName}"? You will no longer
+            have access to the course content and discussions.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="sm:justify-between">
+          <Button variant="outline" onClick={onClose} disabled={isLeaving}>
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={handleLeave}
+            disabled={isLeaving}
+            className="ml-2"
+          >
+            {isLeaving ? (
+              <>
+                <span className="mr-2">Leaving...</span>
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-r-transparent" />
+              </>
+            ) : (
+              "Leave Course"
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
