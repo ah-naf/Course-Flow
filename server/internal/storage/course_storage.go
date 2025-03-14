@@ -21,6 +21,67 @@ func NewCourseStorage(db *sql.DB) *CourseStorage {
 	}
 }
 
+func (s *CourseStorage) LeaveCourse(courseID, userID string) error {
+	// First check if the user is the admin of the course
+	adminQuery := `
+		SELECT EXISTS (
+			SELECT 1 FROM courses 
+			WHERE id = $1 AND admin_id = $2
+		)
+	`
+	var isAdmin bool
+	err := s.DB.QueryRow(adminQuery, courseID, userID).Scan(&isAdmin)
+	if err != nil {
+		return err
+	}
+
+	// If user is admin, they cannot leave the course
+	if isAdmin {
+		return &utils.ApiError{
+			Code:    http.StatusForbidden,
+			Message: "As the course admin, you cannot leave the course. You must either delete or transfer ownership first.",
+		}
+	}
+
+	// Proceed with leaving the course if user is not the admin
+	tx, err := s.DB.Begin()
+	if err != nil {
+		return err
+	}
+
+	query := `
+		DELETE FROM course_members
+		WHERE course_id = $1 AND user_id = $2
+	`
+
+	result, err := tx.Exec(query, courseID, userID)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if rowsAffected == 0 {
+		tx.Rollback()
+		return &utils.ApiError{
+			Code:    http.StatusNotFound,
+			Message: "You are not a member of this course or the course does not exist.",
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
+}
+
 func (s *CourseStorage) DeleteCourse(courseID, adminID string) error {
 	tx, err := s.DB.Begin()
 	if err != nil {

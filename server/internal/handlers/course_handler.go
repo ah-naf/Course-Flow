@@ -17,6 +17,15 @@ func NewCourseHandler(service *services.CourseService) *CourseHandler {
 	return &CourseHandler{Service: service}
 }
 
+func (h *CourseHandler) LeaveCourseHandler(w http.ResponseWriter, r *http.Request) error {
+	err := h.Service.LeaveCourse(r)
+	if err != nil {
+		return err
+	}
+
+	return utils.WriteJSON(w, http.StatusOK, map[string]string{"message": "You have successfully left the course."})
+}
+
 func (h *CourseHandler) DeleteCourseHandler(w http.ResponseWriter, r *http.Request) error {
 	err := h.Service.DeleteCourse(r)
 	if err != nil {

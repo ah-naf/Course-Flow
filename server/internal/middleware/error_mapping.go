@@ -12,5 +12,5 @@ func mapErrorToStatus(err error) (int, string) {
 	}
 
 	// Ensure non-ApiError errors don’t expose internal details
-	return http.StatusInternalServerError, "An unexpected error occurred"
+	return http.StatusInternalServerError, err.Error()
 }

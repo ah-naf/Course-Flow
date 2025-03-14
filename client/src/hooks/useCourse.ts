@@ -136,7 +136,6 @@ export const deleteCourse = () => {
   });
 };
 
-
 interface LeaveCourseMutationVars {
   courseId: string;
   courseName: string;
@@ -147,10 +146,8 @@ export const useLeaveCourse = () => {
 
   return useMutation({
     mutationFn: async ({ courseId, courseName }: LeaveCourseMutationVars) => {
-      await axiosInstance.post(`/courses/leave`, {
-        course_id: courseId,
-      });
-      
+      await axiosInstance.delete(`/courses/leave/${courseId}`);
+
       // Return the course name to use in the success handler
       return { courseName };
     },
@@ -159,10 +156,11 @@ export const useLeaveCourse = () => {
       queryClient.invalidateQueries({ queryKey: ["courses", false] }); // Refresh ClassroomPage
       queryClient.invalidateQueries({ queryKey: ["courses", true] }); // Refresh ArchivedPage
       queryClient.invalidateQueries({ queryKey: ["teachingCourses"] });
-      
+
       // Show success toast with course name
       toast.success(`Left "${data.courseName}" successfully`, {
-        description: "You can rejoin this course using the join code if needed."
+        description:
+          "You can rejoin this course using the join code if needed.",
       });
     },
     onError: (error, variables) => {
@@ -170,7 +168,8 @@ export const useLeaveCourse = () => {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<{ error?: string }>;
         toast.error(`Failed to leave "${variables.courseName}"`, {
-          description: axiosError.response?.data?.error || "An unknown error occurred",
+          description:
+            axiosError.response?.data?.error || "An unknown error occurred",
         });
       } else {
         toast.error(`Failed to leave "${variables.courseName}"`, {

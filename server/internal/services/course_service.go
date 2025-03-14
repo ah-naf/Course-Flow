@@ -32,6 +32,25 @@ func NewCourseService(courseStorage *storage.CourseStorage) *CourseService {
 	return &CourseService{CourseStorage: courseStorage}
 }
 
+func (s *CourseService) LeaveCourse(r *http.Request) error {
+	ctx := r.Context()
+	userID, err := utils.GetUserIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	vars := mux.Vars(r)
+	courseID := vars["id"]
+	if courseID == "" {
+		return &utils.ApiError{
+			Code:    http.StatusBadRequest,
+			Message: "course_id is required",
+		}
+	}
+
+	return s.CourseStorage.LeaveCourse(courseID, userID)
+}
+
 func (s *CourseService) DeleteCourse(r *http.Request) error {
 	ctx := r.Context()
 	AdminID, err := utils.GetUserIDFromContext(ctx)
