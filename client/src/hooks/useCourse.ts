@@ -13,6 +13,35 @@ interface CourseResponse extends Course {
   admin: User;
 }
 
+export const useJoinCourse = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (joinCode: string) => {
+      await axiosInstance.post(`/courses/join`, {
+        course_id: joinCode,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["courses", false] }); // Refresh ClassroomPage
+      toast.success("Successfully joined the course!");
+    },
+    onError: (error) => {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<{ error?: string }>;
+        toast.error("Unable to join the course", {
+          description:
+            axiosError.response?.data?.error || "An unknown error occurred",
+        });
+      } else {
+        toast.error("Unable to join the course", {
+          description: "An unknown error occurred",
+        });
+      }
+    },
+  });
+};
+
 export const useFetchCourse = (
   archived: boolean = false
 ): UseQueryResult<CourseResponse[], Error> => {

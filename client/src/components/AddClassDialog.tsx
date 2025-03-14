@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Image as ImageIcon, Plus, X } from "lucide-react";
+import { useJoinCourse } from "@/hooks/useCourse";
 
 interface AddClassDialogProps {
   children?: React.ReactNode; // For the DialogTrigger (e.g., the Plus button)
@@ -25,6 +26,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({ children }) => {
   const [coverPic, setCoverPic] = useState<File | null>(null);
   const [classId, setClassId] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const joinCourseMutation = useJoinCourse();
 
   // Handle file input for cover image
   const handleCoverPicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,10 +59,12 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({ children }) => {
   // Handle class join
   const handleJoinClass = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Joining class with ID:", classId);
-    // Reset form and close dialog
-    setClassId("");
-    setIsDialogOpen(false);
+    joinCourseMutation.mutate(classId, {
+      onSuccess: () => {
+        setClassId("");
+        setIsDialogOpen(false);
+      },
+    });
   };
 
   return (

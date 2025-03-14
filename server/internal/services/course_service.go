@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-playground/validator"
@@ -119,6 +120,13 @@ func (s *CourseService) JoinCourseService(joinCode string, r *http.Request) erro
 	userID, err := utils.GetUserIDFromContext(ctx)
 	if err != nil {
 		return err
+	}
+
+	if strings.TrimSpace(joinCode) == "" {
+		return &utils.ApiError{
+			Code: http.StatusNotFound,
+			Message: "Course ID is required.",
+		}
 	}
 
 	return s.CourseStorage.JoinCourse(joinCode, userID)
