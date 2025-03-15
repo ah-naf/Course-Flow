@@ -146,7 +146,10 @@ const ClassroomPage: React.FC = () => {
                           : { backgroundColor: course.background_color }),
                       }}
                     >
-                      <h3 className="text-xl sm:text-2xl font-bold text-white px-3 text-center line-clamp-2">
+                      {course.cover_pic && (
+                        <div className="absolute inset-0 bg-black opacity-30" />
+                      )}
+                      <h3 className="text-xl sm:text-2xl z-100 font-bold text-white px-3 text-center line-clamp-2">
                         {course.name}
                       </h3>
                       {unreadCount > 0 && (
