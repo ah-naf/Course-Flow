@@ -11,7 +11,8 @@ import (
 
 func (r *Router) setupCourseRouter(router *mux.Router) {
 	courseStorage := storage.NewCourseStorage(r.DB)
-	courseService := services.NewCourseService(courseStorage)
+	documentStorage := storage.NewDocumentStorage(r.DB)
+	courseService := services.NewCourseService(courseStorage, documentStorage)
 	courseHandler := handlers.NewCourseHandler(courseService)
 
 	courseRouter := router.PathPrefix("/courses").Subrouter()

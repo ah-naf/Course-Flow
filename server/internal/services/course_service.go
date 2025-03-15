@@ -26,11 +26,16 @@ var backgroundColors = []string{
 }
 
 type CourseService struct {
-	CourseStorage *storage.CourseStorage
+	CourseStorage   *storage.CourseStorage
+	DocumentService *DocumentService
 }
 
-func NewCourseService(courseStorage *storage.CourseStorage) *CourseService {
-	return &CourseService{CourseStorage: courseStorage}
+func NewCourseService(courseStorage *storage.CourseStorage, documentStorage *storage.DocumentStorage) *CourseService {
+	documentService := NewDocumentService(documentStorage)
+	return &CourseService{
+		CourseStorage:   courseStorage,
+		DocumentService: documentService,
+	}
 }
 
 func (s *CourseService) LeaveCourse(r *http.Request) error {
@@ -124,7 +129,7 @@ func (s *CourseService) JoinCourseService(joinCode string, r *http.Request) erro
 
 	if strings.TrimSpace(joinCode) == "" {
 		return &utils.ApiError{
-			Code: http.StatusNotFound,
+			Code:    http.StatusNotFound,
 			Message: "Course ID is required.",
 		}
 	}
@@ -170,15 +175,32 @@ func (s *CourseService) CreateNewCourseService(course *models.Course, r *http.Re
 	course.IsPrivate = false
 	course.IsArchived = false
 	course.PostPermission = "Instructor"
-	now := time.Now()
-	course.CreatedAt = now
-	course.UpdatedAt = now
 
 	if course.BackgroundColor == "" {
 		// Create a new random instance instead of seeding the global source
 		randGen := rand.New(rand.NewSource(time.Now().UnixNano()))
 		course.BackgroundColor = backgroundColors[randGen.Intn(len(backgroundColors))]
 	}
+
+	if err := r.ParseMultipartForm(20 << 20); err != nil {
+		return &utils.ApiError{Code: http.StatusBadRequest, Message: "File too large"}
+	}
+
+	// Get all uploaded files from the "document" form field
+	files := r.MultipartForm.File["cover_pic"]
+
+	uploadedDoc, err := s.DocumentService.SaveFilesToLocal(files, instructorID)
+	if err != nil {
+		return err
+	}
+
+	if len(uploadedDoc) > 0 {
+		course.CoverPic = uploadedDoc[0].FilePath
+	}
+
+	now := time.Now()
+	course.CreatedAt = now
+	course.UpdatedAt = now
 
 	err = s.CourseStorage.CreateNewCourse(course)
 	if err != nil {

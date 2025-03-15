@@ -5,7 +5,6 @@ import (
 	"course-flow/internal/services"
 	"course-flow/internal/utils"
 	"encoding/json"
-	"log"
 	"net/http"
 )
 
@@ -104,15 +103,31 @@ func (h *CourseHandler) GetCoursesByInstructorHandler(w http.ResponseWriter, r *
 }
 
 func (h *CourseHandler) CreateCourseHandler(w http.ResponseWriter, r *http.Request) error {
+	// Parse the multipart form data (20MB max size)
+	if err := r.ParseMultipartForm(20 << 20); err != nil {
+		return &utils.ApiError{
+			Code:    http.StatusBadRequest,
+			Message: "Failed to parse form data: " + err.Error(),
+		}
+	}
+
 	var courseReq models.Course
-	if err := json.NewDecoder(r.Body).Decode(&courseReq); err != nil {
-		log.Fatal(err)
-		return err
+
+	// Get form values
+	courseReq.JoinCode = r.FormValue("id")
+	courseReq.Name = r.FormValue("name")
+	courseReq.Description = r.FormValue("description")
+
+	if courseReq.JoinCode == "" || courseReq.Name == "" {
+		return &utils.ApiError{
+			Code:    http.StatusBadRequest,
+			Message: "ID and Name are required fields",
+		}
 	}
 
 	if err := h.Service.CreateNewCourseService(&courseReq, r); err != nil {
 		return err
 	}
 
-	return utils.WriteJSON(w, http.StatusCreated, map[string]string{"message": "Successfully created new Class."})
+	return utils.WriteJSON(w, http.StatusCreated, map[string]string{"message": "Successfully created new class."})
 }

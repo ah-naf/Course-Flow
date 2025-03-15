@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 	"sync"
 	"time"
 )
@@ -147,11 +149,26 @@ func (s *DocumentService) DeleteDocument(id, userID string) error {
 func (s *DocumentService) SaveFileToLocal(file multipart.File, filename string) (string, error) {
 	mediaDir := utils.GetEnv("MEDIA_DIR")
 
-	timestamp := time.Now().Format("20060102_150405")
-	uniqueName := fmt.Sprintf("%s_%s", timestamp, filename)
-	filePath := filepath.Join(mediaDir, uniqueName)
+	// Format timestamp without spaces and special characters
+	timestamp := time.Now().UTC().Format("20060102_150405")
 
-	out, err := os.Create(filePath)
+	// Sanitize filename - replace spaces and special characters
+	sanitizedFilename := strings.ReplaceAll(filename, " ", "_")
+	// Remove any other problematic characters
+	re := regexp.MustCompile(`[^\w\.-]`)
+	sanitizedFilename = re.ReplaceAllString(sanitizedFilename, "_")
+
+	uniqueName := fmt.Sprintf("%s_%s", timestamp, sanitizedFilename)
+
+	// Ensure the directory exists
+	if err := os.MkdirAll(mediaDir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create directory: %v", err)
+	}
+
+	// Create the full system path for storage
+	fullPath := filepath.Join(mediaDir, uniqueName)
+	fmt.Println("path", fullPath)
+	out, err := os.Create(fullPath)
 	if err != nil {
 		return "", fmt.Errorf("failed to create file: %v", err)
 	}
@@ -162,5 +179,6 @@ func (s *DocumentService) SaveFileToLocal(file multipart.File, filename string) 
 		return "", fmt.Errorf("failed to save file: %v", err)
 	}
 
-	return filePath, nil
+	// Return the URL path, not the full system path
+	return fullPath, nil
 }
