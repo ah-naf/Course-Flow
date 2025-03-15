@@ -21,7 +21,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useNotificationStore } from "@/store/notificationStore";
 import { useNavigate } from "react-router-dom";
-import { useArchiveCourse, useFetchCourse, useLeaveCourse } from "@/hooks/useCourse";
+import {
+  useArchiveCourse,
+  useFetchCourse,
+  useLeaveCourse,
+} from "@/hooks/useCourse";
 import { toast } from "sonner"; // shadcn/ui sonner
 import { Loader2 } from "lucide-react"; // For loading spinner
 import { useUserStore } from "@/store/userStore";
@@ -33,6 +37,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  ContextMenu,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import { ContextMenuContent } from "@radix-ui/react-context-menu";
 
 const ClassroomPage: React.FC = () => {
   const { getUnreadCountForClass } = useNotificationStore();
@@ -40,6 +50,7 @@ const ClassroomPage: React.FC = () => {
   const { user } = useUserStore();
 
   const { data: courses, isLoading, error } = useFetchCourse();
+  console.log(courses);
   const archiveCourseMutation = useArchiveCourse();
 
   const [leaveCourseDialogOpen, setLeaveCourseDialogOpen] =
@@ -58,12 +69,6 @@ const ClassroomPage: React.FC = () => {
       });
     }
   }, [error]);
-
-  // Handler functions for dropdown menu actions
-  const handleEditCourse = (courseId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    console.log(`Edit course: ${courseId}`);
-  };
 
   const handleLeaveCourse = (
     courseId: string,
@@ -122,95 +127,90 @@ const ClassroomPage: React.FC = () => {
           {courses.map((course) => {
             const unreadCount = getUnreadCountForClass(course.id);
             return (
-              <Card
-                key={course.id}
-                className="overflow-hidden hover:shadow-lg pt-0 transition-all duration-200 cursor-pointer transform hover:-translate-y-1 border border-gray-200 rounded-xl"
-                title={course.name}
-                onClick={() => navigate(`/class/${course.id}`)}
-              >
-                <div
-                  className="h-24 sm:h-28 lg:h-32 flex items-center justify-center relative"
-                  style={{ backgroundColor: course.background_color }}
-                >
-                  <h3 className="text-xl sm:text-2xl font-bold text-white px-3 text-center line-clamp-2">
-                    {course.name}
-                  </h3>
-                  {unreadCount > 0 && (
-                    <Badge
-                      variant="destructive"
-                      className="absolute top-2 left-2 h-6 w-6 flex items-center justify-center rounded-full text-xs"
+              <ContextMenu key={course.id}>
+                <ContextMenuTrigger>
+                  <Card
+                    className="overflow-hidden hover:shadow-lg pt-0 transition-all duration-200 cursor-pointer transform hover:-translate-y-1 border border-gray-200 rounded-xl"
+                    title={course.name}
+                    onClick={() => navigate(`/class/${course.id}`)}
+                  >
+                    <div
+                      className="h-24 sm:h-28 lg:h-32 flex items-center justify-center relative"
+                      style={{
+                        ...(course.cover_pic
+                          ? {
+                              backgroundImage: `url(http://localhost:8080/${course.cover_pic})`,
+                              backgroundSize: "cover",
+                              backgroundPosition: "center",
+                            }
+                          : { backgroundColor: course.background_color }),
+                      }}
                     >
-                      {unreadCount}
-                    </Badge>
-                  )}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      asChild
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-white absolute top-2 right-2 opacity-70 hover:opacity-100 rounded-full hover:bg-white/20"
-                        title="More Options"
-                        aria-label="More options for this class"
-                      >
-                        <MoreVertical className="h-4 w-4 sm:h-5 sm:w-5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      {user?.id !== course.admin.id && (
-                        <DropdownMenuItem
-                          onClick={(e) =>
-                            handleLeaveCourse(course.id, course.name, e)
-                          }
-                          className="cursor-pointer"
+                      <h3 className="text-xl sm:text-2xl font-bold text-white px-3 text-center line-clamp-2">
+                        {course.name}
+                      </h3>
+                      {unreadCount > 0 && (
+                        <Badge
+                          variant="destructive"
+                          className="absolute top-2 left-2 h-6 w-6 flex items-center justify-center rounded-full text-xs"
                         >
-                          <LogOut className="mr-2 h-4 w-4" />
-                          <span>Leave</span>
-                        </DropdownMenuItem>
+                          {unreadCount}
+                        </Badge>
                       )}
-                      <DropdownMenuItem
-                        onClick={(e) => handleCopyLink(course.joinCode, e)}
-                        className="cursor-pointer"
-                      >
-                        <Link className="mr-2 h-4 w-4" />
-                        <span>Copy class link</span>
-                      </DropdownMenuItem>
-                      {user?.id === course.admin.id && (
-                        <DropdownMenuItem
-                          onClick={(e) => handleArchiveCourse(course.id, e)}
-                          className="cursor-pointer text-red-500 "
-                        >
-                          <Archive className="mr-2 h-4 w-4 text-red-500" />
-                          <span className="hover:text-red-500">Archive</span>
-                        </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-                <CardContent className="pb-4">
-                  <div className="flex items-center mb-3">
-                    <Avatar className="h-8 w-8 sm:h-10 sm:w-10 mr-3 ring-2 ring-gray-200">
-                      <AvatarImage src={course.admin.avatar} />
-                      <AvatarFallback
-                        style={{ backgroundColor: course.background_color }}
-                        className="text-white text-sm"
-                      >
-                        {course.admin.firstName.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-sm sm:text-base">
-                        {course.admin.firstName} {course.admin.lastName}
-                      </p>
                     </div>
-                  </div>
-                  <p className="text-sm text-gray-600 line-clamp-2">
-                    {course.description}
-                  </p>
-                </CardContent>
-              </Card>
+                    <CardContent className="pb-4">
+                      <div className="flex items-center mb-3">
+                        <Avatar className="h-8 w-8 sm:h-10 sm:w-10 mr-3 ring-2 ring-gray-200">
+                          <AvatarImage src={course.admin.avatar} />
+                          <AvatarFallback
+                            style={{ backgroundColor: course.background_color }}
+                            className="text-white text-sm"
+                          >
+                            {course.admin.firstName.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-sm sm:text-base">
+                            {course.admin.firstName} {course.admin.lastName}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-600 line-clamp-2">
+                        {course.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </ContextMenuTrigger>
+                <ContextMenuContent className="z-50 rounded-md shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                  {user?.id !== course.admin.id && (
+                    <ContextMenuItem
+                      onClick={(e) =>
+                        handleLeaveCourse(course.id, course.name, e)
+                      }
+                      className="cursor-pointer px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Leave</span>
+                    </ContextMenuItem>
+                  )}
+                  <ContextMenuItem
+                    onClick={(e) => handleCopyLink(course.joinCode, e)}
+                    className="cursor-pointer px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+                  >
+                    <Link className="mr-2 h-4 w-4" />
+                    <span>Copy class link</span>
+                  </ContextMenuItem>
+                  {user?.id === course.admin.id && (
+                    <ContextMenuItem
+                      onClick={(e) => handleArchiveCourse(course.id, e)}
+                      className="cursor-pointer px-4 py-2 text-sm text-red-500 hover:bg-red-50"
+                    >
+                      <Archive className="mr-2 h-4 w-4 text-red-500" />
+                      <span className="hover:text-red-500">Archive</span>
+                    </ContextMenuItem>
+                  )}
+                </ContextMenuContent>
+              </ContextMenu>
             );
           })}
         </div>

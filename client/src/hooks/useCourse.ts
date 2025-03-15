@@ -13,6 +13,61 @@ interface CourseResponse extends Course {
   admin: User;
 }
 
+interface CreateCourseFormData {
+  id: string;
+  name: string;
+  description: string;
+  cover_pic: File | undefined; // Can be a File object or filename string
+}
+
+export const useCreateCourse = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (formData: CreateCourseFormData) => {
+      // Create FormData object for multipart/form-data request
+      const data = new FormData();
+      data.append("id", formData.id);
+      data.append("name", formData.name);
+      data.append("description", formData.description || "");
+      if (formData.cover_pic) data.append("cover_pic", formData.cover_pic);
+
+      // Using a demo endpoint - in a real app, this would be your actual API endpoint
+      const response = await axiosInstance.post("/courses", data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      return response.data;
+    },
+    onSuccess: (data) => {
+      // Invalidate relevant queries to refresh course lists
+      queryClient.invalidateQueries({ queryKey: ["courses", false] });
+      queryClient.invalidateQueries({ queryKey: ["teachingCourses"] });
+
+      toast.success("Course created successfully!", {
+        description: `Your new course "${
+          data?.name || "course"
+        }" has been created.`,
+      });
+    },
+    onError: (error) => {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<{ error?: string }>;
+        toast.error("Failed to create course", {
+          description:
+            axiosError.response?.data?.error || "An unknown error occurred",
+        });
+      } else {
+        toast.error("Failed to create course", {
+          description: "An unknown error occurred",
+        });
+      }
+    },
+  });
+};
+
 export const useJoinCourse = () => {
   const queryClient = useQueryClient();
 

@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Image as ImageIcon, Plus, X } from "lucide-react";
-import { useJoinCourse } from "@/hooks/useCourse";
+import { useCreateCourse, useJoinCourse } from "@/hooks/useCourse";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -66,6 +66,8 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({ children }) => {
   const joinCourseMutation = useJoinCourse();
   const [classId, setClassId] = useState("");
 
+  const createClassMutation = useCreateCourse();
+
   const {
     register,
     handleSubmit,
@@ -116,9 +118,22 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({ children }) => {
 
   const onSubmit = (data: ClassFormData) => {
     console.log("Creating class:", data);
-    reset();
-    setCoverPicPreview(null);
-    setIsDialogOpen(false);
+
+    createClassMutation.mutate(
+      {
+        cover_pic: data.cover_pic as File,
+        id: data.id,
+        description: data.description || "",
+        name: data.name,
+      },
+      {
+        onSuccess: () => {
+          reset();
+          setCoverPicPreview(null);
+          setIsDialogOpen(false);
+        },
+      }
+    );
   };
 
   const handleJoinClass = (e: React.FormEvent) => {
