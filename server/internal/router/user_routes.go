@@ -20,5 +20,6 @@ func (r *Router) setupUserRouter(router *mux.Router) {
 
 	// User routes
 	userRouter.HandleFunc("", middleware.ConvertToHandlerFunc(userHandler.GetUserHandler)).Methods("GET")
+	userRouter.HandleFunc("/me", middleware.ConvertToHandlerFunc(userHandler.GetUserWithIDHandler, middleware.AuthMiddleware)).Methods("GET")
 	userRouter.HandleFunc("/edit", middleware.ConvertToHandlerFunc(userHandler.EditUserDetailsHadnler, middleware.AuthMiddleware)).Methods("PUT")
 }

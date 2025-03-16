@@ -15,7 +15,7 @@ import AddClassDialog from "@/components/AddClassDialog";
 import NotificationDialog from "@/components/NotificationDialog"; // Import the new component
 import ProfileDialog from "./ProfileDialog";
 import { useLogout } from "@/hooks/useAuth";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -26,6 +26,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = "" }) => {
   const { user, logout } = useUserStore();
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const logoutMutation = useLogout();
+  const location = useLocation();
 
   const handleLogout = () => {
     const token = localStorage.getItem("refresh_token");
@@ -77,17 +78,19 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = "" }) => {
       </div>
 
       <div className="ml-auto flex items-center space-x-3">
-        <AddClassDialog>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full hover:bg-gray-100"
-            title="Add New Class"
-            aria-label="Add a new class or join an existing one"
-          >
-            <Plus className="h-5 w-5" />
-          </Button>
-        </AddClassDialog>
+        {location.pathname === "/" && (
+          <AddClassDialog>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full hover:bg-gray-100"
+              title="Add New Class"
+              aria-label="Add a new class or join an existing one"
+            >
+              <Plus className="h-5 w-5" />
+            </Button>
+          </AddClassDialog>
+        )}
 
         {/* Use the NotificationDialog component */}
         <NotificationDialog />

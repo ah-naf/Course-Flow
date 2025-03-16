@@ -1,13 +1,15 @@
 package handlers
 
 import (
+	"context"
 	"course-flow/internal/models"
 	"course-flow/internal/services"
 	"course-flow/internal/utils"
-	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -313,5 +315,15 @@ func (h *AuthHandler) HandleGitHubCallback(w http.ResponseWriter, r *http.Reques
 		return err
 	}
 
-	return utils.WriteJSON(w, http.StatusOK, loginResp)
+	frontendCallback := "http://localhost:5173/oauth/callback"
+	redirectURL := fmt.Sprintf(
+		"%s?access_token=%s&refresh_token=%s",
+		frontendCallback,
+		url.QueryEscape(loginResp.AccessToken),
+		url.QueryEscape(loginResp.RefreshToken),
+	)
+	http.Redirect(w, r, redirectURL, http.StatusFound)
+	return nil
+
+	// return utils.WriteJSON(w, http.StatusOK, loginResp)
 }

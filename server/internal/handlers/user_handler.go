@@ -17,6 +17,15 @@ func NewUserHandler(service *services.UserService) *UserHandler {
 	return &UserHandler{Service: service}
 }
 
+func (h *UserHandler) GetUserWithIDHandler(w http.ResponseWriter, r *http.Request) error {
+	user, err := h.Service.GetUserWithID(r)
+	if err != nil {
+		return err
+	}
+
+	return utils.WriteJSON(w, http.StatusOK, user)
+}
+
 func (h *UserHandler) EditUserDetailsHadnler(w http.ResponseWriter, r *http.Request) error {
 	if err := r.ParseMultipartForm(20 << 20); err != nil {
 		return &utils.ApiError{

@@ -6,6 +6,7 @@ import ClassroomPage from "./pages/ClassroomPage";
 import AppLayout from "./layout/AppLayout";
 import ArchivedPage from "./pages/ArchivedPage";
 import ClassPage from "./pages/ClassPage";
+import OAuthCallback from "./pages/OAuthCallback";
 import { useUserStore } from "./store/userStore";
 
 const App: React.FC = () => {
@@ -15,7 +16,10 @@ const App: React.FC = () => {
     <Router>
       <Routes>
         {!user ? (
-          <Route path="/" element={<Home />} />
+          <>
+            <Route path="/" element={<Home />} />
+            <Route path="/oauth/callback" element={<OAuthCallback />} />
+          </>
         ) : (
           <Route element={<AppLayout />}>
             <Route path="/" element={<ClassroomPage />} />

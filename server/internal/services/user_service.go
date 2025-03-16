@@ -9,16 +9,26 @@ import (
 )
 
 type UserService struct {
-	Storage *storage.UserStorage
+	Storage         *storage.UserStorage
 	DocumentService *DocumentService
 }
 
 func NewUserService(storage *storage.UserStorage, documentStorage *storage.DocumentStorage) *UserService {
 	documentService := NewDocumentService(documentStorage)
 	return &UserService{
-		Storage: storage,
+		Storage:         storage,
 		DocumentService: documentService,
 	}
+}
+
+func (s *UserService) GetUserWithID(r *http.Request) (*models.User, error) {
+	ctx := r.Context()
+	userID, err := utils.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.Storage.GetUserWithID(userID)
 }
 
 func (s *UserService) EditUserDetails(user *models.User, r *http.Request) error {

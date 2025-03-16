@@ -18,6 +18,36 @@ func NewUserStorage(db *sql.DB) *UserStorage {
 	}
 }
 
+func (s *UserStorage) GetUserWithID(userID string) (*models.User, error) {
+	var user models.User
+
+	query := `
+		SELECT id, email, username, first_name, last_name, created_at, updated_at, avatar
+		FROM users
+		WHERE id = $1
+	`
+	err := s.DB.QueryRow(query, userID).Scan(
+		&user.ID,
+		&user.Email,
+		&user.Username,
+		&user.FirstName,
+		&user.LastName,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+		&user.Avatar,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, &utils.ApiError{
+				Code:    http.StatusNotFound,
+				Message: "User not found",
+			}
+		}
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (s *UserStorage) EditUserDetails(user *models.User) error {
 	tx, err := s.DB.Begin()
 	if err != nil {

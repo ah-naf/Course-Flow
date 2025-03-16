@@ -13,6 +13,7 @@ import { useLogin, useRegister } from "@/hooks/useAuth";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import axiosInstance from "@/api/axiosInstance";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -35,7 +36,6 @@ const initialData: UserFormData = {
   password: "",
 };
 
-// Single schema with conditional requirements
 const authSchema = yup.object().shape({
   firstName: yup.string().when("$mode", {
     is: "register",
@@ -73,7 +73,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   } = useForm<UserFormData>({
     resolver: yupResolver(authSchema),
     defaultValues: initialData,
-    context: { mode }, // Pass mode as context to schema
+    context: { mode },
   });
 
   const onSubmit: SubmitHandler<UserFormData> = (data) => {
@@ -88,6 +88,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         {
           onSuccess: () => {
             reset();
+            onClose();
           },
         }
       );
@@ -95,9 +96,15 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       loginMutation.mutate(data, {
         onSuccess: () => {
           reset();
+          onClose();
         },
       });
     }
+  };
+
+  const handleOAuthLogin = (provider: "google" | "github") => {
+    const redirectUrl = `${axiosInstance.defaults.baseURL}/auth/${provider}/login`;
+    window.location.href = redirectUrl; // Redirect to backend OAuth endpoint
   };
 
   const getInputBorderClass = (field: keyof UserFormData) => {
@@ -215,11 +222,16 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           </div>
           <button
             type="submit"
-            disabled={mode === "register" && registerMutation.isPending}
+            disabled={
+              (mode === "register" && registerMutation.isPending) ||
+              (mode === "login" && loginMutation.isPending)
+            }
             className="w-full py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition disabled:bg-blue-300"
           >
             {mode === "register" && registerMutation.isPending
               ? "Processing..."
+              : mode === "login" && loginMutation.isPending
+              ? "Logging in..."
               : mode === "login"
               ? "Login"
               : "Register"}
@@ -229,11 +241,19 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           or
         </span>
         <div className="space-y-2">
-          <button className="flex items-center justify-center w-full py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-100">
+          <button
+            type="button"
+            onClick={() => handleOAuthLogin("google")}
+            className="flex items-center justify-center w-full py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-100"
+          >
             <FaGoogle className="mr-2" size={20} />
             Sign in with Google
           </button>
-          <button className="flex items-center justify-center w-full py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-100">
+          <button
+            type="button"
+            onClick={() => handleOAuthLogin("github")}
+            className="flex items-center justify-center w-full py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-100"
+          >
             <FaGithub className="mr-2" size={20} />
             Sign in with GitHub
           </button>
@@ -243,6 +263,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <p>
               Don't have an account?{" "}
               <button
+                type="button"
                 className="text-blue-500 hover:underline cursor-pointer"
                 onClick={() => {
                   setMode("register");
@@ -256,6 +277,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <p>
               Already have an account?{" "}
               <button
+                type="button"
                 className="text-blue-500 hover:underline cursor-pointer"
                 onClick={() => {
                   setMode("login");
