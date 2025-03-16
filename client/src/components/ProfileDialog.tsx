@@ -90,6 +90,10 @@ const ProfileDialog: React.FC<ProfileDialogProps> = ({ isOpen, onClose }) => {
     user?.avatar ? `http://localhost:8080/${user.avatar}` : null
   );
 
+  // Track if we're using a custom uploaded avatar or the default one
+  const [isUsingUploadedAvatar, setIsUsingUploadedAvatar] =
+    React.useState(false);
+
   // Set initial form values when user changes
   useEffect(() => {
     if (user) {
@@ -98,6 +102,7 @@ const ProfileDialog: React.FC<ProfileDialogProps> = ({ isOpen, onClose }) => {
       setAvatarPreview(
         user.avatar ? `http://localhost:8080/${user.avatar}` : null
       );
+      setIsUsingUploadedAvatar(false);
     }
   }, [user, setValue]);
 
@@ -106,6 +111,7 @@ const ProfileDialog: React.FC<ProfileDialogProps> = ({ isOpen, onClose }) => {
     if (avatarFile instanceof File) {
       const objectUrl = URL.createObjectURL(avatarFile);
       setAvatarPreview(objectUrl);
+      setIsUsingUploadedAvatar(true);
       return () => URL.revokeObjectURL(objectUrl); // Clean up
     }
   }, [avatarFile]);
@@ -116,6 +122,7 @@ const ProfileDialog: React.FC<ProfileDialogProps> = ({ isOpen, onClose }) => {
     setAvatarPreview(
       user?.avatar ? `http://localhost:8080/${user.avatar}` : null
     );
+    setIsUsingUploadedAvatar(false);
   };
 
   const onSubmit = (data: UserEditFormData) => {
@@ -126,13 +133,10 @@ const ProfileDialog: React.FC<ProfileDialogProps> = ({ isOpen, onClose }) => {
         avatar: data.avatar as File | undefined,
       },
       {
-        onSuccess: (updatedUser) => {
-          // If your API returns the updated user data, you can use it directly
-          // Otherwise, you'll need to refetch user data to get the updated avatar
-          // This approach assumes your useUserStore has a way to update the user
-          // after a successful edit operation
+        onSuccess: () => {
           onClose(); // Close dialog on success
           reset(); // Reset form after successful submission
+          setIsUsingUploadedAvatar(false)
         },
       }
     );
@@ -179,10 +183,14 @@ const ProfileDialog: React.FC<ProfileDialogProps> = ({ isOpen, onClose }) => {
                       const file = e.target.files?.[0];
                       if (file) {
                         setValue("avatar", file);
+                        setIsUsingUploadedAvatar(true);
+                      } else {
+                        // Handle case where user cancels file selection
+                        // Keep the current state
                       }
                     }}
                   />
-                  {avatarFile && (
+                  {isUsingUploadedAvatar && (
                     <Button
                       type="button"
                       variant="ghost"

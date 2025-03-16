@@ -98,7 +98,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                   onClick={() => navigate(`/class/${course.id}`)} // Navigate to course page
                 >
                   <Avatar className="h-6 w-6">
-                    <AvatarImage src={course.admin.avatar} />
+                    <AvatarImage
+                      src={`http://localhost:8080/${course.admin.avatar}`}
+                    />
                     <AvatarFallback
                       style={{ backgroundColor: course.background_color }}
                       className="text-white text-xs"
@@ -154,7 +156,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                   onClick={() => navigate(`/class/${course.id}`)} // Navigate to course page
                 >
                   <Avatar className="h-6 w-6">
-                    <AvatarImage src={course.admin.avatar} />
+                    <AvatarImage
+                      src={`http://localhost:8080/${course.admin.avatar}`}
+                    />
                     <AvatarFallback
                       style={{ backgroundColor: course.background_color }}
                       className="text-white text-xs"

@@ -1,7 +1,7 @@
 import axiosInstance from "@/api/axiosInstance";
 import { useUserStore } from "@/store/userStore";
 import { User } from "@/utils/types";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
 
@@ -33,13 +33,14 @@ interface LogoutData {
 }
 
 interface EditUserData {
-  first_name: string
-  last_name: string
-  avatar: File | undefined
+  first_name: string;
+  last_name: string;
+  avatar: File | undefined;
 }
 
 export const useEditUserDetails = () => {
   const { setUser } = useUserStore();
+  const queryClient = useQueryClient();
 
   return useMutation<User, Error, EditUserData>({
     mutationFn: async (data: EditUserData) => {
@@ -51,11 +52,15 @@ export const useEditUserDetails = () => {
       }
 
       try {
-        const response = await axiosInstance.put<User>("/users/edit", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
+        const response = await axiosInstance.put<User>(
+          "/users/edit",
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
         return response.data;
       } catch (error) {
         if (axios.isAxiosError(error)) {
@@ -68,6 +73,10 @@ export const useEditUserDetails = () => {
       }
     },
     onSuccess: (updatedUser) => {
+      queryClient.invalidateQueries({ queryKey: ["courses", false] }); // Refresh ClassroomPage
+      queryClient.invalidateQueries({ queryKey: ["courses", true] }); // Refresh ArchivedPage
+      queryClient.invalidateQueries({ queryKey: ["teachingCourses"] });
+
       toast.success("Profile updated successfully!", {
         description: `Your details have been saved, ${updatedUser.firstName}!`,
       });

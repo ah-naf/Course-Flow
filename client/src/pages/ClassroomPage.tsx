@@ -3,12 +3,7 @@ import React, { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  BookOpen,
-  LogOut,
-  Link,
-  Archive,
-} from "lucide-react";
+import { BookOpen, LogOut, Link, Archive } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNotificationStore } from "@/store/notificationStore";
 import { useNavigate } from "react-router-dom";
@@ -155,7 +150,9 @@ const ClassroomPage: React.FC = () => {
                     <CardContent className="pb-4">
                       <div className="flex items-center mb-3">
                         <Avatar className="h-8 w-8 sm:h-10 sm:w-10 mr-3 ring-2 ring-gray-200">
-                          <AvatarImage src={course.admin.avatar} />
+                          <AvatarImage
+                            src={`http://localhost:8080/${course.admin.avatar}`}
+                          />
                           <AvatarFallback
                             style={{ backgroundColor: course.background_color }}
                             className="text-white text-sm"
