@@ -132,3 +132,11 @@ type ApiError struct {
 func (e *ApiError) Error() string {
 	return e.Message
 }
+
+func NormalizeMedia(avatar string) string {
+	if avatar == "" || strings.HasPrefix(avatar, "https:") {
+		return avatar
+	}
+	baseURL := GetEnv("BASE_URL")
+	return baseURL + avatar
+}

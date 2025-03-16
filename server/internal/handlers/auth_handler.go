@@ -192,7 +192,16 @@ func (h *AuthHandler) HandleGoogleCallback(w http.ResponseWriter, r *http.Reques
 		return err
 	}
 
-	return utils.WriteJSON(w, http.StatusOK, loginResp)
+	frontendCallback := "http://localhost:5173/oauth/callback"
+	redirectURL := fmt.Sprintf(
+		"%s?access_token=%s&refresh_token=%s",
+		frontendCallback,
+		url.QueryEscape(loginResp.AccessToken),
+		url.QueryEscape(loginResp.RefreshToken),
+	)
+	http.Redirect(w, r, redirectURL, http.StatusFound)
+	return nil
+
 }
 
 var GithubOAuthConfig = &oauth2.Config{

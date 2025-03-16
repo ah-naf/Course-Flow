@@ -45,6 +45,7 @@ func (s *UserStorage) GetUserWithID(userID string) (*models.User, error) {
 		}
 		return nil, err
 	}
+	utils.GetEnv("BASE_URL")
 	return &user, nil
 }
 
@@ -122,6 +123,7 @@ func (s *UserStorage) GetUserWithEmail(user *models.User) error {
 		}
 		return err
 	}
+	user.Avatar = utils.NormalizeMedia(user.Avatar)
 	return nil
 }
 
@@ -137,6 +139,7 @@ func (s *UserStorage) GetAllUser() ([]*models.User, error) {
 		if err := rows.Scan(&user.ID, &user.Email, &user.Username, &user.PasswordHash, &user.FirstName, &user.LastName, &user.CreatedAt, &user.UpdatedAt, &user.Avatar); err != nil {
 			return nil, err
 		}
+		user.Avatar = utils.NormalizeMedia(user.Avatar)
 		users = append(users, user)
 	}
 	return users, nil
@@ -159,6 +162,7 @@ func (s *UserStorage) SaveUser(user *models.User) error {
 		&user.UpdatedAt,
 		&user.Avatar,
 	)
+	user.Avatar = utils.NormalizeMedia(user.Avatar)
 	return err
 }
 

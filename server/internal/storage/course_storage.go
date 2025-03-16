@@ -198,6 +198,8 @@ func (s *CourseStorage) GetCourseByUserID(userID string, archieved bool) ([]*mod
 		); err != nil {
 			return nil, err
 		}
+		course.CoverPic = utils.NormalizeMedia(course.CoverPic)
+		course.Admin.Avatar = utils.NormalizeMedia(course.Admin.Avatar)
 		courses = append(courses, &course)
 	}
 
@@ -272,6 +274,8 @@ func (s *CourseStorage) GetCoursesByInstructor(userID string) ([]*models.CourseL
 		); err != nil {
 			return nil, err
 		}
+		course.CoverPic = utils.NormalizeMedia(course.CoverPic)
+		course.Admin.Avatar = utils.NormalizeMedia(course.Admin.Avatar)
 		courses = append(courses, &course)
 	}
 	return courses, nil

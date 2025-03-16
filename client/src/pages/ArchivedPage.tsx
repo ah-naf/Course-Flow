@@ -122,7 +122,7 @@ const ArchivedPage: React.FC = () => {
                     style={{
                       ...(course.cover_pic
                         ? {
-                            backgroundImage: `url(http://localhost:8080/${course.cover_pic})`,
+                            backgroundImage: `url(${course.cover_pic})`,
                             backgroundSize: "cover",
                             backgroundPosition: "center",
                           }
@@ -139,9 +139,7 @@ const ArchivedPage: React.FC = () => {
                   <CardContent className="pb-3">
                     <div className="flex items-center mb-2">
                       <Avatar className="h-8 w-8 sm:h-10 sm:w-10 mr-2 sm:mr-3 ring-2 ring-gray-200">
-                        <AvatarImage
-                          src={`http://localhost:8080/${course.admin.avatar}`}
-                        />
+                        <AvatarImage src={course.admin.avatar} />
                         <AvatarFallback
                           style={{ backgroundColor: course.background_color }}
                           className="text-white text-xs sm:text-sm"

@@ -37,7 +37,9 @@ const OAuthCallback: React.FC = () => {
           toast.success("Login successful!", {
             description: `Welcome back, ${user.lastName}!`,
           });
-          navigate("/");
+          setTimeout(() => {
+            window.location.href = "/";
+          }, 500);
         })
         .catch((err) => {
           toast.error("Failed to fetch user data", {

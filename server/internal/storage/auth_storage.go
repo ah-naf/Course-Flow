@@ -33,6 +33,7 @@ func (s *AuthStorage) RetrieveUserPassword(username string) (*models.User, error
 		}
 		return nil, err
 	}
+	user.Avatar = utils.NormalizeMedia(user.Avatar)
 	return &user, nil
 }
 
