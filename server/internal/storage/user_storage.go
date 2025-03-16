@@ -18,6 +18,54 @@ func NewUserStorage(db *sql.DB) *UserStorage {
 	}
 }
 
+func (s *UserStorage) EditUserDetails(user *models.User) error {
+	tx, err := s.DB.Begin()
+	if err != nil {
+		return err
+	}
+
+	query := `
+		UPDATE users
+		SET first_name = $1, last_name = $2, avatar = $3, updated_at = $4
+		WHERE id = $5
+		RETURNING id, first_name, last_name, avatar, email, username
+	`
+
+	err = tx.QueryRow(
+		query,
+		user.FirstName,
+		user.LastName,
+		user.Avatar,
+		user.UpdatedAt,
+		user.ID,
+	).Scan(
+		&user.ID,
+		&user.FirstName,
+		&user.LastName,
+		&user.Avatar,
+		&user.Email,
+		&user.Username,
+	)
+
+	if err != nil {
+		tx.Rollback()
+		if err == sql.ErrNoRows {
+			return &utils.ApiError{
+				Code:    404,
+				Message: "user not found or you dont have the permission",
+			}
+		}
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
+}
+
 func (s *UserStorage) GetUserWithEmail(user *models.User) error {
 	query := `
 		SELECT id, email, username, password_hash, first_name, last_name, created_at, updated_at, avatar

@@ -28,4 +28,5 @@ type CourseListResponse struct {
 	PostPermission  string    `json:"post_permission"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
+	JoinCode        string    `json:"join_code"`
 }

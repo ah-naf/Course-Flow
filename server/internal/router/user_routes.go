@@ -12,11 +12,13 @@ import (
 func (r *Router) setupUserRouter(router *mux.Router) {
 	// Initialize user-related components
 	userStorage := storage.NewUserStorage(r.DB)
-	userService := services.NewUserService(userStorage)
+	documentStorage := storage.NewDocumentStorage(r.DB)
+	userService := services.NewUserService(userStorage, documentStorage)
 	userHandler := handlers.NewUserHandler(userService)
 
 	userRouter := router.PathPrefix("/users").Subrouter()
 
 	// User routes
-	userRouter.HandleFunc("/", middleware.ConvertToHandlerFunc(userHandler.GetUserHandler)).Methods("GET")
+	userRouter.HandleFunc("", middleware.ConvertToHandlerFunc(userHandler.GetUserHandler)).Methods("GET")
+	userRouter.HandleFunc("/edit", middleware.ConvertToHandlerFunc(userHandler.EditUserDetailsHadnler, middleware.AuthMiddleware)).Methods("PUT")
 }
