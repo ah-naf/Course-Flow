@@ -9,7 +9,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react"; // For loading spinner
 import { useFetchCourse, useFetchTeachingCourses } from "@/hooks/useCourse";
 
@@ -43,13 +43,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
         isOpen ? "w-64" : "w-0 overflow-hidden"
       )}
     >
-      <div
+      <Link
+        to={"/"}
         className="p-4 flex items-center font-medium text-xl"
         title="Learning Hub"
       >
         <BookOpen className="h-6 w-6 mr-2 text-blue-600" />
         <span>Learning Hub</span>
-      </div>
+      </Link>
       <div className="flex-1 overflow-y-auto space-y-2 p-2">
         <Button
           variant="ghost"

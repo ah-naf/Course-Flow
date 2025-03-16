@@ -15,6 +15,7 @@ import AddClassDialog from "@/components/AddClassDialog";
 import NotificationDialog from "@/components/NotificationDialog"; // Import the new component
 import ProfileDialog from "./ProfileDialog";
 import { useLogout } from "@/hooks/useAuth";
+import { Link } from "react-router-dom";
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -62,13 +63,15 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = "" }) => {
       </Button>
 
       <div className="flex items-center text-lg font-medium">
-        <span className="text-gray-600 flex items-center mx-1">
+        <Link to={"/"} className="text-gray-600 flex items-center mx-1">
           <BookOpen className="h-6 w-6 mr-2 text-blue-600" />
-        </span>
+        </Link>
         {pagePath && (
           <React.Fragment>
             <ChevronRight className="h-4 w-4 mx-1" />
-            <span className="text-gray-600">{pagePath}</span>
+            <Link to={`/class/${pagePath}`} className="text-gray-600">
+              {pagePath}
+            </Link>
           </React.Fragment>
         )}
       </div>
@@ -92,7 +95,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = "" }) => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Avatar className="cursor-pointer h-9 w-9 ring-2 ring-blue-500 ring-offset-2">
-              <AvatarImage src="/api/placeholder/30/30" />
+              <AvatarImage src={`http://localhost:8080/${user.avatar}`} />
               <AvatarFallback className="bg-blue-600 text-white">
                 {initials}
               </AvatarFallback>
@@ -101,7 +104,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = "" }) => {
           <DropdownMenuContent align="end" className="w-64 p-2">
             <div className="flex items-center p-2 mb-2">
               <Avatar className="h-10 w-10 mr-3">
-                <AvatarImage src="/api/placeholder/40/40" />
+                <AvatarImage src={`http://localhost:8080/${user.avatar}`} />
                 <AvatarFallback className="bg-blue-600 text-white">
                   {initials}
                 </AvatarFallback>

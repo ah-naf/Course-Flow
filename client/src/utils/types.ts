@@ -6,7 +6,7 @@ export interface Course {
   instructor: User;
   background_color: string;
   cover_pic?: string;
-  joinCode: string;
+  join_code: string;
   updated_at?: string;
   post_permission: string;
   role: string;

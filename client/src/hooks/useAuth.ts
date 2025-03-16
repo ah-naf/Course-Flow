@@ -32,6 +32,56 @@ interface LogoutData {
   refresh_token: string;
 }
 
+interface EditUserData {
+  first_name: string
+  last_name: string
+  avatar: File | undefined
+}
+
+export const useEditUserDetails = () => {
+  const { setUser } = useUserStore();
+
+  return useMutation<User, Error, EditUserData>({
+    mutationFn: async (data: EditUserData) => {
+      const formData = new FormData();
+      formData.append("first_name", data.first_name);
+      formData.append("last_name", data.last_name);
+      if (data.avatar) {
+        formData.append("avatar", data.avatar);
+      }
+
+      try {
+        const response = await axiosInstance.put<User>("/users/edit", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        return response.data;
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          const axiosError = error as AxiosError<{ error: string }>;
+          throw new Error(
+            axiosError.response?.data?.error || "Failed to update user details"
+          );
+        }
+        throw new Error("Failed to update user details");
+      }
+    },
+    onSuccess: (updatedUser) => {
+      toast.success("Profile updated successfully!", {
+        description: `Your details have been saved, ${updatedUser.firstName}!`,
+      });
+      setUser(updatedUser); // Update the user in the store with the latest data
+    },
+    onError: (error) => {
+      console.error(error);
+      toast.error(error.message || "Failed to update profile", {
+        description: "Please try again or check your input.",
+      });
+    },
+  });
+};
+
 export const useRegister = () => {
   return useMutation<RegisterResponse, Error, RegisterData>({
     mutationFn: async (data: RegisterData) => {

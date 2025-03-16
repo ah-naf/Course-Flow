@@ -188,7 +188,7 @@ const ClassroomPage: React.FC = () => {
                     </ContextMenuItem>
                   )}
                   <ContextMenuItem
-                    onClick={(e) => handleCopyLink(course.joinCode, e)}
+                    onClick={(e) => handleCopyLink(course.join_code, e)}
                     className="cursor-pointer px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                   >
                     <Link className="mr-2 h-4 w-4" />

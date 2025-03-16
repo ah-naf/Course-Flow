@@ -23,10 +23,10 @@ func NewAuthStorage(db *sql.DB) *AuthStorage {
 func (s *AuthStorage) RetrieveUserPassword(username string) (*models.User, error) {
 	var user models.User
 	query := `
-	SELECT id, password_hash, username, first_name, last_name, avatar, updated_at FROM users
+	SELECT id, password_hash, username, first_name, last_name, avatar, updated_at, email FROM users
 	WHERE username = $1
 	`
-	err := s.DB.QueryRow(query, username).Scan(&user.ID, &user.PasswordHash, &user.Username, &user.FirstName, &user.LastName, &user.Avatar, &user.UpdatedAt)
+	err := s.DB.QueryRow(query, username).Scan(&user.ID, &user.PasswordHash, &user.Username, &user.FirstName, &user.LastName, &user.Avatar, &user.UpdatedAt, &user.Email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, &utils.ApiError{Code: http.StatusUnauthorized, Message: "Invalid username or password"}
