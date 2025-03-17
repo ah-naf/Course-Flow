@@ -8,6 +8,7 @@ import ArchivedPage from "./pages/ArchivedPage";
 import ClassPage from "./pages/ClassPage";
 import OAuthCallback from "./pages/OAuthCallback";
 import { useUserStore } from "./store/userStore";
+import CourseJoin from "./pages/CourseJoin";
 
 const App: React.FC = () => {
   const { user } = useUserStore();
@@ -25,6 +26,7 @@ const App: React.FC = () => {
             <Route path="/" element={<ClassroomPage />} />
             <Route path="/archived" element={<ArchivedPage />} />
             <Route path="/class/:classId" element={<ClassPage />} />
+            <Route path="/join/:joinCode" element={<CourseJoin />} />
           </Route>
         )}
       </Routes>
