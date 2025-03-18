@@ -10,74 +10,87 @@ import { Badge } from "@/components/ui/badge";
 import GroupMembers from "@/components/GroupMembers";
 import Attachments from "@/components/Attachments";
 import { Button } from "@/components/ui/button";
-import { MessageCircle } from "lucide-react"; // Added Send icon
+import { AlertCircle, Loader2, MessageCircle, RefreshCw } from "lucide-react"; // Added Send icon
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import ClassroomChat from "@/components/ClassroomChat";
+import { useCoursePreview } from "@/hooks/useCourse";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 // Main ClassPage Component
 const ClassPage: React.FC = () => {
   const { classId } = useParams<{ classId: string }>();
   const navigate = useNavigate();
 
-  
-
+  const { data: course, isLoading, error } = useCoursePreview(classId);
+  console.log(course);
   // State for dialogs
   const [isJoinDetailsDialogOpen, setIsJoinDetailsDialogOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
-  // Dummy data for the course
-  const allCourses: Course[] = [
-    {
-      id: "react-101",
-      name: "React Development",
-      description:
-        "Learn the fundamentals of React, including components, state management, and hooks.",
-      instructor: {
-        id: "1",
-        firstName: "ss",
-        lastName: "ss",
-        avatar: "",
-        email: "",
-        username: "Sarah Johnson",
-        initial: "S",
-      },
-      background_color: "#4CAF50",
-      cover_pic: "https://via.placeholder.com/1200x400?text=React+Development",
-      joinCode: "RCT-DEV-2025",
-      post_permission: "everyone",
-      role: "",
-    },
-    {
-      id: "ui-303",
-      name: "UI/UX Design",
-      description:
-        "Master the art of designing intuitive and visually appealing user interfaces.",
-      instructor: {
-        id: "2",
-        firstName: "ss",
-        lastName: "ss",
-        avatar: "",
-        email: "",
-        username: "Priya Patel",
-        initial: "P",
-      },
-      background_color: "#9C27B0",
-      cover_pic: "",
-      joinCode: "UIX-303-2025",
-      post_permission: "instructor",
-      role: "",
-    },
-  ];
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full bg-gray-50 px-4">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto" />
+          <p className="mt-4 text-gray-700 text-lg">Loading course...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const course = allCourses.find((c) => c.id === classId);
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-full bg-gray-50 p-4">
+        <Card className="w-full max-w-md shadow-lg overflow-hidden pt-0">
+          <div className="h-24 bg-gradient-to-r from-red-100 to-red-300"></div>
+          <CardHeader className="text-center">
+            <div className="mx-auto p-3 bg-red-50 rounded-full mb-2">
+              <AlertCircle className="h-10 w-10 text-red-500" />
+            </div>
+            <CardTitle className="text-xl">Unable to Load Course</CardTitle>
+            <CardDescription className="text-base mt-2">
+              {typeof error === "string"
+                ? error
+                : error?.message ||
+                  "We couldn't load the course information. Please try again later."}
+            </CardDescription>
+          </CardHeader>
+
+          <CardFooter className="pt-4 pb-6 flex justify-center gap-3">
+            <Button
+              variant="outline"
+              onClick={() => window.location.reload()}
+              className="px-4"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Try Again
+            </Button>
+            <Button
+              className="bg-indigo-600 hover:bg-indigo-700 px-4"
+              onClick={() => navigate("/classroom")}
+            >
+              Return to Classroom
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
 
   if (!course) {
     navigate("/");
-    return null;
+    return;
   }
 
   // Flag to control visibility of join details
-  const showJoinDetails = true;
+  const showJoinDetails = !course.is_private;
 
   return (
     <div className="p-1 md:p-6 flex justify-center relative">

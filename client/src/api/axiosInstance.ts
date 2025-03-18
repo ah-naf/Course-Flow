@@ -9,8 +9,10 @@ interface CustomAxiosRequestConfig extends AxiosRequestConfig {
   _retry?: boolean;
 }
 
+const BASE_URL = "http://localhost:8080/api/v1"
+
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:8080/api/v1", // your API base URL
+  baseURL: BASE_URL, // your API base URL
 });
 
 // Add a request interceptor to set the Authorization header from localStorage

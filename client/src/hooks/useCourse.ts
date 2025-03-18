@@ -20,6 +20,39 @@ interface CreateCourseFormData {
   cover_pic: File | undefined; // Can be a File object or filename string
 }
 
+
+interface CoursePreview extends Course {
+  admin: User;
+  total_members: number;
+  is_private: boolean
+}
+
+
+export const useCoursePreview = (course_joincode: string | undefined) => {
+  return useQuery<CoursePreview, Error>({
+    queryKey: ["coursePreview", course_joincode],
+    queryFn: async () => {
+      try {
+        const response = await axiosInstance.get(
+          `/courses/preview/${course_joincode}`
+        );
+        return response.data;
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          const axiosError = error as AxiosError<{ error?: string }>;
+          // Throw error with message so that it will be in the `error` property.
+          throw new Error(
+            axiosError.response?.data?.error || "Course not found"
+          );
+        } else {
+          throw new Error("An unknown error occurred");
+        }
+      }
+    },
+    enabled: Boolean(course_joincode),
+  });
+};
+
 export const useCreateCourse = () => {
   const queryClient = useQueryClient();
 

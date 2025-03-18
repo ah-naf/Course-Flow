@@ -39,6 +39,13 @@ func NewCourseService(courseStorage *storage.CourseStorage, documentStorage *sto
 }
 
 func (s *CourseService) CoursePreview(r *http.Request) (*models.CoursePreviewResponse, error) {
+	ctx := r.Context()
+	userID, err := utils.GetUserIDFromContext(ctx)
+	showRole := false
+	if err == nil && userID != "" {
+		showRole = true
+	}
+	
 	vars := mux.Vars(r)
 	joinCode := vars["id"]
 	if joinCode == "" {
@@ -48,7 +55,7 @@ func (s *CourseService) CoursePreview(r *http.Request) (*models.CoursePreviewRes
 		}
 	}
 
-	return s.CourseStorage.CoursePreview(joinCode)
+	return s.CourseStorage.CoursePreview(joinCode, userID, showRole)
 }
 
 func (s *CourseService) LeaveCourse(r *http.Request) error {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Card,
@@ -20,51 +20,18 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { format } from "date-fns";
-import { Course, User } from "@/utils/types";
-import { useJoinCourse } from "@/hooks/useCourse";
-import axios from "axios";
+import { useJoinCourse, useCoursePreview } from "@/hooks/useCourse";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-interface CoursePreview extends Course {
-  admin: User;
-  total_members: number;
-}
 
 const CourseJoin = () => {
   const navigate = useNavigate();
   const [isJoining, setIsJoining] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [course, setCourse] = useState<CoursePreview | null>(null);
 
   const location = useLocation();
   const course_joincode = location.pathname.split("/")[2];
   const joinCourseMutation = useJoinCourse();
 
-  useEffect(() => {
-    if (course_joincode) {
-      (async function () {
-        setIsLoading(true);
-        try {
-          const response = await axios.get(
-            `http://localhost:8080/api/v1/courses/preview/${course_joincode}`
-          );
-          if (response.data && !response.data.error) {
-            setCourse(response.data);
-            setError(null);
-          } else {
-            setError(response.data.error || "Course not found");
-            setCourse(null);
-          }
-        } catch (error) {
-          setError("Failed to load course preview");
-          setCourse(null);
-        } finally {
-          setIsLoading(false);
-        }
-      })();
-    }
-  }, [course_joincode]);
+  const { data: course, isLoading, error } = useCoursePreview(course_joincode);
 
   const handleJoinCourse = async () => {
     setIsJoining(true);
@@ -95,7 +62,8 @@ const CourseJoin = () => {
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-2" />
             <CardTitle className="text-xl">Course Not Available</CardTitle>
             <CardDescription className="text-base">
-              {error || "This course doesn't exist or is not accessible."}
+              {error?.message ||
+                "This course doesn't exist or is not accessible."}
             </CardDescription>
           </CardHeader>
           <CardFooter className="pb-6 flex justify-center">

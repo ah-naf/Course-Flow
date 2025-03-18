@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Course } from "@/utils/types";
 import { ClassSettingsDialog } from "./ClassSettingsDialog";
+import { toast } from "sonner";
 
 interface ClassBannerProps {
   course: Course;
@@ -37,29 +38,42 @@ export const ClassBanner: React.FC<ClassBannerProps> = ({
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
 
   const copyJoinCode = () => {
-    if (course.joinCode) {
-      navigator.clipboard.writeText(course.joinCode);
+    if (course.join_code) {
+      navigator.clipboard.writeText(course.join_code);
       setCopiedJoinCode(true);
       setTimeout(() => setCopiedJoinCode(false), 2000);
     }
   };
 
-  const copyInviteLink = () => {
-    if (course.inviteLink) {
-      navigator.clipboard.writeText(course.inviteLink);
-      setCopiedInviteLink(true);
-      setTimeout(() => setCopiedInviteLink(false), 2000);
-    }
+  const copyInviteLink = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const link = `https://localhost:5173/join/${course.join_code}`;
+    navigator.clipboard
+      .writeText(link)
+      .then(() => {
+        toast.success("Link copied to clipboard!");
+        setCopiedInviteLink(true);
+        setTimeout(() => {
+          setCopiedInviteLink(false);
+        }, 2000);
+      })
+      .catch((err) => {
+        toast.error("Failed to copy link", {
+          description: err.message,
+        });
+      });
   };
 
   return (
     <div
       className="h-80 md:h-56 lg:h-68 w-full bg-cover bg-center rounded-lg mb-6 relative overflow-hidden"
       style={{
-        backgroundImage: course.coverPic
-          ? `url(${course.coverPic})`
+        backgroundImage: course.cover_pic
+          ? `url(${course.cover_pic})`
           : undefined,
-        backgroundColor: !course.coverPic ? course.backgroundColor : undefined,
+        backgroundColor: !course.cover_pic
+          ? course.background_color
+          : undefined,
       }}
     >
       <div className="absolute top-4 right-4 z-10">
@@ -147,7 +161,7 @@ export const ClassBanner: React.FC<ClassBannerProps> = ({
                           </div>
                           <div className="mt-3 sm:mt-0 flex items-center space-x-2">
                             <code className="bg-gray-100 px-3 py-2 rounded-md text-sm font-mono">
-                              {course.joinCode}
+                              {course.join_code}
                             </code>
                             <TooltipProvider>
                               <Tooltip>
@@ -179,7 +193,7 @@ export const ClassBanner: React.FC<ClassBannerProps> = ({
                             </TooltipProvider>
                           </div>
                         </div>
-                        {course.inviteLink && (
+                        {course.join_code && (
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between">
                             <div>
                               <h4 className="font-medium text-gray-700">
@@ -187,9 +201,6 @@ export const ClassBanner: React.FC<ClassBannerProps> = ({
                               </h4>
                             </div>
                             <div className="mt-3 sm:mt-0 flex items-center space-x-2">
-                              <code className="bg-gray-100 px-3 py-2 rounded-md text-sm font-mono truncate max-w-[200px] sm:max-w-[300px]">
-                                {course.inviteLink}
-                              </code>
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>

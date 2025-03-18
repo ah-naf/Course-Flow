@@ -21,33 +21,68 @@ func NewCourseStorage(db *sql.DB) *CourseStorage {
 	}
 }
 
-func (s *CourseStorage) CoursePreview(joinCode string) (*models.CoursePreviewResponse, error) {
-	query := `
-		SELECT 
-			c.id, 
-			c.name, 
-			c.description, 
-			c.background_color, 
-			c.cover_pic, 
-			c.join_code, 
-			c.post_permission, 
-			c.created_at, 
-			c.updated_at,
-			u.id AS admin_id,
-			u.username AS admin_username,
-			u.first_name AS admin_first_name,
-			u.last_name AS admin_last_name,
-			u.avatar AS admin_avatar,
-			(SELECT COUNT(*) FROM course_members WHERE course_id = c.id) AS total_members
-		FROM courses c
-		LEFT JOIN users u ON c.admin_id = u.id
-		WHERE c.join_code = $1 
-		AND c.is_private = FALSE 
-		AND c.archived = FALSE
-	`
+func (s *CourseStorage) CoursePreview(joinCode, userID string, showRole bool) (*models.CoursePreviewResponse, error) {
+	var query string
+	var row *sql.Row
+
+	if showRole && userID != "" {
+		query = `
+			SELECT 
+				c.id, 
+				c.name, 
+				c.description, 
+				c.background_color, 
+				c.cover_pic, 
+				c.join_code, 
+				c.post_permission, 
+				c.created_at, 
+				c.updated_at,
+				u.id AS admin_id,
+				u.username AS admin_username,
+				u.first_name AS admin_first_name,
+				u.last_name AS admin_last_name,
+				u.avatar AS admin_avatar,
+				(SELECT COUNT(*) FROM course_members WHERE course_id = c.id) AS total_members,
+				c.archived,
+				c.is_private,
+				cm.role
+			FROM courses c
+			LEFT JOIN users u ON c.admin_id = u.id
+			LEFT JOIN course_members cm ON cm.course_id = c.id AND cm.user_id = $2
+			WHERE c.join_code = $1 
+			AND c.archived = FALSE
+		`
+		row = s.DB.QueryRow(query, joinCode, userID)
+	} else {
+		query = `
+			SELECT 
+				c.id, 
+				c.name, 
+				c.description, 
+				c.background_color, 
+				c.cover_pic, 
+				c.join_code, 
+				c.post_permission, 
+				c.created_at, 
+				c.updated_at,
+				u.id AS admin_id,
+				u.username AS admin_username,
+				u.first_name AS admin_first_name,
+				u.last_name AS admin_last_name,
+				u.avatar AS admin_avatar,
+				(SELECT COUNT(*) FROM course_members WHERE course_id = c.id) AS total_members,
+				c.archived
+			FROM courses c
+			LEFT JOIN users u ON c.admin_id = u.id
+			WHERE c.join_code = $1 
+			AND c.is_private = FALSE 
+			AND c.archived = FALSE
+		`
+		row = s.DB.QueryRow(query, joinCode)
+	}
 
 	var preview models.CoursePreviewResponse
-	err := s.DB.QueryRow(query, joinCode).Scan(
+	err := row.Scan(
 		&preview.ID,
 		&preview.Name,
 		&preview.Description,
@@ -63,8 +98,10 @@ func (s *CourseStorage) CoursePreview(joinCode string) (*models.CoursePreviewRes
 		&preview.Admin.LastName,
 		&preview.Admin.Avatar,
 		&preview.TotalMembers,
+		&preview.IsArchived,
+		&preview.IsPrivate,
+		&preview.Role,	
 	)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, &utils.ApiError{Code: http.StatusNotFound, Message: "course not found or not accessible"}
