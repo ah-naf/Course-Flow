@@ -21,6 +21,7 @@ func (r *Router) setupCourseRouter(router *mux.Router) {
 	courseRouter.HandleFunc("", middleware.ConvertToHandlerFunc(courseHandler.CreateCourseHandler, middleware.AuthMiddleware)).Methods("POST")
 	courseRouter.HandleFunc("", middleware.ConvertToHandlerFunc(courseHandler.GetCourseForSingleUserHandler, middleware.AuthMiddleware)).Methods("GET")
 	courseRouter.HandleFunc("/{id}", middleware.ConvertToHandlerFunc(courseHandler.DeleteCourseHandler, middleware.AuthMiddleware)).Methods("DELETE")
+	courseRouter.HandleFunc("/{id}", middleware.ConvertToHandlerFunc(courseHandler.UpdateCourseSettingHandler, middleware.AuthMiddleware)).Methods("PUT")
 	courseRouter.HandleFunc("/instructor", middleware.ConvertToHandlerFunc(courseHandler.GetCoursesByInstructorHandler, middleware.AuthMiddleware)).Methods("GET")
 	courseRouter.HandleFunc("/join", middleware.ConvertToHandlerFunc(courseHandler.JoinCourseHandler, middleware.AuthMiddleware)).Methods("POST")
 	courseRouter.HandleFunc("/archive", middleware.ConvertToHandlerFunc(courseHandler.ArchiveCourseHandler, middleware.AuthMiddleware)).Methods("PUT")

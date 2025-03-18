@@ -5,7 +5,9 @@ import (
 	"course-flow/internal/services"
 	"course-flow/internal/utils"
 	"encoding/json"
+	"log"
 	"net/http"
+	"strconv"
 )
 
 type CourseHandler struct {
@@ -14,6 +16,46 @@ type CourseHandler struct {
 
 func NewCourseHandler(service *services.CourseService) *CourseHandler {
 	return &CourseHandler{Service: service}
+}
+
+func (h *CourseHandler) UpdateCourseSettingHandler(w http.ResponseWriter, r *http.Request) error {
+	// Parse the multipart form data (20MB max size)
+	if err := r.ParseMultipartForm(20 << 20); err != nil {
+		return &utils.ApiError{
+			Code:    http.StatusBadRequest,
+			Message: "Failed to parse form data: " + err.Error(),
+		}
+	}
+
+	var courseReq models.CoursePreviewResponse
+
+	// Get form values
+	courseReq.Name = r.FormValue("name")
+	courseReq.Description = r.FormValue("description")
+	courseReq.BackgroundColor = r.FormValue("background_color")
+
+	isPrivateStr := r.FormValue("is_private")
+	isPrivate, err := strconv.ParseBool(isPrivateStr)
+	if err != nil {
+		log.Printf("Invalid is_private value: %v, defaulting to false", err)
+		isPrivate = false // Default to false if invalid
+	}
+	courseReq.IsPrivate = isPrivate
+
+	courseReq.PostPermission = r.FormValue("post_permission")
+
+	if courseReq.Name == "" {
+		return &utils.ApiError{
+			Code:    http.StatusBadRequest,
+			Message: "Name is required field",
+		}
+	}
+
+	if err := h.Service.UpdateCourseSetting(&courseReq, r); err != nil {
+		return err
+	}
+
+	return utils.WriteJSON(w, http.StatusCreated, map[string]string{"message": "Successfully updated the class settings."})
 }
 
 func (h *CourseHandler) CoursePreviewHandler(w http.ResponseWriter, r *http.Request) error {

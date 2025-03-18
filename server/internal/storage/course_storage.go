@@ -21,6 +21,45 @@ func NewCourseStorage(db *sql.DB) *CourseStorage {
 	}
 }
 
+func (s *CourseStorage) UpdateCourseSetting(userID string, course *models.CoursePreviewResponse) error {
+	tx, err := s.DB.Begin()
+	if err != nil {
+		return err
+	}
+
+	query := `
+		UPDATE courses
+		SET name = $3, description = $4, cover_pic = $5, background_color = $6, is_private = $7, post_permission = $8, updated_at = $9
+		WHERE id = $1 AND admin_id = $2 AND archived = FALSE
+	`
+
+	result, err := tx.Exec(query, course.ID, userID, course.Name, course.Description, course.CoverPic, course.BackgroundColor, course.IsPrivate, course.PostPermission, course.UpdatedAt)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	if rowsAffected == 0 {
+		tx.Rollback()
+		return &utils.ApiError{
+			Code:    404,
+			Message: "course not found or user not authorized to update it",
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
+}
+
 func (s *CourseStorage) CoursePreview(joinCode, userID string, showRole bool) (*models.CoursePreviewResponse, error) {
 	var query string
 	var row *sql.Row
@@ -100,7 +139,7 @@ func (s *CourseStorage) CoursePreview(joinCode, userID string, showRole bool) (*
 		&preview.TotalMembers,
 		&preview.IsArchived,
 		&preview.IsPrivate,
-		&preview.Role,	
+		&preview.Role,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {

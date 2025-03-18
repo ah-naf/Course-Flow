@@ -38,6 +38,44 @@ func NewCourseService(courseStorage *storage.CourseStorage, documentStorage *sto
 	}
 }
 
+func (s *CourseService) UpdateCourseSetting(course *models.CoursePreviewResponse, r *http.Request) error {
+	ctx := r.Context()
+	userID, err := utils.GetUserIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+	if id == "" {
+		return &utils.ApiError{
+			Code:    http.StatusBadRequest,
+			Message: "Course ID is required",
+		}
+	}
+	course.ID = id
+
+	if err := r.ParseMultipartForm(20 << 20); err != nil {
+		return &utils.ApiError{Code: http.StatusBadRequest, Message: "File too large"}
+	}
+
+	// Get all uploaded files from the "document" form field
+	files := r.MultipartForm.File["cover_pic"]
+
+	uploadedDoc, err := s.DocumentService.SaveFilesToLocal(files, userID)
+	if err != nil {
+		return err
+	}
+
+	if len(uploadedDoc) > 0 {
+		course.CoverPic = uploadedDoc[0].FilePath
+	}
+
+	course.UpdatedAt = time.Now()
+
+	return s.CourseStorage.UpdateCourseSetting(userID, course)
+}
+
 func (s *CourseService) CoursePreview(r *http.Request) (*models.CoursePreviewResponse, error) {
 	ctx := r.Context()
 	userID, err := utils.GetUserIDFromContext(ctx)
@@ -45,7 +83,7 @@ func (s *CourseService) CoursePreview(r *http.Request) (*models.CoursePreviewRes
 	if err == nil && userID != "" {
 		showRole = true
 	}
-	
+
 	vars := mux.Vars(r)
 	joinCode := vars["id"]
 	if joinCode == "" {
