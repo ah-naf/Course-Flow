@@ -7,6 +7,7 @@ export interface Course {
   background_color: string;
   cover_pic?: string;
   join_code: string;
+  created_at?: string;
   updated_at?: string;
   post_permission: string;
   role: string;
