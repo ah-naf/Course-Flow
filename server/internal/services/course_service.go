@@ -38,6 +38,19 @@ func NewCourseService(courseStorage *storage.CourseStorage, documentStorage *sto
 	}
 }
 
+func (s *CourseService) CoursePreview(r *http.Request) (*models.CoursePreviewResponse, error) {
+	vars := mux.Vars(r)
+	joinCode := vars["id"]
+	if joinCode == "" {
+		return nil, &utils.ApiError{
+			Code:    http.StatusBadRequest,
+			Message: "Join code is required",
+		}
+	}
+
+	return s.CourseStorage.CoursePreview(joinCode)
+}
+
 func (s *CourseService) LeaveCourse(r *http.Request) error {
 	ctx := r.Context()
 	userID, err := utils.GetUserIDFromContext(ctx)

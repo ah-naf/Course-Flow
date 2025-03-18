@@ -16,6 +16,15 @@ func NewCourseHandler(service *services.CourseService) *CourseHandler {
 	return &CourseHandler{Service: service}
 }
 
+func (h *CourseHandler) CoursePreviewHandler(w http.ResponseWriter, r *http.Request) error {
+	preview, err := h.Service.CoursePreview(r)
+	if err != nil {
+		return err
+	}
+
+	return utils.WriteJSON(w, http.StatusOK, preview)
+}
+
 func (h *CourseHandler) LeaveCourseHandler(w http.ResponseWriter, r *http.Request) error {
 	err := h.Service.LeaveCourse(r)
 	if err != nil {

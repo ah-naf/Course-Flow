@@ -21,6 +21,63 @@ func NewCourseStorage(db *sql.DB) *CourseStorage {
 	}
 }
 
+func (s *CourseStorage) CoursePreview(joinCode string) (*models.CoursePreviewResponse, error) {
+	query := `
+		SELECT 
+			c.id, 
+			c.name, 
+			c.description, 
+			c.background_color, 
+			c.cover_pic, 
+			c.join_code, 
+			c.post_permission, 
+			c.created_at, 
+			c.updated_at,
+			u.id AS admin_id,
+			u.username AS admin_username,
+			u.first_name AS admin_first_name,
+			u.last_name AS admin_last_name,
+			u.avatar AS admin_avatar,
+			(SELECT COUNT(*) FROM course_members WHERE course_id = c.id) AS total_members
+		FROM courses c
+		LEFT JOIN users u ON c.admin_id = u.id
+		WHERE c.join_code = $1 
+		AND c.is_private = FALSE 
+		AND c.archived = FALSE
+	`
+
+	var preview models.CoursePreviewResponse
+	err := s.DB.QueryRow(query, joinCode).Scan(
+		&preview.ID,
+		&preview.Name,
+		&preview.Description,
+		&preview.BackgroundColor,
+		&preview.CoverPic,
+		&preview.JoinCode,
+		&preview.PostPermission,
+		&preview.CreatedAt,
+		&preview.UpdatedAt,
+		&preview.Admin.ID,
+		&preview.Admin.Username,
+		&preview.Admin.FirstName,
+		&preview.Admin.LastName,
+		&preview.Admin.Avatar,
+		&preview.TotalMembers,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, &utils.ApiError{Code: http.StatusNotFound, Message: "course not found or not accessible"}
+		}
+		return nil, fmt.Errorf("error fetching course preview: %w", err)
+	}
+
+	preview.CoverPic = utils.NormalizeMedia(preview.CoverPic)
+	preview.Admin.Avatar = utils.NormalizeMedia(preview.Admin.Avatar)
+
+	return &preview, nil
+}
+
 func (s *CourseStorage) LeaveCourse(courseID, userID string) error {
 	// First check if the user is the admin of the course
 	adminQuery := `

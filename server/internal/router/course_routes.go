@@ -26,5 +26,6 @@ func (r *Router) setupCourseRouter(router *mux.Router) {
 	courseRouter.HandleFunc("/archive", middleware.ConvertToHandlerFunc(courseHandler.ArchiveCourseHandler, middleware.AuthMiddleware)).Methods("PUT")
 	courseRouter.HandleFunc("/restore", middleware.ConvertToHandlerFunc(courseHandler.RestoreArchivedCourseHandler, middleware.AuthMiddleware)).Methods("PUT")
 	courseRouter.HandleFunc("/leave/{id}", middleware.ConvertToHandlerFunc(courseHandler.LeaveCourseHandler, middleware.AuthMiddleware)).Methods("DELETE")
+	courseRouter.HandleFunc("/preview/{id}", middleware.ConvertToHandlerFunc(courseHandler.CoursePreviewHandler)).Methods("GET")
 }
 

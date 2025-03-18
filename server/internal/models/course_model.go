@@ -30,3 +30,8 @@ type CourseListResponse struct {
 	UpdatedAt       time.Time `json:"updated_at"`
 	JoinCode        string    `json:"join_code"`
 }
+
+type CoursePreviewResponse struct {
+	TotalMembers int `json:"total_members"`
+	CourseListResponse
+}
