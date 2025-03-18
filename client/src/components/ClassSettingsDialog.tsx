@@ -10,16 +10,17 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Upload } from "lucide-react";
-import { Course } from "@/utils/types";
+import { Course, CoursePreview } from "@/utils/types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useUpdateClassSettings } from "@/hooks/useCourse";
 
 interface ClassSettingsDialogProps {
-  course: Course;
+  course: CoursePreview;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -29,13 +30,11 @@ export const ClassSettingsDialog: React.FC<ClassSettingsDialogProps> = ({
   isOpen,
   onOpenChange,
 }) => {
-  const [classSettings, setClassSettings] = useState({
-    name: course.name,
-    description: course.description || "",
-    backgroundColor: course.backgroundColor || "#3b82f6",
-    isPrivate: course.isPrivate || false,
-    postPermission: course.postPermission || "everyone",
-  });
+  console.log(course);
+  const [classSettings, setClassSettings] = useState<CoursePreview>(course);
+  const [uploadedCoverPic, setUploadedCoverPic] = useState<string | null>(null);
+  const [coverPicFile, setCoverPicFile] = useState<File | undefined>(undefined);
+  const { mutate: updateClassSettings, isPending } = useUpdateClassSettings();
 
   const handleSettingChange = (field: string, value: any) => {
     setClassSettings((prev) => ({
@@ -45,8 +44,19 @@ export const ClassSettingsDialog: React.FC<ClassSettingsDialogProps> = ({
   };
 
   const handleSaveSettings = () => {
-    console.log("Saving settings:", classSettings);
-    onOpenChange(false);
+    updateClassSettings(
+      {
+        ...classSettings,
+        cover_pic: coverPicFile,
+      },
+      {
+        onSuccess: () => {
+          onOpenChange(false);
+          setCoverPicFile(undefined);
+          setUploadedCoverPic(null);
+        },
+      }
+    );
   };
 
   return (
@@ -72,17 +82,14 @@ export const ClassSettingsDialog: React.FC<ClassSettingsDialogProps> = ({
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="className">Class ID</Label>
-                <Input
-                  id="classId"
-                  value={classSettings.name}
-                  disabled
-                />
+                <Input id="classId" value={classSettings.join_code} disabled />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="className">Class Name</Label>
                 <Input
                   id="className"
                   value={classSettings.name}
+                  required
                   onChange={(e) => handleSettingChange("name", e.target.value)}
                   placeholder="Enter class name"
                 />
@@ -105,25 +112,87 @@ export const ClassSettingsDialog: React.FC<ClassSettingsDialogProps> = ({
           <TabsContent value="appearance" className="space-y-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="coverImage">Cover Image</Label>
+                <Label htmlFor="cover_pic">Cover Image</Label>
                 <div className="flex items-center gap-4">
-                  <div
-                    className="h-20 w-32 rounded-md bg-cover bg-center border"
-                    style={{
-                      backgroundImage: course.coverPic
-                        ? `url(${course.coverPic})`
-                        : undefined,
-                      backgroundColor: !course.coverPic
-                        ? classSettings.backgroundColor
-                        : undefined,
-                    }}
-                  />
-                  <Button variant="outline" className="flex items-center gap-2">
-                    <Upload className="h-4 w-4" />
-                    Change Cover
-                  </Button>
+                  {uploadedCoverPic || classSettings.cover_pic ? (
+                    <div className="relative">
+                      <div
+                        className="h-20 w-32 rounded-md bg-cover bg-center border"
+                        style={{
+                          backgroundImage: `url(${
+                            uploadedCoverPic || classSettings.cover_pic
+                          })`,
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                        onClick={() => {
+                          setUploadedCoverPic(null);
+                          if (uploadedCoverPic) {
+                          } else {
+                            handleSettingChange("cover_pic", "");
+                          }
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="h-20 w-32 rounded-md border flex items-center justify-center text-gray-400">
+                      No cover image
+                    </div>
+                  )}
+                  <div>
+                    <input
+                      type="file"
+                      id="coverImageInput"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          const file = e.target.files[0];
+                          setCoverPicFile(file);
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            if (event.target?.result) {
+                              setUploadedCoverPic(
+                                event.target.result as string
+                              );
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                    <Button
+                      variant="outline"
+                      className="flex items-center gap-2 mb-2"
+                      onClick={() =>
+                        document.getElementById("coverImageInput")?.click()
+                      }
+                    >
+                      <Upload className="h-4 w-4" />
+                      Upload Cover
+                    </Button>
+
+                    {uploadedCoverPic && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs text-red-500"
+                        onClick={() => {
+                          setUploadedCoverPic(null);
+                          setCoverPicFile(undefined);
+                        }}
+                      >
+                        Cancel upload
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="backgroundColor">Background Color</Label>
                 <div className="flex items-center gap-4">
@@ -131,14 +200,46 @@ export const ClassSettingsDialog: React.FC<ClassSettingsDialogProps> = ({
                     id="backgroundColor"
                     type="color"
                     className="w-16 h-10 p-1"
-                    value={classSettings.backgroundColor}
+                    value={classSettings.background_color}
                     onChange={(e) =>
-                      handleSettingChange("backgroundColor", e.target.value)
+                      handleSettingChange("background_color", e.target.value)
                     }
+                  />
+                  <div
+                    className="h-10 w-10 rounded-md border"
+                    style={{ backgroundColor: classSettings.background_color }}
                   />
                   <span className="text-sm text-gray-600">
                     Used when no cover image is present
                   </span>
+                </div>
+              </div>
+
+              <div className=" space-y-2">
+                <Label>Preview</Label>
+                <div
+                  className="h-32 relative w-full rounded-md bg-cover bg-center border"
+                  style={{
+                    backgroundImage:
+                      uploadedCoverPic || classSettings.cover_pic
+                        ? `url(${uploadedCoverPic || classSettings.cover_pic})`
+                        : undefined,
+                    backgroundColor: !(
+                      uploadedCoverPic || classSettings.cover_pic
+                    )
+                      ? classSettings.background_color
+                      : undefined,
+                  }}
+                >
+                  {classSettings.cover_pic ||
+                    (uploadedCoverPic && (
+                      <div className="absolute bg-black opacity-30 w-full h-full inset-0"></div>
+                    ))}
+                  <div className="p-4">
+                    <h3 className="text-xl font-semibold text-white drop-shadow-md">
+                      {classSettings.name}
+                    </h3>
+                  </div>
                 </div>
               </div>
             </div>
@@ -155,31 +256,31 @@ export const ClassSettingsDialog: React.FC<ClassSettingsDialogProps> = ({
                 </div>
                 <Switch
                   id="privateClass"
-                  checked={classSettings.isPrivate}
+                  checked={classSettings.is_private}
                   onCheckedChange={(checked) =>
-                    handleSettingChange("isPrivate", checked)
+                    handleSettingChange("is_private", checked)
                   }
                 />
               </div>
               <div className="space-y-3">
-                <Label htmlFor="postPermission">Who can post in class?</Label>
+                <Label htmlFor="post_permission">Who can post in class?</Label>
                 <RadioGroup
-                  value={classSettings.postPermission}
+                  value={classSettings.post_permission}
                   onValueChange={(value) =>
-                    handleSettingChange("postPermission", value)
+                    handleSettingChange("post_permission", value)
                   }
                 >
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="everyone" id="everyone" />
-                    <Label htmlFor="everyone">Everyone</Label>
+                    <RadioGroupItem value="Members" id="Members" />
+                    <Label htmlFor="Members">Everyone</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="instructors" id="instructors" />
-                    <Label htmlFor="instructors">Instructors only</Label>
+                    <RadioGroupItem value="Instructors" id="Instructors" />
+                    <Label htmlFor="Instructors">Instructors only</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="moderators" id="moderators" />
-                    <Label htmlFor="moderators">
+                    <RadioGroupItem value="Moderators" id="Moderators" />
+                    <Label htmlFor="Moderators">
                       Instructors and moderators
                     </Label>
                   </div>

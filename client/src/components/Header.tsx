@@ -15,7 +15,7 @@ import AddClassDialog from "@/components/AddClassDialog";
 import NotificationDialog from "@/components/NotificationDialog"; // Import the new component
 import ProfileDialog from "./ProfileDialog";
 import { useLogout } from "@/hooks/useAuth";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -27,6 +27,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = "" }) => {
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const logoutMutation = useLogout();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     const token = localStorage.getItem("refresh_token");
@@ -44,6 +45,8 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = "" }) => {
         },
       }
     );
+
+    setTimeout(() => navigate("/"), 500);
   };
 
   if (!user) return null;
@@ -117,7 +120,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = "" }) => {
                   {user.firstName} {user.lastName}
                 </p>
                 <span className="text-xs text-gray-500 mt-1 bg-gray-200 p-1 rounded font-semibold">
-                  @{user.username}
+                  {user.username}
                 </span>
               </div>
             </div>

@@ -22,15 +22,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useUserStore } from "@/store/userStore";
 
 // Main ClassPage Component
 const ClassPage: React.FC = () => {
   const { classId } = useParams<{ classId: string }>();
   const navigate = useNavigate();
+  const { user } = useUserStore();
 
   const { data: course, isLoading, error } = useCoursePreview(classId);
-  console.log(course);
-  // State for dialogs
   const [isJoinDetailsDialogOpen, setIsJoinDetailsDialogOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
@@ -74,7 +74,7 @@ const ClassPage: React.FC = () => {
             </Button>
             <Button
               className="bg-indigo-600 hover:bg-indigo-700 px-4"
-              onClick={() => navigate("/classroom")}
+              onClick={() => navigate("/")}
             >
               Return to Classroom
             </Button>
@@ -84,7 +84,8 @@ const ClassPage: React.FC = () => {
     );
   }
 
-  if (!course) {
+  console.log(user);
+  if (!course || !user) {
     navigate("/");
     return;
   }
@@ -139,7 +140,9 @@ const ClassPage: React.FC = () => {
           </TabsList>
           <TabsContent value="posts">
             {/* Post Creation Button */}
-            <CreatePostButton instructor={course.instructor} />
+            {course.role && course.role !== "Member" && (
+              <CreatePostButton instructor={course.instructor} />
+            )}
 
             {/* Posts Section */}
             <PostList course={course} classId={classId || ""} />

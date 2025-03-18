@@ -36,7 +36,6 @@ const ClassroomPage: React.FC = () => {
   const { user } = useUserStore();
 
   const { data: courses, isLoading, error } = useFetchCourse();
-  console.log(courses);
   const archiveCourseMutation = useArchiveCourse();
 
   const [leaveCourseDialogOpen, setLeaveCourseDialogOpen] =
@@ -118,7 +117,7 @@ const ClassroomPage: React.FC = () => {
                   <Card
                     className="overflow-hidden hover:shadow-lg pt-0 transition-all duration-200 cursor-pointer transform hover:-translate-y-1 border border-gray-200 rounded-xl"
                     title={course.name}
-                    onClick={() => navigate(`/class/${course.id}`)}
+                    onClick={() => navigate(`/class/${course.join_code}`)}
                   >
                     <div
                       className="h-24 sm:h-28 lg:h-32 flex items-center justify-center relative"

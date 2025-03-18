@@ -63,3 +63,9 @@ export interface RefreshTokenResponse {
   access_token: string;
   refresh_token: string;
 }
+
+export interface CoursePreview extends Course {
+  admin: User;
+  total_members: number;
+  is_private: boolean;
+}

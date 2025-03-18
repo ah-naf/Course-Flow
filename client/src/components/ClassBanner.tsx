@@ -16,12 +16,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Course } from "@/utils/types";
+import { CoursePreview } from "@/utils/types";
 import { ClassSettingsDialog } from "./ClassSettingsDialog";
 import { toast } from "sonner";
+import { useUserStore } from "@/store/userStore";
 
 interface ClassBannerProps {
-  course: Course;
+  course: CoursePreview;
   showJoinDetails: boolean;
   setIsJoinDetailsDialogOpen: (open: boolean) => void;
   isJoinDetailsDialogOpen: boolean;
@@ -36,6 +37,7 @@ export const ClassBanner: React.FC<ClassBannerProps> = ({
   const [copiedJoinCode, setCopiedJoinCode] = useState(false);
   const [copiedInviteLink, setCopiedInviteLink] = useState(false);
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
+  const { user } = useUserStore();
 
   const copyJoinCode = () => {
     if (course.join_code) {
@@ -76,30 +78,33 @@ export const ClassBanner: React.FC<ClassBannerProps> = ({
           : undefined,
       }}
     >
-      <div className="absolute top-4 right-4 z-10">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="secondary"
-                size="icon"
-                className="bg-white/80 hover:bg-white text-gray-800 rounded-full h-10 w-10 cursor-pointer"
-                onClick={() => setIsSettingsDialogOpen(true)}
-              >
-                <Settings className="h-5 w-5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Class Settings</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        <ClassSettingsDialog
-          course={course}
-          isOpen={isSettingsDialogOpen}
-          onOpenChange={setIsSettingsDialogOpen}
-        />
-      </div>
+      {course.admin.id === user?.id && (
+        <div className="absolute top-4 right-4 z-10">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="bg-white/80 hover:bg-white text-gray-800 rounded-full h-10 w-10 cursor-pointer"
+                  onClick={() => setIsSettingsDialogOpen(true)}
+                >
+                  <Settings className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Class Settings</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <ClassSettingsDialog
+            course={course}
+            isOpen={isSettingsDialogOpen}
+            onOpenChange={setIsSettingsDialogOpen}
+          />
+        </div>
+      )}
 
       <div className="absolute inset-0 flex items-end p-6">
         <div className="w-full flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 sm:gap-0">

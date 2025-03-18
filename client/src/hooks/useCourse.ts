@@ -1,5 +1,5 @@
 import axiosInstance from "@/api/axiosInstance";
-import { Course, User } from "@/utils/types";
+import { Course, CoursePreview, User } from "@/utils/types";
 import {
   useMutation,
   useQuery,
@@ -20,13 +20,77 @@ interface CreateCourseFormData {
   cover_pic: File | undefined; // Can be a File object or filename string
 }
 
-
-interface CoursePreview extends Course {
-  admin: User;
-  total_members: number;
-  is_private: boolean
+interface CourseSetting {
+  id: string;
+  name: string;
+  description: string;
+  background_color: string;
+  cover_pic?: File;
+  join_code: string;
+  post_permission: string;
+  is_private: boolean;
 }
 
+export const useUpdateClassSettings = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (updatedSettings: CourseSetting) => {
+      const formData = new FormData();
+
+      formData.append("join_code", updatedSettings.join_code);
+      formData.append("name", updatedSettings.name);
+      formData.append("description", updatedSettings.description || "");
+      formData.append("background_color", updatedSettings.background_color);
+      formData.append("is_private", String(updatedSettings.is_private));
+      formData.append("post_permission", updatedSettings.post_permission);
+
+      if (updatedSettings.cover_pic instanceof File) {
+        formData.append("cover_pic", updatedSettings.cover_pic);
+      }
+
+      const response = await axiosInstance.put(
+        `/courses/${updatedSettings.join_code}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      return response.data;
+    },
+    onSuccess: (data) => {
+      // Invalidate relevant queries to refresh course-related data
+      queryClient.invalidateQueries({ queryKey: ["courses", false] });
+      queryClient.invalidateQueries({ queryKey: ["courses", true] });
+      queryClient.invalidateQueries({ queryKey: ["teachingCourses"] });
+      queryClient.invalidateQueries({
+        queryKey: ["coursePreview", data.join_code],
+      });
+
+      toast.success("Class settings updated successfully!", {
+        description: `Settings for "${
+          data?.name || "course"
+        }" have been saved.`,
+      });
+    },
+    onError: (error) => {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<{ error?: string }>;
+        toast.error("Failed to update class settings", {
+          description:
+            axiosError.response?.data?.error || "An unknown error occurred",
+        });
+      } else {
+        toast.error("Failed to update class settings", {
+          description: "An unknown error occurred",
+        });
+      }
+    },
+  });
+};
 
 export const useCoursePreview = (course_joincode: string | undefined) => {
   return useQuery<CoursePreview, Error>({
