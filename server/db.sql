@@ -67,3 +67,16 @@ CREATE TABLE comments (
     content TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+SELECT 
+			u.id,
+			u.email,
+			u.username,
+			u.first_name,
+			u.last_name,
+			u.avatar,
+			cm.joined_at,
+			cm.role
+		FROM course_members cm
+		JOIN users u ON cm.user_id = u.id
+		WHERE cm.course_id = 'b35d6f5e-fe59-4ada-bf59-d2eed8a83003';
