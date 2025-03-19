@@ -248,21 +248,21 @@ export const ClassSettingsDialog: React.FC<ClassSettingsDialogProps> = ({
               <div className="space-y-3">
                 <Label htmlFor="post_permission">Who can post in class?</Label>
                 <RadioGroup
-                  value={classSettings.post_permission}
+                  value={String(classSettings.post_permission)}
                   onValueChange={(value) =>
-                    handleSettingChange("post_permission", value)
+                    handleSettingChange("post_permission", parseInt(value))
                   }
                 >
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="Members" id="Members" />
+                    <RadioGroupItem value={"0"} id="Members" />
                     <Label htmlFor="Members">Everyone</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="Instructors" id="Instructors" />
+                    <RadioGroupItem value="3" id="Instructors" />
                     <Label htmlFor="Instructors">Instructors only</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="Moderators" id="Moderators" />
+                    <RadioGroupItem value="2" id="Moderators" />
                     <Label htmlFor="Moderators">
                       Instructors and moderators
                     </Label>

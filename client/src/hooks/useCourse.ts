@@ -27,7 +27,7 @@ interface CourseSetting {
   background_color: string;
   cover_pic?: File;
   join_code: string;
-  post_permission: string;
+  post_permission: number;
   is_private: boolean;
 }
 
@@ -44,7 +44,10 @@ export const useUpdateClassSettings = () => {
       formData.append("description", updatedSettings.description || "");
       formData.append("background_color", updatedSettings.background_color);
       formData.append("is_private", String(updatedSettings.is_private));
-      formData.append("post_permission", updatedSettings.post_permission);
+      formData.append(
+        "post_permission",
+        String(updatedSettings.post_permission)
+      );
 
       if (updatedSettings.cover_pic instanceof File) {
         formData.append("cover_pic", updatedSettings.cover_pic);

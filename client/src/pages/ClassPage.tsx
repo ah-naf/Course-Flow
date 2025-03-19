@@ -84,12 +84,11 @@ const ClassPage: React.FC = () => {
     );
   }
 
-  console.log(user);
   if (!course || !user) {
     navigate("/");
     return;
   }
-
+  console.log(course);
   // Flag to control visibility of join details
   const showJoinDetails = !course.is_private || course.admin.id === user.id;
 
@@ -140,7 +139,7 @@ const ClassPage: React.FC = () => {
           </TabsList>
           <TabsContent value="posts">
             {/* Post Creation Button */}
-            {course.role && course.role !== "Member" && (
+            {course.role && course.role >= course.post_permission && (
               <CreatePostButton instructor={course.instructor} />
             )}
 

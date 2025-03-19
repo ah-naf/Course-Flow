@@ -9,8 +9,8 @@ export interface Course {
   join_code: string;
   created_at?: string;
   updated_at?: string;
-  post_permission: string;
-  role: string;
+  post_permission: number;
+  role: number;
 }
 
 export interface User {
