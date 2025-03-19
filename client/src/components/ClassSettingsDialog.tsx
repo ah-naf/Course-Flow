@@ -30,7 +30,6 @@ export const ClassSettingsDialog: React.FC<ClassSettingsDialogProps> = ({
   isOpen,
   onOpenChange,
 }) => {
-  console.log(course);
   const [classSettings, setClassSettings] = useState<CoursePreview>(course);
   const [uploadedCoverPic, setUploadedCoverPic] = useState<string | null>(null);
   const [coverPicFile, setCoverPicFile] = useState<File | undefined>(undefined);
@@ -51,9 +50,7 @@ export const ClassSettingsDialog: React.FC<ClassSettingsDialogProps> = ({
       },
       {
         onSuccess: () => {
-          onOpenChange(false);
-          setCoverPicFile(undefined);
-          setUploadedCoverPic(null);
+          setTimeout(() => window.location.reload(), 1000);
         },
       }
     );
@@ -124,19 +121,6 @@ export const ClassSettingsDialog: React.FC<ClassSettingsDialogProps> = ({
                           })`,
                         }}
                       />
-                      <button
-                        type="button"
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
-                        onClick={() => {
-                          setUploadedCoverPic(null);
-                          if (uploadedCoverPic) {
-                          } else {
-                            handleSettingChange("cover_pic", "");
-                          }
-                        }}
-                      >
-                        ✕
-                      </button>
                     </div>
                   ) : (
                     <div className="h-20 w-32 rounded-md border flex items-center justify-center text-gray-400">
@@ -231,10 +215,9 @@ export const ClassSettingsDialog: React.FC<ClassSettingsDialogProps> = ({
                       : undefined,
                   }}
                 >
-                  {classSettings.cover_pic ||
-                    (uploadedCoverPic && (
-                      <div className="absolute bg-black opacity-30 w-full h-full inset-0"></div>
-                    ))}
+                  {(classSettings.cover_pic || uploadedCoverPic) && (
+                    <div className="absolute bg-black opacity-30 w-full h-full inset-0"></div>
+                  )}
                   <div className="p-4">
                     <h3 className="text-xl font-semibold text-white drop-shadow-md">
                       {classSettings.name}
@@ -291,10 +274,18 @@ export const ClassSettingsDialog: React.FC<ClassSettingsDialogProps> = ({
         </Tabs>
 
         <DialogFooter className="mt-6">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              onOpenChange(false);
+              setClassSettings(course);
+            }}
+          >
             Cancel
           </Button>
-          <Button onClick={handleSaveSettings}>Save Changes</Button>
+          <Button disabled={isPending} onClick={handleSaveSettings}>
+            Save Changes
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

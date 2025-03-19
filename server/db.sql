@@ -27,7 +27,7 @@ CREATE TABLE courses (
     join_code VARCHAR(50) UNIQUE,
     is_private BOOLEAN DEFAULT TRUE,
     archived BOOLEAN DEFAULT FALSE,
-    post_permission VARCHAR(50) DEFAULT 'Instructor', -- Intstructor | Moderator | All
+    post_permission VARCHAR(50) DEFAULT 'Instructors', -- Intstructor | Moderator | All
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

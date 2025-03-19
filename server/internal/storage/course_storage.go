@@ -22,18 +22,29 @@ func NewCourseStorage(db *sql.DB) *CourseStorage {
 }
 
 func (s *CourseStorage) UpdateCourseSetting(userID string, course *models.CoursePreviewResponse) error {
+	var err error
 	tx, err := s.DB.Begin()
 	if err != nil {
 		return err
 	}
 
-	query := `
+	var result sql.Result
+	if course.CoverPic != "" {
+		query := `
 		UPDATE courses
 		SET name = $3, description = $4, cover_pic = $5, background_color = $6, is_private = $7, post_permission = $8, updated_at = $9
 		WHERE id = $1 AND admin_id = $2 AND archived = FALSE
-	`
+		`
+		result, err = tx.Exec(query, course.ID, userID, course.Name, course.Description, course.CoverPic, course.BackgroundColor, course.IsPrivate, course.PostPermission, course.UpdatedAt)
+	} else {
+		query := `
+		UPDATE courses
+		SET name = $3, description = $4, background_color = $5, is_private = $6, post_permission = $7, updated_at = $8
+		WHERE id = $1 AND admin_id = $2 AND archived = FALSE
+		`
+		result, err = tx.Exec(query, course.ID, userID, course.Name, course.Description, course.BackgroundColor, course.IsPrivate, course.PostPermission, course.UpdatedAt)
+	}
 
-	result, err := tx.Exec(query, course.ID, userID, course.Name, course.Description, course.CoverPic, course.BackgroundColor, course.IsPrivate, course.PostPermission, course.UpdatedAt)
 	if err != nil {
 		tx.Rollback()
 		return err

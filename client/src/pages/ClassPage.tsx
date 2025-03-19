@@ -91,7 +91,7 @@ const ClassPage: React.FC = () => {
   }
 
   // Flag to control visibility of join details
-  const showJoinDetails = !course.is_private;
+  const showJoinDetails = !course.is_private || course.admin.id === user.id;
 
   return (
     <div className="p-1 md:p-6 flex justify-center relative">

@@ -38,6 +38,7 @@ export const useUpdateClassSettings = () => {
     mutationFn: async (updatedSettings: CourseSetting) => {
       const formData = new FormData();
 
+      formData.append("id", updatedSettings.id);
       formData.append("join_code", updatedSettings.join_code);
       formData.append("name", updatedSettings.name);
       formData.append("description", updatedSettings.description || "");
@@ -49,17 +50,13 @@ export const useUpdateClassSettings = () => {
         formData.append("cover_pic", updatedSettings.cover_pic);
       }
 
-      const response = await axiosInstance.put(
-        `/courses/${updatedSettings.join_code}`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      await axiosInstance.put(`/courses/${updatedSettings.id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
-      return response.data;
+      return updatedSettings;
     },
     onSuccess: (data) => {
       // Invalidate relevant queries to refresh course-related data
