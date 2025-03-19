@@ -232,7 +232,7 @@ func (s *CourseService) CreateNewCourseService(course *models.Course, r *http.Re
 	// Set default values
 	course.IsPrivate = false
 	course.IsArchived = false
-	course.PostPermission = "Instructor"
+	course.PostPermission = 3 // 3 for 'Instructor'
 
 	if course.BackgroundColor == "" {
 		// Create a new random instance instead of seeding the global source

@@ -27,7 +27,7 @@ CREATE TABLE courses (
     join_code VARCHAR(50) UNIQUE,
     is_private BOOLEAN DEFAULT TRUE,
     archived BOOLEAN DEFAULT FALSE,
-    post_permission VARCHAR(50) DEFAULT 'Instructors', -- Intstructor | Moderator | All
+    post_permission INT DEFAULT 3, -- Intstructor(3) | Moderator(2) | Member(1) | All(0)
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -35,7 +35,7 @@ CREATE TABLE courses (
 CREATE TABLE course_members (
     course_id UUID REFERENCES courses(id) ON DELETE CASCADE,
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    role VARCHAR(20) NOT NULL,  -- Allowed values: 'Instructor', 'Moderator', 'Member'
+    role INT NOT NULL,  -- Allowed values: 'Instructor'(3), 'Moderator'(2), 'Member'(1)_
     joined_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (course_id, user_id)
 );

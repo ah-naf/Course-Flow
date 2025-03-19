@@ -12,15 +12,15 @@ type Course struct {
 	JoinCode        string    `json:"join_code" validate:"required,min=4,max=20,alphanum"`
 	IsPrivate       bool      `json:"is_private"`
 	IsArchived      bool      `json:"archived"`
-	PostPermission  string    `json:"post_permission" validate:"max=20"`
+	PostPermission  int       `json:"post_permission"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
 }
 
 type CourseListResponse struct {
 	Course
-	Admin User   `json:"admin"`
-	Role  string `json:"role"`
+	Admin User `json:"admin"`
+	Role  int  `json:"role"`
 }
 
 type CoursePreviewResponse struct {

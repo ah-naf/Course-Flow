@@ -42,7 +42,12 @@ func (h *CourseHandler) UpdateCourseSettingHandler(w http.ResponseWriter, r *htt
 	}
 	courseReq.IsPrivate = isPrivate
 
-	courseReq.PostPermission = r.FormValue("post_permission")
+	postPermissionStr := r.FormValue("post_permission")
+	postPermission, err := strconv.Atoi(postPermissionStr)
+	if err != nil {
+		return &utils.ApiError{Code: http.StatusBadRequest, Message: "Invalid post permission type"}
+	}
+	courseReq.PostPermission = postPermission
 
 	if courseReq.Name == "" {
 		return &utils.ApiError{
