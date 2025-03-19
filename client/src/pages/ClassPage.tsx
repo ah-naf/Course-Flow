@@ -31,6 +31,7 @@ const ClassPage: React.FC = () => {
   const { user } = useUserStore();
 
   const { data: course, isLoading, error } = useCoursePreview(classId);
+  console.log(course);
   const [isJoinDetailsDialogOpen, setIsJoinDetailsDialogOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
@@ -88,7 +89,6 @@ const ClassPage: React.FC = () => {
     navigate("/");
     return;
   }
-  console.log(course);
   // Flag to control visibility of join details
   const showJoinDetails = !course.is_private || course.admin.id === user.id;
 
@@ -139,8 +139,8 @@ const ClassPage: React.FC = () => {
           </TabsList>
           <TabsContent value="posts">
             {/* Post Creation Button */}
-            {course.role && course.role >= course.post_permission && (
-              <CreatePostButton instructor={course.instructor} />
+            {course.role >= course.post_permission && (
+              <CreatePostButton instructor={course.admin} />
             )}
 
             {/* Posts Section */}

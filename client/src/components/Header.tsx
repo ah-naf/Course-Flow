@@ -50,7 +50,6 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = "" }) => {
   };
 
   if (!user) return null;
-
   const initials = `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
 
   return (

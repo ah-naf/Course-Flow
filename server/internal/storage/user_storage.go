@@ -45,7 +45,7 @@ func (s *UserStorage) GetUserWithID(userID string) (*models.User, error) {
 		}
 		return nil, err
 	}
-	utils.GetEnv("BASE_URL")
+	user.Avatar = utils.NormalizeMedia(user.Avatar)
 	return &user, nil
 }
 
@@ -93,7 +93,7 @@ func (s *UserStorage) EditUserDetails(user *models.User) error {
 		tx.Rollback()
 		return err
 	}
-
+	user.Avatar = utils.NormalizeMedia(user.Avatar)
 	return nil
 }
 

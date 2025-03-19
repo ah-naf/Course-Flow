@@ -3,7 +3,7 @@ export interface Course {
   id: string;
   name: string;
   description: string;
-  instructor: User;
+  admin: User;
   background_color: string;
   cover_pic?: string;
   join_code: string;
@@ -47,7 +47,8 @@ export interface ChatMessage {
 }
 
 export interface GroupMember extends User {
-  role: "Instructor" | "Moderator" | "Member";
+  role: number;
+  created_at?: string;
 }
 
 export interface FileStorage {

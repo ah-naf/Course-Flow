@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type Course struct {
 	ID              string    `json:"id"`
@@ -20,7 +22,7 @@ type Course struct {
 type CourseListResponse struct {
 	Course
 	Admin User `json:"admin"`
-	Role  int  `json:"role"`
+	Role  *int `json:"role"`
 }
 
 type CoursePreviewResponse struct {

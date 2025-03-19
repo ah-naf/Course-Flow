@@ -74,6 +74,8 @@ func (s *CourseStorage) UpdateCourseSetting(userID string, course *models.Course
 func (s *CourseStorage) CoursePreview(joinCode, userID string, showRole bool) (*models.CoursePreviewResponse, error) {
 	var query string
 	var row *sql.Row
+	var err error
+	var preview models.CoursePreviewResponse
 
 	if showRole && userID != "" {
 		query = `
@@ -103,6 +105,26 @@ func (s *CourseStorage) CoursePreview(joinCode, userID string, showRole bool) (*
 			AND c.archived = FALSE
 		`
 		row = s.DB.QueryRow(query, joinCode, userID)
+		err = row.Scan(
+			&preview.ID,
+			&preview.Name,
+			&preview.Description,
+			&preview.BackgroundColor,
+			&preview.CoverPic,
+			&preview.JoinCode,
+			&preview.PostPermission,
+			&preview.CreatedAt,
+			&preview.UpdatedAt,
+			&preview.Admin.ID,
+			&preview.Admin.Username,
+			&preview.Admin.FirstName,
+			&preview.Admin.LastName,
+			&preview.Admin.Avatar,
+			&preview.TotalMembers,
+			&preview.IsArchived,
+			&preview.IsPrivate,
+			&preview.Role,
+		)
 	} else {
 		query = `
 			SELECT 
@@ -129,29 +151,27 @@ func (s *CourseStorage) CoursePreview(joinCode, userID string, showRole bool) (*
 			AND c.archived = FALSE
 		`
 		row = s.DB.QueryRow(query, joinCode)
+		err = row.Scan(
+			&preview.ID,
+			&preview.Name,
+			&preview.Description,
+			&preview.BackgroundColor,
+			&preview.CoverPic,
+			&preview.JoinCode,
+			&preview.PostPermission,
+			&preview.CreatedAt,
+			&preview.UpdatedAt,
+			&preview.Admin.ID,
+			&preview.Admin.Username,
+			&preview.Admin.FirstName,
+			&preview.Admin.LastName,
+			&preview.Admin.Avatar,
+			&preview.TotalMembers,
+			&preview.IsArchived,
+			&preview.IsPrivate,
+		)
 	}
 
-	var preview models.CoursePreviewResponse
-	err := row.Scan(
-		&preview.ID,
-		&preview.Name,
-		&preview.Description,
-		&preview.BackgroundColor,
-		&preview.CoverPic,
-		&preview.JoinCode,
-		&preview.PostPermission,
-		&preview.CreatedAt,
-		&preview.UpdatedAt,
-		&preview.Admin.ID,
-		&preview.Admin.Username,
-		&preview.Admin.FirstName,
-		&preview.Admin.LastName,
-		&preview.Admin.Avatar,
-		&preview.TotalMembers,
-		&preview.IsArchived,
-		&preview.IsPrivate,
-		&preview.Role,
-	)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, &utils.ApiError{Code: http.StatusNotFound, Message: "course not found or not accessible"}
@@ -371,7 +391,7 @@ func (s *CourseStorage) JoinCourse(joinCode, userID string) error {
 	}
 
 	// Add user as a member
-	err = s.AddCourseMember(courseID, userID, "Member")
+	err = s.AddCourseMember(courseID, userID, 0) // 0 for member
 	if err != nil {
 		return err
 	}
@@ -465,7 +485,7 @@ func (s *CourseStorage) CreateNewCourse(course *models.Course) error {
 		return err
 	}
 
-	err = s.AddCourseMember(course.ID, course.AdminID, "Instructor")
+	err = s.AddCourseMember(course.ID, course.AdminID, 3) // 3 for instructor
 	return nil
 }
 
@@ -505,7 +525,7 @@ func (s *CourseStorage) CheckCourseMembership(courseID, userID string) (bool, er
 }
 
 // AddCourseMember inserts a new member into a course with the specified role
-func (s *CourseStorage) AddCourseMember(courseID, userID, role string) error {
+func (s *CourseStorage) AddCourseMember(courseID, userID string, role int) error {
 	insertQuery := `
         INSERT INTO course_members (course_id, user_id, role)
         VALUES ($1, $2, $3)

@@ -30,11 +30,11 @@ const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
   React.useEffect(() => {
     const initialMembers: GroupMember[] = [
       {
-        id: course.instructor.id,
-        username: course.instructor.username,
-        initial: course.instructor.initial,
-        role: "Instructor",
-        timestamp: new Date().toLocaleDateString(),
+        id: course.admin.id,
+        username: course.admin.username,
+        initial: course.admin.initial,
+        role: 3,
+        created_at: new Date().toLocaleDateString(),
         firstName: "Sarah",
         lastName: "Johnson",
         email: "sarah.johnson@example.com",
@@ -44,8 +44,8 @@ const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
         id: "student1",
         username: "AlexJohnson",
         initial: "A",
-        role: "Member",
-        timestamp: new Date(Date.now() - 86400000).toLocaleDateString(),
+        role: 2,
+        created_at: new Date(Date.now() - 86400000).toLocaleDateString(),
         firstName: "Alex",
         lastName: "Johnson",
         email: "alex.johnson@example.com",
@@ -55,8 +55,8 @@ const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
         id: "student2",
         username: "EmilyWang",
         initial: "E",
-        role: "Member",
-        timestamp: new Date(Date.now() - 172800000).toLocaleDateString(),
+        role: 2,
+        created_at: new Date(Date.now() - 172800000).toLocaleDateString(),
         firstName: "Emily",
         lastName: "Wang",
         email: "emily.wang@example.com",
@@ -154,7 +154,7 @@ const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
                             </p>
                             <p className="text-sm">
                               <span className="font-medium">Joined:</span>{" "}
-                              {formatRelativeTime(member.timestamp || "")}
+                              {formatRelativeTime(member.created_at || "")}
                             </p>
                           </div>
                         </div>
@@ -169,7 +169,7 @@ const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
             </div>
             <div className="flex items-center space-x-2">
               <p className="text-xs sm:text-sm text-gray-500">
-                Joined: {member.timestamp}
+                Joined: {member.created_at}
               </p>
               {/* Role Dropdown */}
               <DropdownMenu>

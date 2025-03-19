@@ -185,17 +185,10 @@ export const useLogout = () => {
         throw new Error("Logout failed");
       }
     },
-    onSuccess: (data) => {
-      toast.success(data.message || "Logged out successfully!", {
-        description: "You've been signed out of your account.",
-      });
+    onSuccess: () => {
       logout();
     },
     onError: () => {
-      toast.error("Your session is expired!", {
-        description: "Please log in again.",
-      });
-
       logout();
     },
   });

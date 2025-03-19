@@ -19,6 +19,7 @@ export const useUserStore = create<UserState>()(
         localStorage.removeItem("user-storage");
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
+        window.location.href = "/";
       },
     }),
     { name: "user-storage", storage: createJSONStorage(() => localStorage) }
