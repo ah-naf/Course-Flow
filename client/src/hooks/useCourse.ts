@@ -334,10 +334,12 @@ export const useLeaveCourse = (kick: boolean = false) => {
       idToKick,
     }: LeaveCourseMutationVars) => {
       if (!kick) await axiosInstance.delete(`/courses/leave/${courseId}`);
-      else
+      else {
         await axiosInstance.delete(`/courses/leave/${courseId}`, {
-          data: { id: idToKick },
+          params: { to_kick: idToKick },
         });
+      }
+
       // Return the course name to use in the success handler
       return { courseName, kick, courseId };
     },

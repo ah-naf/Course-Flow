@@ -65,6 +65,7 @@ const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
         {
           courseId: course.id,
           courseName: course.name,
+          idToKick: memberToKick.id,
         },
         {
           onSuccess: () => setMemberToKick(null),
