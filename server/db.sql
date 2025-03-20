@@ -69,14 +69,26 @@ CREATE TABLE comments (
 );
 
 SELECT 
-			u.id,
-			u.email,
-			u.username,
-			u.first_name,
-			u.last_name,
-			u.avatar,
-			cm.joined_at,
-			cm.role
-		FROM course_members cm
-		JOIN users u ON cm.user_id = u.id
-		WHERE cm.course_id = 'b35d6f5e-fe59-4ada-bf59-d2eed8a83003';
+    c.id, 
+    c.name, 
+    c.description, 
+    c.background_color, 
+    c.cover_pic, 
+    c.join_code, 
+    c.post_permission, 
+    c.created_at, 
+    c.updated_at,
+    u.id AS admin_id,
+    u.username AS admin_username,
+    u.first_name AS admin_first_name,
+    u.last_name AS admin_last_name,
+    u.avatar AS admin_avatar,
+    (SELECT COUNT(*) FROM course_members WHERE course_id = c.id) AS total_members,
+    c.archived,
+    c.is_private,
+    cm.role
+FROM courses c
+LEFT JOIN users u ON c.admin_id = u.id
+INNER JOIN course_members cm ON cm.course_id = c.id AND cm.user_id = 'ff270520-b738-4da7-8c6e-f65dcf7805e0'
+WHERE c.join_code = 'SEC201' 
+AND c.archived = FALSE

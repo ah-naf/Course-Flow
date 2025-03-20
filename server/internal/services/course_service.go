@@ -4,6 +4,7 @@ import (
 	"course-flow/internal/models"
 	"course-flow/internal/storage"
 	"course-flow/internal/utils"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -102,6 +103,19 @@ func (s *CourseService) LeaveCourse(r *http.Request) error {
 	if err != nil {
 		return err
 	}
+
+	var req struct {
+		ToKick string `json:"id"`
+	}
+
+	if json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return err
+	}
+
+	if req.ToKick != "" {
+		userID = req.ToKick
+	}
+	fmt.Println("kick", req.ToKick)
 
 	vars := mux.Vars(r)
 	courseID := vars["id"]

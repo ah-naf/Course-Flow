@@ -100,7 +100,7 @@ func (s *CourseStorage) CoursePreview(joinCode, userID string, showRole bool) (*
 				cm.role
 			FROM courses c
 			LEFT JOIN users u ON c.admin_id = u.id
-			LEFT JOIN course_members cm ON cm.course_id = c.id AND cm.user_id = $2
+			INNER JOIN course_members cm ON cm.course_id = c.id AND cm.user_id = $2
 			WHERE c.join_code = $1 
 			AND c.archived = FALSE
 		`

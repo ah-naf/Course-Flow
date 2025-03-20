@@ -114,6 +114,7 @@ export const useCoursePreview = (course_joincode: string | undefined) => {
       }
     },
     enabled: Boolean(course_joincode),
+    retry: 1,
   });
 };
 
@@ -320,42 +321,67 @@ export const useDeleteCourse = () => {
 interface LeaveCourseMutationVars {
   courseId: string;
   courseName: string;
+  idToKick?: string;
 }
 
-export const useLeaveCourse = () => {
+export const useLeaveCourse = (kick: boolean = false) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ courseId, courseName }: LeaveCourseMutationVars) => {
-      await axiosInstance.delete(`/courses/leave/${courseId}`);
-
+    mutationFn: async ({
+      courseId,
+      courseName,
+      idToKick,
+    }: LeaveCourseMutationVars) => {
+      if (!kick) await axiosInstance.delete(`/courses/leave/${courseId}`);
+      else
+        await axiosInstance.delete(`/courses/leave/${courseId}`, {
+          data: { id: idToKick },
+        });
       // Return the course name to use in the success handler
-      return { courseName };
+      return { courseName, kick, courseId };
     },
     onSuccess: (data) => {
       // Invalidate and refetch relevant queries
-      queryClient.invalidateQueries({ queryKey: ["courses", false] }); // Refresh ClassroomPage
-      queryClient.invalidateQueries({ queryKey: ["courses", true] }); // Refresh ArchivedPage
-      queryClient.invalidateQueries({ queryKey: ["teachingCourses"] });
+      if (!data.kick) {
+        queryClient.invalidateQueries({ queryKey: ["courses", false] }); // Refresh ClassroomPage
+        queryClient.invalidateQueries({ queryKey: ["courses", true] }); // Refresh ArchivedPage
+        queryClient.invalidateQueries({ queryKey: ["teachingCourses"] });
 
-      // Show success toast with course name
-      toast.success(`Left "${data.courseName}" successfully`, {
-        description:
-          "You can rejoin this course using the join code if needed.",
-      });
+        // Show success toast with course name
+        toast.success(`Left "${data.courseName}" successfully`, {
+          description:
+            "You can rejoin this course using the join code if needed.",
+        });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["members", data.courseId] });
+        toast.success(`Member kicked from "${data.courseName}"`, {
+          description: "The member has been removed from the course.",
+        });
+      }
     },
     onError: (error, variables) => {
       // Check if it's an Axios error and safely cast it
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<{ error?: string }>;
-        toast.error(`Failed to leave "${variables.courseName}"`, {
-          description:
-            axiosError.response?.data?.error || "An unknown error occurred",
-        });
+        toast.error(
+          `Failed to ${kick ? "kick member from" : "leave"} "${
+            variables.courseName
+          }"`,
+          {
+            description:
+              axiosError.response?.data?.error || "An unknown error occurred",
+          }
+        );
       } else {
-        toast.error(`Failed to leave "${variables.courseName}"`, {
-          description: "An unknown error occurred",
-        });
+        toast.error(
+          `Failed to ${kick ? "kick member from" : "leave"} "${
+            variables.courseName
+          }"`,
+          {
+            description: "An unknown error occurred",
+          }
+        );
       }
     },
   });

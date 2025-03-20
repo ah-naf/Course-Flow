@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { UserX, Search, ChevronDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,6 +25,7 @@ import { toast } from "sonner";
 import { getRoleLabel } from "@/lib/utils";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useUserStore } from "@/store/userStore";
+import { useLeaveCourse } from "@/hooks/useCourse";
 
 const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
   const { members, setMembers, removeMember, updateMemberRole } =
@@ -31,16 +33,11 @@ const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
   const { user } = useUserStore();
   const [searchTerm, setSearchTerm] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [memberToKick, setMemberToKick] = useState<GroupMember | null>(null);
 
-  // Use the hook to fetch data
+  const kickMemberMutation = useLeaveCourse(true);
   const { data, isLoading, isError, error } = useFetchCourseMember(course.id);
 
-  // Determine if the current user is an instructor or admin
-  const isCurrentUserInstructor = user?.role === 3;
-  const isCurrentUserAdmin = user?.id === course.admin.id;
-  const canManageRoles = isCurrentUserInstructor || isCurrentUserAdmin;
-
-  // Handle data changes and errors
   useEffect(() => {
     if (data) {
       setMembers(data);
@@ -53,19 +50,26 @@ const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
         error instanceof Error ? error.message : "Unknown error occurred";
       setErrorMessage(errorMsg);
       toast.error(`Failed to load members: ${errorMsg}`);
-
-      // Clear error after 5 seconds
-      const timer = setTimeout(() => {
-        setErrorMessage(null);
-      }, 5000);
-
+      const timer = setTimeout(() => setErrorMessage(null), 5000);
       return () => clearTimeout(timer);
     }
   }, [isError, error]);
 
-  const handleKickMember = (memberId: string) => {
-    if (confirm(`Are you sure you want to kick this member?`)) {
-      removeMember(memberId);
+  const handleKickMember = (member: GroupMember) => {
+    setMemberToKick(member); // Set the member to show confirmation dialog
+  };
+
+  const confirmKickMember = () => {
+    if (memberToKick) {
+      kickMemberMutation.mutate(
+        {
+          courseId: course.id,
+          courseName: course.name,
+        },
+        {
+          onSuccess: () => setMemberToKick(null),
+        }
+      );
     }
   };
 
@@ -109,137 +113,176 @@ const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
         </div>
       ) : (
         <div className="space-y-4 sm:space-y-6">
-          {filteredMembers.map((member) => (
-            <div
-              key={member.id}
-              className="flex items-center justify-between hover:bg-gray-50 p-2 rounded-md transition-colors"
-            >
-              <div className="flex items-center space-x-3">
-                <Avatar className="w-8 h-8 sm:w-10 sm:h-10">
-                  <AvatarImage
-                    src={member.avatar}
-                    alt={`${member.username}'s avatar`}
-                  />
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    {member.initial}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="link"
-                        className="p-0 h-auto font-medium text-sm sm:text-base text-left"
-                      >
-                        {member.username}
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-lg w-full max-h-[80vh] p-0">
-                      <DialogHeader className="p-6 pb-0">
-                        <DialogTitle>Member Profile</DialogTitle>
-                      </DialogHeader>
-                      <Card className="m-6 shadow-lg">
-                        <CardContent className="p-6">
-                          <div className="flex flex-col items-center space-y-4">
-                            {member.avatar ? (
-                              <img
-                                src={member.avatar}
-                                alt={`${member.username}'s avatar`}
-                                className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
-                              />
-                            ) : (
-                              <div className="w-24 h-24 rounded-full bg-green-500 flex items-center justify-center text-white text-4xl font-semibold border-2 border-gray-200">
-                                {member.initial}
+          {filteredMembers.map((member) => {
+            const isCurrentUserInstructor =
+              user?.id === member.id && member.role === 3;
+            const isCurrentUserAdmin = user?.id === course.admin.id;
+            const canManageRoles =
+              isCurrentUserInstructor || isCurrentUserAdmin;
+            if (member.id === course.admin.id && user?.id === member.id) return;
+            return (
+              <div
+                key={member.id}
+                className="flex items-center justify-between hover:bg-gray-50 p-2 rounded-md transition-colors"
+              >
+                <div className="flex items-center space-x-3">
+                  <Avatar className="w-8 h-8 sm:w-10 sm:h-10">
+                    <AvatarImage
+                      src={member.avatar}
+                      alt={`${member.username}'s avatar`}
+                    />
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                      {member.initial}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="link"
+                          className="p-0 h-auto font-medium text-sm sm:text-base text-left"
+                        >
+                          {member.username}
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-lg w-full max-h-[80vh] p-0">
+                        <DialogHeader className="p-6 pb-0">
+                          <DialogTitle>Member Profile</DialogTitle>
+                        </DialogHeader>
+                        <Card className="m-6 shadow-lg">
+                          <CardContent className="p-6">
+                            {/* Profile content remains the same */}
+                            <div className="flex flex-col items-center space-y-4">
+                              {member.avatar ? (
+                                <img
+                                  src={member.avatar}
+                                  alt={`${member.username}'s avatar`}
+                                  className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+                                />
+                              ) : (
+                                <div className="w-24 h-24 rounded-full bg-green-500 flex items-center justify-center text-white text-4xl font-semibold border-2 border-gray-200">
+                                  {member.initial}
+                                </div>
+                              )}
+                              <div className="text-center">
+                                <h3 className="text-xl font-semibold">
+                                  {member.firstName} {member.lastName}
+                                </h3>
+                                <p className="text-sm text-gray-500">
+                                  @{member.username}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                  {member.email}
+                                </p>
                               </div>
-                            )}
-                            <div className="text-center">
-                              <h3 className="text-xl font-semibold">
-                                {member.firstName} {member.lastName}
-                              </h3>
-                              <p className="text-sm text-gray-500">
-                                @{member.username}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                {member.email}
-                              </p>
+                              <div className="text-center">
+                                <p className="text-sm">
+                                  <span className="font-medium">Role:</span>{" "}
+                                  {getRoleLabel(member.role)}
+                                </p>
+                                <p className="text-sm">
+                                  <span className="font-medium">Joined:</span>{" "}
+                                  {formatRelativeTime(member.created_at || "")}
+                                </p>
+                              </div>
                             </div>
-                            <div className="text-center">
-                              <p className="text-sm">
-                                <span className="font-medium">Role:</span>{" "}
-                                {getRoleLabel(member.role)}
-                              </p>
-                              <p className="text-sm">
-                                <span className="font-medium">Joined:</span>{" "}
-                                {formatRelativeTime(member.created_at || "")}
-                              </p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </DialogContent>
-                  </Dialog>
+                          </CardContent>
+                        </Card>
+                      </DialogContent>
+                    </Dialog>
+                    <p className="text-xs sm:text-sm text-gray-500">
+                      {getRoleLabel(member.role)}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
                   <p className="text-xs sm:text-sm text-gray-500">
-                    {getRoleLabel(member.role)}
+                    Joined: {formatRelativeTime(member.created_at || "")}
                   </p>
+
+                  {canManageRoles && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-8">
+                          {getRoleLabel(member.role)}
+                          <ChevronDown className="ml-2 h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        {isCurrentUserAdmin && (
+                          <DropdownMenuItem
+                            onClick={() => updateMemberRole(member.id, 3)}
+                          >
+                            Instructor
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem
+                          onClick={() => updateMemberRole(member.id, 2)}
+                        >
+                          Moderator
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => updateMemberRole(member.id, 1)}
+                        >
+                          Member
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+
+                  {canManageRoles &&
+                    (isCurrentUserAdmin || member.role < 3) && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleKickMember(member)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <UserX className="w-4 h-4 mr-1" />
+                        Kick
+                      </Button>
+                    )}
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <p className="text-xs sm:text-sm text-gray-500">
-                  Joined: {formatRelativeTime(member.created_at || "")}
-                </p>
-
-                {/* Role Dropdown - Only shown for instructors or admins */}
-                {canManageRoles && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-8">
-                        {getRoleLabel(member.role)}
-                        <ChevronDown className="ml-2 h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      {/* Only admin can promote someone to instructor */}
-                      {isCurrentUserAdmin && (
-                        <DropdownMenuItem
-                          onClick={() => updateMemberRole(member.id, 3)}
-                        >
-                          Instructor
-                        </DropdownMenuItem>
-                      )}
-                      {/* Both admin and instructor can promote to moderator */}
-                      <DropdownMenuItem
-                        onClick={() => updateMemberRole(member.id, 2)}
-                      >
-                        Moderator
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => updateMemberRole(member.id, 1)}
-                      >
-                        Member
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
-
-                {/* Kick Button - Only shown for instructors or admins */}
-                {canManageRoles && (isCurrentUserAdmin || member.role < 3) && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleKickMember(member.id)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <UserX className="w-4 h-4 mr-1" />
-                    Kick
-                  </Button>
-                )}
-              </div>
-            </div>
-          ))}
+            );
+          })}
           {filteredMembers.length === 0 && !isLoading && (
             <p className="text-center text-gray-500">No members found</p>
           )}
         </div>
+      )}
+
+      {/* Kick Confirmation Dialog */}
+      {memberToKick && (
+        <Dialog
+          open={!!memberToKick}
+          onOpenChange={() => setMemberToKick(null)}
+        >
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Confirm Removal</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="text-sm text-gray-600">
+                Are you sure you want to remove{" "}
+                <span className="font-semibold">{memberToKick.username}</span>{" "}
+                from the group? This action cannot be undone.
+              </p>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setMemberToKick(null)}
+                className="mr-2"
+              >
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={confirmKickMember}>
+                Remove
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
