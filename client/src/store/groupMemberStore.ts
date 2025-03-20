@@ -5,10 +5,7 @@ interface GroupMembersState {
   members: GroupMember[];
   setMembers: (members: GroupMember[]) => void;
   removeMember: (memberId: string) => void;
-  updateMemberRole: (
-    memberId: string,
-    role: "Instructor" | "Moderator" | "Member"
-  ) => void;
+  updateMemberRole: (memberId: string, role: number) => void;
 }
 
 export const useGroupMembersStore = create<GroupMembersState>((set) => ({
