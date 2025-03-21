@@ -1,6 +1,6 @@
 // src/pages/ClassPage.tsx
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClassBanner } from "@/components/ClassBanner";
 import { CreatePostButton } from "@/components/CreatePostButton";
@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import GroupMembers from "@/components/GroupMembers";
 import Attachments from "@/components/Attachments";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Loader2, MessageCircle, RefreshCw } from "lucide-react"; // Added Send icon
+import { AlertCircle, Loader2, MessageCircle, RefreshCw } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import ClassroomChat from "@/components/ClassroomChat";
 import { useCoursePreview } from "@/hooks/useCourse";
@@ -29,10 +29,18 @@ const ClassPage: React.FC = () => {
   const { classId } = useParams<{ classId: string }>();
   const navigate = useNavigate();
   const { user } = useUserStore();
+  const [searchParams] = useSearchParams(); // Get URL query parameters
 
   const { data: course, isLoading, error } = useCoursePreview(classId);
   const [isJoinDetailsDialogOpen, setIsJoinDetailsDialogOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+
+  // Get the tab from URL query, default to "posts" if invalid or not found
+  const validTabs = ["posts", "members", "files"];
+  const tabFromUrl = searchParams.get("tab");
+  const defaultTab = validTabs.includes(tabFromUrl || "")
+    ? tabFromUrl || "posts"
+    : "posts";
 
   if (isLoading) {
     return (
@@ -86,8 +94,9 @@ const ClassPage: React.FC = () => {
 
   if (!course || !user) {
     navigate("/");
-    return;
+    return null; // Return null since navigate will handle redirection
   }
+
   // Flag to control visibility of join details
   const showJoinDetails = !course.is_private || course.admin.id === user.id;
 
@@ -103,7 +112,7 @@ const ClassPage: React.FC = () => {
         />
 
         {/* Tabs */}
-        <Tabs defaultValue="posts" className="mt-4">
+        <Tabs value={defaultTab} className="mt-4">
           <TabsList className="grid grid-cols-3 w-full h-12 mb-4 bg-gray-100 rounded-lg overflow-hidden shadow-sm">
             <TabsTrigger
               value="posts"
