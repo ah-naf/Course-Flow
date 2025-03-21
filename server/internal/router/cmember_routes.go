@@ -17,4 +17,5 @@ func (r *Router) setupCourseMemberRouter(router *mux.Router) {
 	cmRouter := router.PathPrefix("/members").Subrouter()
 
 	cmRouter.HandleFunc("/{id}", middleware.ConvertToHandlerFunc(cmHandler.GetAllMemberHandler)).Methods("GET")
+	cmRouter.HandleFunc("/change-role/{id}", middleware.ConvertToHandlerFunc(cmHandler.ChangeRoleHandler, middleware.AuthMiddleware)).Methods("PUT")
 }

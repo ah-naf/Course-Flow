@@ -1,7 +1,48 @@
 import axiosInstance from "@/api/axiosInstance";
 import { GroupMember } from "@/utils/types";
-import { useQuery, UseQueryResult } from "@tanstack/react-query";
+import { useMutation, useQuery, UseQueryResult } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
+import { toast } from "sonner";
+
+export const useChangeRole = (courseID: string) => {
+  return useMutation({
+    mutationFn: async ({
+      member_id,
+      role,
+    }: {
+      member_id: string;
+      role: number;
+    }) => {
+      const response = await axiosInstance.put(
+        `/members/change-role/${courseID}`,
+        {
+          member_id,
+          role,
+        }
+      );
+
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("Role updated successfully", {
+        description: "The member's role has been changed.",
+      });
+    },
+    onError: (error) => {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<{ error: string }>;
+        toast.error(
+          axiosError.response?.data.error ||
+            "An error occurred while updating the role",
+          {
+            description:
+              "Please try again or contact support if the issue persists.",
+          }
+        );
+      }
+    },
+  });
+};
 
 export const useFetchCourseMember = (
   id: string

@@ -3,6 +3,7 @@ package handlers
 import (
 	"course-flow/internal/services"
 	"course-flow/internal/utils"
+	"encoding/json"
 	"net/http"
 )
 
@@ -14,6 +15,24 @@ func NewCourseMemberHandler(cmSerivces *services.CourseMemberService) *CourseMem
 	return &CourseMemberHandler{
 		CourseMemberService: cmSerivces,
 	}
+}
+
+func (h *CourseMemberHandler) ChangeRoleHandler(w http.ResponseWriter, r *http.Request) error {
+	var req struct {
+		MemberID string `json:"member_id"`
+		Role     int    `json:"role"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return err
+	}
+
+	err := h.CourseMemberService.ChangeRole(req.MemberID, req.Role, r)
+	if err != nil {
+		return err
+	}
+
+	return utils.WriteJSON(w, http.StatusOK, map[string]string{"message": "Role changed successfully"})
 }
 
 func (h *CourseMemberHandler) GetAllMemberHandler(w http.ResponseWriter, r *http.Request) error {

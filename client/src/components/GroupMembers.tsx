@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useGroupMembersStore } from "@/store/groupMemberStore";
 import { formatRelativeTime } from "@/utils/formatRelativeTime";
-import { useFetchCourseMember } from "@/hooks/useCourseMember";
+import { useChangeRole, useFetchCourseMember } from "@/hooks/useCourseMember";
 import { toast } from "sonner";
 import { getRoleLabel } from "@/lib/utils";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -36,6 +36,7 @@ const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
   const [memberToKick, setMemberToKick] = useState<GroupMember | null>(null);
 
   const kickMemberMutation = useLeaveCourse(true);
+  const changeRoleMutation = useChangeRole(course.id);
   const { data, isLoading, isError, error } = useFetchCourseMember(course.id);
 
   useEffect(() => {
@@ -68,11 +69,73 @@ const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
           idToKick: memberToKick.id,
         },
         {
-          onSuccess: () => setMemberToKick(null),
+          onSuccess: () => {
+            removeMember(memberToKick.id);
+            setMemberToKick(null);
+          },
         }
       );
     }
   };
+
+  const handleRoleChange = (memberId: string, newRole: number) => {
+    changeRoleMutation.mutate(
+      {
+        member_id: memberId,
+        role: newRole,
+      },
+      {
+        onSuccess: () => {
+          // Update local state through the store
+          updateMemberRole(memberId, newRole);
+        },
+      }
+    );
+  };
+
+  // Helper to determine if current user can change a member's role
+  const canChangeRole = (memberRole: number): boolean => {
+    if (!user) return false;
+
+    // Admin can change anyone's role
+    if (user.id === course.admin.id) return true;
+
+    // Find current user's role in this course
+    const currentUserMember = members.find((m) => m.id === user.id);
+    if (!currentUserMember) return false;
+
+    // Users can only manage members with lower roles than their own
+    return currentUserMember.role > memberRole;
+  };
+
+  // Helper to determine if current user can kick a member
+  const canKickMember = (memberRole: number): boolean => {
+    if (!user) return false;
+
+    // Admin can kick anyone
+    if (user.id === course.admin.id) return true;
+
+    // Find current user's role in this course
+    const currentUserMember = members.find((m) => m.id === user.id);
+    if (!currentUserMember) return false;
+
+    // Users can only kick members with lower roles than their own
+    return currentUserMember.role > memberRole && currentUserMember.role > 2;
+  };
+
+  // Get current user's role in this course
+  const getCurrentUserRole = (): number => {
+    if (!user) return 0;
+
+    // Admin has highest authority
+    if (user.id === course.admin.id) return 999;
+
+    // Find current user's role in this course
+    const currentUserMember = members.find((m) => m.id === user.id);
+    return currentUserMember?.role || 0;
+  };
+
+  const currentUserRole = getCurrentUserRole();
 
   const filteredMembers = members.filter(
     (member: GroupMember) =>
@@ -115,12 +178,14 @@ const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
       ) : (
         <div className="space-y-4 sm:space-y-6">
           {filteredMembers.map((member) => {
-            const isCurrentUserInstructor =
-              user?.id === member.id && member.role === 3;
-            const isCurrentUserAdmin = user?.id === course.admin.id;
-            const canManageRoles =
-              isCurrentUserInstructor || isCurrentUserAdmin;
-            if (member.id === course.admin.id && user?.id === member.id) return;
+            // Skip rendering yourself if you're the admin
+            if (member.id === course.admin.id && user?.id === member.id)
+              return null;
+
+            // Check permissions for this specific member
+            const canModifyRole = canChangeRole(member.role);
+            const canRemoveMember = canKickMember(member.role);
+
             return (
               <div
                 key={member.id}
@@ -201,48 +266,75 @@ const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
                     Joined: {formatRelativeTime(member.created_at || "")}
                   </p>
 
-                  {canManageRoles && (
+                  {canModifyRole && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm" className="h-8">
-                          {getRoleLabel(member.role)}
-                          <ChevronDown className="ml-2 h-4 w-4" />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8"
+                          disabled={
+                            changeRoleMutation.isPending &&
+                            changeRoleMutation.variables?.member_id ===
+                              member.id
+                          }
+                        >
+                          {changeRoleMutation.isPending &&
+                          changeRoleMutation.variables?.member_id ===
+                            member.id ? (
+                            <>
+                              <span className="animate-pulse">Updating...</span>
+                            </>
+                          ) : (
+                            <>
+                              {getRoleLabel(member.role)}
+                              <ChevronDown className="ml-2 h-4 w-4" />
+                            </>
+                          )}
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
-                        {isCurrentUserAdmin && (
-                          <DropdownMenuItem
-                            onClick={() => updateMemberRole(member.id, 3)}
-                          >
-                            Instructor
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem
-                          onClick={() => updateMemberRole(member.id, 2)}
-                        >
-                          Moderator
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => updateMemberRole(member.id, 1)}
-                        >
-                          Member
-                        </DropdownMenuItem>
+                        {/* Only show role options that are below the current user's role */}
+                        {[1, 2, 3].map((roleLevel) => {
+                          // Only show roles below the current user's role
+                          if (roleLevel >= currentUserRole) return null;
+
+                          // Don't show the current role of the member
+                          if (roleLevel === member.role) return null;
+
+                          return (
+                            <DropdownMenuItem
+                              key={roleLevel}
+                              onClick={() =>
+                                handleRoleChange(member.id, roleLevel)
+                              }
+                            >
+                              {getRoleLabel(roleLevel)}
+                            </DropdownMenuItem>
+                          );
+                        })}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}
 
-                  {canManageRoles &&
-                    (isCurrentUserAdmin || member.role < 3) && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleKickMember(member)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <UserX className="w-4 h-4 mr-1" />
-                        Kick
-                      </Button>
-                    )}
+                  {canRemoveMember && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleKickMember(member)}
+                      className="text-red-500 hover:text-red-700"
+                      disabled={
+                        kickMemberMutation.isPending &&
+                        memberToKick?.id === member.id
+                      }
+                    >
+                      <UserX className="w-4 h-4 mr-1" />
+                      {kickMemberMutation.isPending &&
+                      memberToKick?.id === member.id
+                        ? "Processing..."
+                        : "Kick"}
+                    </Button>
+                  )}
                 </div>
               </div>
             );
@@ -257,7 +349,7 @@ const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
       {memberToKick && (
         <Dialog
           open={!!memberToKick}
-          onOpenChange={() => setMemberToKick(null)}
+          onOpenChange={(open) => !open && setMemberToKick(null)}
         >
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
@@ -275,11 +367,16 @@ const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
                 variant="outline"
                 onClick={() => setMemberToKick(null)}
                 className="mr-2"
+                disabled={kickMemberMutation.isPending}
               >
                 Cancel
               </Button>
-              <Button variant="destructive" onClick={confirmKickMember}>
-                Remove
+              <Button
+                variant="destructive"
+                onClick={confirmKickMember}
+                disabled={kickMemberMutation.isPending}
+              >
+                {kickMemberMutation.isPending ? "Removing..." : "Remove"}
               </Button>
             </DialogFooter>
           </DialogContent>

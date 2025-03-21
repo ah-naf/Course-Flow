@@ -31,7 +31,6 @@ const ClassPage: React.FC = () => {
   const { user } = useUserStore();
 
   const { data: course, isLoading, error } = useCoursePreview(classId);
-  console.log(course);
   const [isJoinDetailsDialogOpen, setIsJoinDetailsDialogOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
