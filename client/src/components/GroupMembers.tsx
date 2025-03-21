@@ -244,7 +244,11 @@ const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
                               <div className="text-center">
                                 <p className="text-sm">
                                   <span className="font-medium">Role:</span>{" "}
-                                  {getRoleLabel(member.role)}
+                                  {getRoleLabel(
+                                    member.id === course.admin.id
+                                      ? 4
+                                      : member.role
+                                  )}
                                 </p>
                                 <p className="text-sm">
                                   <span className="font-medium">Joined:</span>{" "}
@@ -257,7 +261,9 @@ const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
                       </DialogContent>
                     </Dialog>
                     <p className="text-xs sm:text-sm text-gray-500">
-                      {getRoleLabel(member.role)}
+                      {getRoleLabel(
+                        member.id === course.admin.id ? 4 : member.role
+                      )}
                     </p>
                   </div>
                 </div>
@@ -287,7 +293,9 @@ const GroupMembers: React.FC<{ course: Course }> = ({ course }) => {
                             </>
                           ) : (
                             <>
-                              {getRoleLabel(member.role)}
+                              {getRoleLabel(
+                                member.id === course.admin.id ? 4 : member.role
+                              )}
                               <ChevronDown className="ml-2 h-4 w-4" />
                             </>
                           )}

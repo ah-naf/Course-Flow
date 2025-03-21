@@ -7,6 +7,8 @@ export function cn(...inputs: ClassValue[]) {
 
 export function getRoleLabel(role: number) {
   switch (role) {
+    case 4:
+      return "Admin";
     case 3:
       return "Instructor";
     case 2:

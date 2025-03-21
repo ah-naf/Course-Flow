@@ -29,7 +29,7 @@ const ClassPage: React.FC = () => {
   const { classId } = useParams<{ classId: string }>();
   const navigate = useNavigate();
   const { user } = useUserStore();
-  const [searchParams] = useSearchParams(); // Get URL query parameters
+  const [searchParams, setSearchParams] = useSearchParams(); // Updated to allow setting params
 
   const { data: course, isLoading, error } = useCoursePreview(classId);
   const [isJoinDetailsDialogOpen, setIsJoinDetailsDialogOpen] = useState(false);
@@ -38,9 +38,23 @@ const ClassPage: React.FC = () => {
   // Get the tab from URL query, default to "posts" if invalid or not found
   const validTabs = ["posts", "members", "files"];
   const tabFromUrl = searchParams.get("tab");
-  const defaultTab = validTabs.includes(tabFromUrl || "")
+  const initialTab = validTabs.includes(tabFromUrl || "")
     ? tabFromUrl || "posts"
     : "posts";
+
+  // State to manage the active tab
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  // Sync tab state with URL when it changes
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
+
+  // Handle tab change and update URL
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab);
+    setSearchParams({ tab: newTab }); // Update URL query parameter
+  };
 
   if (isLoading) {
     return (
@@ -112,7 +126,11 @@ const ClassPage: React.FC = () => {
         />
 
         {/* Tabs */}
-        <Tabs value={defaultTab} className="mt-4">
+        <Tabs
+          value={activeTab}
+          onValueChange={handleTabChange} // Handle tab changes
+          className="mt-4"
+        >
           <TabsList className="grid grid-cols-3 w-full h-12 mb-4 bg-gray-100 rounded-lg overflow-hidden shadow-sm">
             <TabsTrigger
               value="posts"
