@@ -21,11 +21,10 @@ func NewDocumentStorage(db *sql.DB) *DocumentStorage {
 func (s *DocumentStorage) SaveDocument(doc *models.Document) error {
 	query := `
 	INSERT INTO documents (user_id, file_name, file_path, file_type, created_at, updated_at)
-	VALUES ($1, $2, $3, $4, $5, $6)
+	VALUES ($1, $2, $3, $4, $5, $6) RETURNING id
 	`
 
-	_, err := s.DB.Exec(query, doc.UserID, doc.FileName, doc.FilePath, doc.FileType, doc.CreatedAt, doc.UpdatedAt)
-	return err
+	return s.DB.QueryRow(query, doc.UserID, doc.FileName, doc.FilePath, doc.FileType, doc.CreatedAt, doc.UpdatedAt).Scan(&doc.ID)
 }
 
 // GetDocument retrieves a document by its ID

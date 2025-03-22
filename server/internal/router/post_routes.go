@@ -11,7 +11,16 @@ import (
 
 func (r *Router) setupPostRouter(router *mux.Router) {
 	postStorage := storage.NewPostStorage(r.DB)
-	postService := services.NewPostService(postStorage)
+
+
+	docStorage := storage.NewDocumentStorage(r.DB)
+	docService := services.NewDocumentService(docStorage)
+
+	attachmentStorage := storage.NewAttachmentStorage(r.DB)
+
+	attchmentService := services.NewAttachmentService(attachmentStorage, docService)
+
+	postService := services.NewPostService(postStorage, attchmentService)
 	postHandler := handlers.NewPostHandler(postService)
 
 	postRouter := router.PathPrefix("/posts").Subrouter()

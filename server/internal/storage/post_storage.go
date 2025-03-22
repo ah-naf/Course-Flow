@@ -15,7 +15,7 @@ func NewPostStorage(db *sql.DB) *PostStorage {
 	return &PostStorage{DB: db}
 }
 
-func (s *PostStorage) CreatePost(courseID, userID, content string) error {
+func (s *PostStorage) CreatePost(courseID, userID, content string) (string, error) {
 	// First, check if user is the course admin
 	courseQuery := `
 		SELECT admin_id, post_permission 
@@ -26,7 +26,7 @@ func (s *PostStorage) CreatePost(courseID, userID, content string) error {
 	var postPermission int
 	err := s.DB.QueryRow(courseQuery, courseID).Scan(&adminID, &postPermission)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if adminID != userID {
@@ -40,17 +40,17 @@ func (s *PostStorage) CreatePost(courseID, userID, content string) error {
 		err = s.DB.QueryRow(roleQuery, courseID, userID).Scan(&currentUserRole)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				return &utils.ApiError{
+				return "", &utils.ApiError{
 					Code:    http.StatusForbidden,
 					Message: "You are not a member of this course",
 				}
 			}
-			return err
+			return "", err
 		}
 
 		// Check if user's role meets the course's post_permission requirement
 		if currentUserRole < postPermission {
-			return &utils.ApiError{
+			return "", &utils.ApiError{
 				Code:    http.StatusForbidden,
 				Message: "You do not have permission to post in this course",
 			}
@@ -59,24 +59,20 @@ func (s *PostStorage) CreatePost(courseID, userID, content string) error {
 
 	query := `
 		INSERT INTO posts (course_id, user_id, content, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5)
+		VALUES ($1, $2, $3, $4, $5) RETURNING id
 	`
+	var postID string
 	now := time.Now().UTC() // Use UTC for consistency
-	result, err := s.DB.Exec(query, courseID, userID, content, now, now)
+	err = s.DB.QueryRow(query, courseID, userID, content, now, now).Scan(&postID)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if rowsAffected == 0 {
-		return &utils.ApiError{
+	if postID == "" {
+		return "", &utils.ApiError{
 			Code:    http.StatusInternalServerError,
 			Message: "Failed to create post",
 		}
 	}
-	return nil
+	return postID, nil
 }

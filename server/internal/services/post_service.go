@@ -9,11 +9,18 @@ import (
 )
 
 type PostService struct {
-	PostStorage *storage.PostStorage
+	PostStorage       *storage.PostStorage
+	AttachmentService *AttachmentService
 }
 
-func NewPostService(postStorage *storage.PostStorage) *PostService {
-	return &PostService{PostStorage: postStorage}
+func NewPostService(
+	postStorage *storage.PostStorage,
+	attachmentService *AttachmentService,
+) *PostService {
+	return &PostService{
+		PostStorage:       postStorage,
+		AttachmentService: attachmentService,
+	}
 }
 
 func (s *PostService) CreatePostService(content string, r *http.Request) error {
@@ -32,5 +39,22 @@ func (s *PostService) CreatePostService(content string, r *http.Request) error {
 		}
 	}
 
-	return s.PostStorage.CreatePost(courseID, userID, content)
+	postID, err := s.PostStorage.CreatePost(courseID, userID, content)
+	if err != nil {
+		return err
+	}
+
+	if r.MultipartForm != nil && r.MultipartForm.File != nil {
+		files := r.MultipartForm.File["attachments"]
+		if len(files) > 0 {
+			_, err := s.AttachmentService.AddAttachmentsToPost(postID, userID, files)
+			if err != nil {
+				// Delete the post if file uploading fails
+				return err
+			}
+
+		}
+	}
+
+	return nil
 }
