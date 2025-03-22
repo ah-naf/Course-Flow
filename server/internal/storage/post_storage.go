@@ -15,6 +15,77 @@ func NewPostStorage(db *sql.DB) *PostStorage {
 	return &PostStorage{DB: db}
 }
 
+func (s *PostStorage) DeletePost(courseID, postID, userID string) error {
+	// First, check if the course exists and get admin ID
+	adminQuery := `
+		SELECT admin_id 
+		FROM courses 
+		WHERE id = $1
+	`
+	var adminID string
+	err := s.DB.QueryRow(adminQuery, courseID).Scan(&adminID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return &utils.ApiError{
+				Code:    http.StatusNotFound,
+				Message: "Course not found",
+			}
+		}
+		return err
+	}
+
+	// Check if user is either the admin or the post author
+	authorQuery := `
+		SELECT user_id 
+		FROM posts 
+		WHERE id = $1 AND course_id = $2
+	`
+	var postAuthorID string
+	err = s.DB.QueryRow(authorQuery, postID, courseID).Scan(&postAuthorID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return &utils.ApiError{
+				Code:    http.StatusNotFound,
+				Message: "Post not found",
+			}
+		}
+		return err
+	}
+
+	// Check if user is neither admin nor author
+	if userID != adminID && userID != postAuthorID {
+		return &utils.ApiError{
+			Code:    http.StatusForbidden,
+			Message: "Only the course admin or post author can delete this post",
+		}
+	}
+
+	// Perform the deletion
+	deleteQuery := `
+		DELETE FROM posts 
+		WHERE id = $1 
+		AND course_id = $2
+	`
+	result, err := s.DB.Exec(deleteQuery, postID, courseID)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return &utils.ApiError{
+			Code:    http.StatusNotFound,
+			Message: "Post not found",
+		}
+	}
+
+	return nil
+}
+
 func (s *PostStorage) CreatePost(courseID, userID, content string) (string, error) {
 	// First, check if user is the course admin
 	courseQuery := `

@@ -23,6 +23,33 @@ func NewPostService(
 	}
 }
 
+func (s *PostService) DeletePost(r *http.Request) error {
+	ctx := r.Context()
+	userID, err := utils.GetUserIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	vars := mux.Vars(r)
+	postID := vars["id"]
+	if postID == "" {
+		return &utils.ApiError{
+			Code:    http.StatusBadRequest,
+			Message: "Post ID is required",
+		}
+	}
+
+	courseID := r.URL.Query().Get("course_id")
+	if courseID == "" {
+		return &utils.ApiError{
+			Code:    http.StatusBadRequest,
+			Message: "Course ID is required",
+		}
+	}
+
+	return s.PostStorage.DeletePost(courseID, postID, userID)
+}
+
 func (s *PostService) CreatePostService(content string, r *http.Request) error {
 	ctx := r.Context()
 	userID, err := utils.GetUserIDFromContext(ctx)

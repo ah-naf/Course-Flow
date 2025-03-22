@@ -26,4 +26,5 @@ func (r *Router) setupPostRouter(router *mux.Router) {
 	postRouter := router.PathPrefix("/posts").Subrouter()
 
 	postRouter.HandleFunc("/{id}", middleware.ConvertToHandlerFunc(postHandler.CreateNewPostHandler, middleware.AuthMiddleware)).Methods("POST")
+	postRouter.HandleFunc("/{id}", middleware.ConvertToHandlerFunc(postHandler.DeletePostHandler, middleware.AuthMiddleware)).Methods("DELETE")
 }
