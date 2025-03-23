@@ -1,8 +1,10 @@
 package storage
 
 import (
+	"course-flow/internal/models"
 	"course-flow/internal/utils"
 	"database/sql"
+	"fmt"
 	"net/http"
 	"time"
 )
@@ -13,6 +15,24 @@ type PostStorage struct {
 
 func NewPostStorage(db *sql.DB) *PostStorage {
 	return &PostStorage{DB: db}
+}
+
+func (s *PostStorage) GetAllPost(courseID string) ([]*models.PostResponse, error) {
+	query := `
+		SELECT 
+			p.id, p.course_id, p.user_id, p.content, p.created_at, p.updated_at,
+			u.id, u.username, u.email, u.first_name, u.last_name, u.avatar
+		FROM posts p
+		LEFT JOIN users u ON p.user_id = u.id
+		WHERE p.course_id = $1
+		ORDER BY p.created_at DESC
+	`
+
+	rows, err := s.DB.Query(query, courseID)
+	if err != nil {
+		return nil, fmt.Errorf("error querying posts: %w", err)
+	}
+	defer rows.Close()
 }
 
 func (s *PostStorage) DeletePost(courseID, postID, userID string) error {

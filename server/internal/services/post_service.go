@@ -76,7 +76,10 @@ func (s *PostService) CreatePostService(content string, r *http.Request) error {
 		if len(files) > 0 {
 			_, err := s.AttachmentService.AddAttachmentsToPost(postID, userID, files)
 			if err != nil {
-				// Delete the post if file uploading fails
+				
+				if err := s.PostStorage.DeletePost(courseID, postID, userID); err != nil {
+					return err
+				}
 				return err
 			}
 
