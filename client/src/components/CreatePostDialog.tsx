@@ -24,15 +24,18 @@ interface CreatePostDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (content: string, attachments: File[]) => void;
+  courseID: string;
 }
 
 export const CreatePostDialog: React.FC<CreatePostDialogProps> = ({
   isOpen,
   onOpenChange,
   onSubmit,
+  courseID,
 }) => {
   const [postContent, setPostContent] = useState("");
   const [postAttachments, setPostAttachments] = useState<File[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const editorRef = useRef<MDXEditorMethods>(null);
 
   // Handle file input for attachments
@@ -49,13 +52,19 @@ export const CreatePostDialog: React.FC<CreatePostDialogProps> = ({
   };
 
   // Handle post submission
-  const handleSubmitPost = (e: React.FormEvent) => {
+  const handleSubmitPost = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!postContent.trim()) return; // Prevent empty posts
 
+    setIsSubmitting(true);
+
+    // Pass content and attachments to parent component for handling
     onSubmit(postContent, postAttachments);
+
+    // Reset form state
     setPostContent("");
     setPostAttachments([]);
+    setIsSubmitting(false);
   };
 
   return (
@@ -159,8 +168,9 @@ export const CreatePostDialog: React.FC<CreatePostDialogProps> = ({
         <Button
           type="submit"
           className="w-full text-sm sm:text-base py-2 sm:py-3"
+          disabled={isSubmitting || !postContent.trim()}
         >
-          Post
+          {isSubmitting ? "Posting..." : "Post"}
         </Button>
       </form>
     </DialogContent>
