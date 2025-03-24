@@ -166,10 +166,7 @@ const ClassPage: React.FC = () => {
           <TabsContent value="posts">
             {/* Post Creation Button */}
             {course.role >= course.post_permission && (
-              <CreatePostButton
-                instructor={course.admin}
-                courseID={course.id}
-              />
+              <CreatePostButton courseID={course.id} />
             )}
 
             {/* Posts Section */}

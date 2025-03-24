@@ -30,13 +30,34 @@ export interface Comment {
   timestamp: string;
 }
 
+export interface Document {
+  id: string;
+  user_id: string;
+  file_name: string;
+  file_path: string;
+  file_type: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Attachment {
+  id: string;
+  post_id: string;
+  document_id: string;
+  uploaded_by: string;
+  upload_date: string;
+  document: Document;
+}
+
 export interface Post {
   id: string;
+  course_id: string;
+  user_id: string;
   content: string;
-  attachments: File[];
-  timestamp: string;
-  comments: Comment[];
+  created_at: string;
+  updated_at: string;
   user: User;
+  attachments: Attachment[];
 }
 
 export interface ChatMessage {

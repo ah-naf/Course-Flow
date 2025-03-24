@@ -4,24 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Edit2, Loader } from "lucide-react";
 import { CreatePostDialog } from "./CreatePostDialog";
-import { usePostStore } from "@/store/postStore";
-import { User } from "@/utils/types";
 import { Progress } from "@/components/ui/progress";
 import { useCreatePost } from "@/hooks/usePost";
 
 interface CreatePostButtonProps {
-  instructor: User;
   courseID: string;
 }
 
 export const CreatePostButton: React.FC<CreatePostButtonProps> = ({
-  instructor,
   courseID,
 }) => {
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
-  const { addPost } = usePostStore();
 
   // Use the createPost mutation
   const createPostMutation = useCreatePost(courseID);
@@ -51,9 +46,6 @@ export const CreatePostButton: React.FC<CreatePostButtonProps> = ({
 
       // Set progress to 100% when complete
       setUploadProgress(100);
-
-      // Update local state via store
-      addPost(content, attachments, instructor);
 
       // Hide progress bar after a delay
       setTimeout(() => {

@@ -131,26 +131,27 @@ export const EditPostDialog: React.FC<EditPostDialogProps> = ({
               <ImageIcon className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-gray-500" />
               Upload Files
             </label>
-            {postAttachments.map((file, index) => (
-              <div
-                key={index}
-                className="flex items-center bg-gray-100 rounded-md p-2 text-sm text-gray-700"
-              >
-                <span className="truncate max-w-[150px] sm:max-w-[200px]">
-                  {file.name}
-                </span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleRemoveAttachment(index)}
-                  className="ml-2 text-gray-500 hover:text-red-500"
-                  aria-label={`Remove ${file.name}`}
+            {postAttachments &&
+              postAttachments.map((file, index) => (
+                <div
+                  key={index}
+                  className="flex items-center bg-gray-100 rounded-md p-2 text-sm text-gray-700"
                 >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
+                  <span className="truncate max-w-[150px] sm:max-w-[200px]">
+                    {file.name}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRemoveAttachment(index)}
+                    className="ml-2 text-gray-500 hover:text-red-500"
+                    aria-label={`Remove ${file.name}`}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
           </div>
           <p
             id="attachmentsHelp"

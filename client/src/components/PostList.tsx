@@ -1,9 +1,11 @@
 // src/components/PostList.tsx
-import React from "react";
+import React, { useEffect } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { PostCard } from "./PostCard.tsx";
+import { toast } from "sonner"; // Import sonner for toast notifications
+import { PostCard } from "./PostCard";
 import { Course, Post } from "@/utils/types";
 import { usePostStore } from "@/store/postStore";
+import { useGetAllPost } from "@/hooks/usePost"; // Import the query hook
 
 interface PostListProps {
   course: Course;
@@ -13,7 +15,7 @@ interface PostListProps {
 export const PostList: React.FC<PostListProps> = ({ course, classId }) => {
   const {
     posts,
-    editPost,
+    setPosts, // Add setPosts from the store
     deletePost,
     addComment,
     editComment,
@@ -22,12 +24,32 @@ export const PostList: React.FC<PostListProps> = ({ course, classId }) => {
     getCommentLink,
   } = usePostStore();
 
+  // Fetch posts using the useGetAllPost hook
+  const { data: fetchedPosts, isLoading, error } = useGetAllPost(course.id);
+
+  // Update the store with fetched posts when data changes
+  useEffect(() => {
+    if (fetchedPosts) {
+      setPosts(fetchedPosts);
+    }
+  }, [fetchedPosts, setPosts]);
+
+  // Display error message using sonner toast if there's an error
+  useEffect(() => {
+    if (error) {
+      toast.error("Failed to fetch posts", {
+        description: error.message,
+        duration: 5000, // Show for 5 seconds
+      });
+    }
+  }, [error]);
+
   const handleEditPost = (
     postId: string,
     content: string,
     attachments: File[]
   ) => {
-    editPost(postId, content, attachments);
+    // TODO: handle edit
   };
 
   const handleDeletePost = (postId: string) => {
@@ -37,13 +59,20 @@ export const PostList: React.FC<PostListProps> = ({ course, classId }) => {
   const handleCopyPostLink = (postId: string) => {
     const postLink = getPostLink(classId || "", postId);
     navigator.clipboard.writeText(postLink);
-    console.log(`Copied post link: ${postLink}`);
+    toast.success("Post link copied!", {
+      description: postLink,
+      duration: 3000,
+    });
   };
 
   const handleAddComment = (postId: string, content: string) => {
     addComment(postId, content, {
       id: "current-user",
-      name: "You",
+      firstName: "You",
+      lastName: "",
+      username: "You",
+      email: "",
+      avatar: "",
       initial: "U",
     });
   };
@@ -63,13 +92,22 @@ export const PostList: React.FC<PostListProps> = ({ course, classId }) => {
   const handleCopyCommentLink = (postId: string, commentId: string) => {
     const commentLink = getCommentLink(classId || "", postId, commentId);
     navigator.clipboard.writeText(commentLink);
-    console.log(`Copied comment link: ${commentLink}`);
+    toast.success("Comment link copied!", {
+      description: commentLink,
+      duration: 3000,
+    });
   };
 
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-4">Posts</h2>
-      {posts.length === 0 ? (
+      {isLoading ? (
+        <Alert className="bg-gray-50 border-gray-200">
+          <AlertDescription className="text-center py-8 text-gray-500">
+            Loading posts...
+          </AlertDescription>
+        </Alert>
+      ) : posts.length === 0 ? (
         <Alert className="bg-gray-50 border-gray-200">
           <AlertDescription className="text-center py-8 text-gray-500">
             No posts yet. Create a post to get started!

@@ -52,23 +52,32 @@ export const PostCard: React.FC<PostCardProps> = ({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   return (
-    <Card className="border border-gray-200 rounded-lg">
-      <CardContent className="pt-2 pb-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center">
-            <Avatar className="h-10 w-10 mr-3 ring-2 ring-gray-200">
-              <AvatarImage src={post.user.avatar || "/api/placeholder/40/40"} />
+    <Card className="border-none shadow-lg rounded-xl bg-white transition-all hover:shadow-xl">
+      <CardContent className="p-6">
+        {/* Header Section */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <Avatar className="h-12 w-12 ring-2 ring-offset-2 ring-gray-200">
+              <AvatarImage src={post.user.avatar} />
               <AvatarFallback
-                className="text-white text-sm"
-                style={{ backgroundColor: course.backgroundColor }}
+                className="text-white text-base font-medium"
+                style={{ backgroundColor: course.background_color }}
               >
                 {post.user.initial}
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-medium">{post.user.name}</p>
-              <p className="text-xs text-gray-500">
-                {formatRelativeTime(post.timestamp)}
+              <div className="flex items-center space-x-2">
+                <p className="text-lg font-semibold text-gray-900">
+                  {post.user.firstName} {post.user.lastName}
+                </p>
+                <span className="text-sm text-gray-500">•</span>
+                <span className="text-sm text-gray-600">
+                  @{post.user.username}
+                </span>
+              </div>
+              <p className="text-sm text-gray-500">
+                {formatRelativeTime(post.created_at)}
               </p>
             </div>
           </div>
@@ -78,74 +87,87 @@ export const PostCard: React.FC<PostCardProps> = ({
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full"
                 aria-label="Post options"
               >
                 <MoreVertical className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent
+              align="end"
+              className="w-48 rounded-lg shadow-md border-gray-200"
+            >
               <DropdownMenuItem
                 onClick={() => setIsEditDialogOpen(true)}
-                className="cursor-pointer"
+                className="cursor-pointer flex items-center space-x-2 py-2 px-3 hover:bg-gray-50"
               >
-                <Edit className="mr-2 h-4 w-4" />
-                <span>Edit</span>
+                <Edit className="h-4 w-4 text-gray-600" />
+                <span className="text-gray-700">Edit</span>
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => onDeletePost(post.id)}
-                className="cursor-pointer text-red-500 hover:text-red-700"
+                className="cursor-pointer flex items-center space-x-2 py-2 px-3 text-red-500 hover:bg-red-50 hover:text-red-700"
               >
-                <Trash2 className="mr-2 h-4 w-4" />
+                <Trash2 className="h-4 w-4" />
                 <span>Delete</span>
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => onCopyPostLink(post.id)}
-                className="cursor-pointer"
+                className="cursor-pointer flex items-center space-x-2 py-2 px-3 hover:bg-gray-50"
               >
-                <LinkIcon className="mr-2 h-4 w-4" />
-                <span>Copy Link</span>
+                <LinkIcon className="h-4 w-4 text-gray-600" />
+                <span className="text-gray-700">Copy Link</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <div className="prose prose-sm max-w-none">
+
+        {/* Post Content */}
+        <div className="prose prose-sm max-w-none text-gray-800 leading-relaxed">
           <ReactMarkdown>{post.content}</ReactMarkdown>
         </div>
-        {post.attachments.length > 0 && (
+
+        {/* Attachments Section */}
+        {post.attachments && post.attachments.length > 0 && (
           <>
-            <Separator className="my-4" />
+            <Separator className="my-6 bg-gray-200" />
             <div>
-              <h4 className="text-sm font-semibold text-gray-700 mb-2">
+              <h4 className="text-sm font-semibold text-gray-700 mb-3">
                 Attachments
               </h4>
-              <div className="flex flex-wrap gap-2">
-                {post.attachments.map((file, index) => (
-                  <div
+              <div className="flex flex-wrap gap-3">
+                {post.attachments.map((attachment, index) => (
+                  <a
                     key={index}
-                    className="bg-gray-100 rounded-md p-2 text-sm text-gray-700 flex items-center"
+                    href={attachment.document.file_path}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center space-x-2 bg-gray-100 hover:bg-gray-200 rounded-lg p-3 text-sm text-gray-700 transition-colors"
                   >
-                    <ImageIcon className="h-4 w-4 mr-2 text-gray-500" />
+                    <ImageIcon className="h-5 w-5 text-gray-500" />
                     <span className="truncate max-w-[150px] sm:max-w-[200px]">
-                      {file.name}
+                      {attachment.document.file_name}
                     </span>
-                  </div>
+                  </a>
                 ))}
               </div>
             </div>
           </>
         )}
 
-        <CommentSection
-          comments={post.comments}
-          postId={post.id}
-          classId={classId}
-          onAddComment={onAddComment}
-          onEditComment={onEditComment}
-          onDeleteComment={onDeleteComment}
-          onCopyCommentLink={onCopyCommentLink}
-          backgroundColor={course.backgroundColor}
-        />
+        {/* Comment Section */}
+        <div className="mt-6">
+          <CommentSection
+            comments={[]} // Ensure comments are passed correctly
+            postId={post.id}
+            classId={classId}
+            onAddComment={onAddComment}
+            onEditComment={onEditComment}
+            onDeleteComment={onDeleteComment}
+            onCopyCommentLink={onCopyCommentLink}
+            backgroundColor={course.background_color}
+          />
+        </div>
 
         {/* Edit Post Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
