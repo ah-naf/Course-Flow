@@ -23,6 +23,18 @@ import { EditPostDialog } from "./EditPostDialog";
 import { CommentSection } from "./CommentSection";
 import { Course, Post } from "@/utils/types";
 import { formatRelativeTime } from "@/utils/formatRelativeTime";
+import { useUserStore } from "@/store/userStore";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface PostCardProps {
   post: Post;
@@ -31,10 +43,8 @@ interface PostCardProps {
   onAddComment: (postId: string, content: string) => void;
   onEditPost: (postId: string, content: string, attachments: File[]) => void;
   onDeletePost: (postId: string) => void;
-  onCopyPostLink: (postId: string) => void;
   onEditComment: (postId: string, commentId: string, content: string) => void;
   onDeleteComment: (postId: string, commentId: string) => void;
-  onCopyCommentLink: (postId: string, commentId: string) => void;
 }
 
 export const PostCard: React.FC<PostCardProps> = ({
@@ -44,11 +54,10 @@ export const PostCard: React.FC<PostCardProps> = ({
   onAddComment,
   onEditPost,
   onDeletePost,
-  onCopyPostLink,
   onEditComment,
   onDeleteComment,
-  onCopyCommentLink,
 }) => {
+  const { user } = useUserStore();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   return (
@@ -82,44 +91,63 @@ export const PostCard: React.FC<PostCardProps> = ({
             </div>
           </div>
           {/* Post Options Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full"
-                aria-label="Post options"
+          {(post.user_id === user?.id || course.admin.id === user?.id) && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full"
+                  aria-label="Post options"
+                >
+                  <MoreVertical className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-48 rounded-lg shadow-md border-gray-200"
               >
-                <MoreVertical className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-48 rounded-lg shadow-md border-gray-200"
-            >
-              <DropdownMenuItem
-                onClick={() => setIsEditDialogOpen(true)}
-                className="cursor-pointer flex items-center space-x-2 py-2 px-3 hover:bg-gray-50"
-              >
-                <Edit className="h-4 w-4 text-gray-600" />
-                <span className="text-gray-700">Edit</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => onDeletePost(post.id)}
-                className="cursor-pointer flex items-center space-x-2 py-2 px-3 text-red-500 hover:bg-red-50 hover:text-red-700"
-              >
-                <Trash2 className="h-4 w-4" />
-                <span>Delete</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => onCopyPostLink(post.id)}
-                className="cursor-pointer flex items-center space-x-2 py-2 px-3 hover:bg-gray-50"
-              >
-                <LinkIcon className="h-4 w-4 text-gray-600" />
-                <span className="text-gray-700">Copy Link</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuItem
+                  onClick={() => setIsEditDialogOpen(true)}
+                  className="cursor-pointer flex items-center space-x-2 py-2 px-3 hover:bg-gray-50"
+                >
+                  <Edit className="h-4 w-4 text-gray-600" />
+                  <span className="text-gray-700">Edit</span>
+                </DropdownMenuItem>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <DropdownMenuItem
+                      onSelect={(e) => e.preventDefault()} // Prevent dropdown from closing
+                      className="cursor-pointer flex items-center space-x-2 py-2 px-3 text-red-500 hover:bg-red-50 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span>Delete</span>
+                    </DropdownMenuItem>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="rounded-lg">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently
+                        delete the post and all its comments.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="rounded-md">
+                        Cancel
+                      </AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => onDeletePost(post.id)}
+                        className="bg-red-500 hover:bg-red-600 text-white rounded-md"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
 
         {/* Post Content */}
@@ -164,7 +192,6 @@ export const PostCard: React.FC<PostCardProps> = ({
             onAddComment={onAddComment}
             onEditComment={onEditComment}
             onDeleteComment={onDeleteComment}
-            onCopyCommentLink={onCopyCommentLink}
             backgroundColor={course.background_color}
           />
         </div>

@@ -30,7 +30,6 @@ interface CommentSectionProps {
   onAddComment: (postId: string, content: string) => void;
   onEditComment: (postId: string, commentId: string, content: string) => void;
   onDeleteComment: (postId: string, commentId: string) => void;
-  onCopyCommentLink: (postId: string, commentId: string) => void;
   backgroundColor: string;
 }
 
@@ -41,7 +40,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   onAddComment,
   onEditComment,
   onDeleteComment,
-  onCopyCommentLink,
   backgroundColor,
 }) => {
   const [commentText, setCommentText] = useState("");
@@ -79,7 +77,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
             <div className="flex-1 bg-gray-50 rounded-lg p-3">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-sm font-medium">{comment.user.name}</p>
+                  <p className="text-sm font-medium">{comment.user.username}</p>
                   <p className="text-xs text-gray-500">
                     {formatRelativeTime(comment.timestamp)}
                   </p>
@@ -110,13 +108,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
                       <span>Delete</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => onCopyCommentLink(postId, comment.id)}
-                      className="cursor-pointer"
-                    >
-                      <LinkIcon className="mr-2 h-4 w-4" />
-                      <span>Copy Link</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

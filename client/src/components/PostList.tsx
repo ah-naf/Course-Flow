@@ -5,7 +5,7 @@ import { toast } from "sonner"; // Import sonner for toast notifications
 import { PostCard } from "./PostCard";
 import { Course, Post } from "@/utils/types";
 import { usePostStore } from "@/store/postStore";
-import { useGetAllPost } from "@/hooks/usePost"; // Import the query hook
+import { useDeletePost, useGetAllPost } from "@/hooks/usePost"; // Import the query hook
 
 interface PostListProps {
   course: Course;
@@ -20,12 +20,11 @@ export const PostList: React.FC<PostListProps> = ({ course, classId }) => {
     addComment,
     editComment,
     deleteComment,
-    getPostLink,
-    getCommentLink,
   } = usePostStore();
 
   // Fetch posts using the useGetAllPost hook
   const { data: fetchedPosts, isLoading, error } = useGetAllPost(course.id);
+  const { mutate: deletePostMutation } = useDeletePost(course.id);
 
   // Update the store with fetched posts when data changes
   useEffect(() => {
@@ -53,16 +52,7 @@ export const PostList: React.FC<PostListProps> = ({ course, classId }) => {
   };
 
   const handleDeletePost = (postId: string) => {
-    deletePost(postId);
-  };
-
-  const handleCopyPostLink = (postId: string) => {
-    const postLink = getPostLink(classId || "", postId);
-    navigator.clipboard.writeText(postLink);
-    toast.success("Post link copied!", {
-      description: postLink,
-      duration: 3000,
-    });
+    deletePostMutation(postId);
   };
 
   const handleAddComment = (postId: string, content: string) => {
@@ -87,15 +77,6 @@ export const PostList: React.FC<PostListProps> = ({ course, classId }) => {
 
   const handleDeleteComment = (postId: string, commentId: string) => {
     deleteComment(postId, commentId);
-  };
-
-  const handleCopyCommentLink = (postId: string, commentId: string) => {
-    const commentLink = getCommentLink(classId || "", postId, commentId);
-    navigator.clipboard.writeText(commentLink);
-    toast.success("Comment link copied!", {
-      description: commentLink,
-      duration: 3000,
-    });
   };
 
   return (
@@ -124,10 +105,8 @@ export const PostList: React.FC<PostListProps> = ({ course, classId }) => {
               onAddComment={handleAddComment}
               onEditPost={handleEditPost}
               onDeletePost={handleDeletePost}
-              onCopyPostLink={handleCopyPostLink}
               onEditComment={handleEditComment}
               onDeleteComment={handleDeleteComment}
-              onCopyCommentLink={handleCopyCommentLink}
             />
           ))}
         </div>

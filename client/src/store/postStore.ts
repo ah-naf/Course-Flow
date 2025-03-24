@@ -9,12 +9,6 @@ interface PostState {
   addComment: (postId: string, content: string, user: User) => void;
   editComment: (postId: string, commentId: string, content: string) => void;
   deleteComment: (postId: string, commentId: string) => void;
-  getPostLink: (classId: string, postId: string) => string;
-  getCommentLink: (
-    classId: string,
-    postId: string,
-    commentId: string
-  ) => string;
 }
 
 export const usePostStore = create<PostState>()((set, get) => ({
@@ -86,15 +80,5 @@ export const usePostStore = create<PostState>()((set, get) => ({
           : post
       ),
     }));
-  },
-
-  // Get a post link
-  getPostLink: (classId: string, postId: string) => {
-    return `https://yourapp.com/class/${classId}/post/${postId}`;
-  },
-
-  // Get a comment link
-  getCommentLink: (classId: string, postId: string, commentId: string) => {
-    return `https://yourapp.com/class/${classId}/post/${postId}/comment/${commentId}`;
   },
 }));
