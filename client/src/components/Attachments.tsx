@@ -11,7 +11,7 @@ const Attachments: React.FC<{ course: Course }> = ({ course }) => {
       name: "React_Basics_Lecture.pdf",
       type: "pdf",
       size: "2.5 MB",
-      uploadedBy: course.instructor.username,
+      uploadedBy: course.admin.username,
       uploadDate: new Date(Date.now() - 86400000).toISOString(),
     },
     {
@@ -19,7 +19,7 @@ const Attachments: React.FC<{ course: Course }> = ({ course }) => {
       name: "Component_Design_Slides.pptx",
       type: "pptx",
       size: "15.7 MB",
-      uploadedBy: course.instructor.username,
+      uploadedBy: course.admin.username,
       uploadDate: new Date(Date.now() - 259200000).toISOString(),
     },
     {
@@ -27,7 +27,7 @@ const Attachments: React.FC<{ course: Course }> = ({ course }) => {
       name: "Assignment1_Starter_Code.zip",
       type: "zip",
       size: "1.2 MB",
-      uploadedBy: course.instructor.username,
+      uploadedBy: course.admin.username,
       uploadDate: new Date(Date.now() - 432000000).toISOString(),
     },
   ]);

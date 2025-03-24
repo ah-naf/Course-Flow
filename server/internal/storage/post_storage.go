@@ -4,7 +4,6 @@ import (
 	"course-flow/internal/models"
 	"course-flow/internal/utils"
 	"database/sql"
-	"fmt"
 	"net/http"
 	"time"
 )
@@ -17,22 +16,120 @@ func NewPostStorage(db *sql.DB) *PostStorage {
 	return &PostStorage{DB: db}
 }
 
-func (s *PostStorage) GetAllPost(courseID string) ([]*models.PostResponse, error) {
+func (s *PostStorage) GetAllPost(courseID string) ([]models.PostResponse, error) {
 	query := `
-		SELECT 
-			p.id, p.course_id, p.user_id, p.content, p.created_at, p.updated_at,
-			u.id, u.username, u.email, u.first_name, u.last_name, u.avatar
-		FROM posts p
-		LEFT JOIN users u ON p.user_id = u.id
-		WHERE p.course_id = $1
-		ORDER BY p.created_at DESC
+	SELECT 
+	    p.id, p.course_id, p.user_id, p.content, p.created_at, p.updated_at,
+	    u.username, u.id, u.first_name, u.last_name, u.avatar,
+	    a.id, a.post_id, a.document_id, a.uploaded_by, a.upload_date,
+	    d.id, d.user_id, d.file_name, d.file_path, d.file_type, d.created_at, d.updated_at
+	FROM posts p
+	LEFT JOIN users u ON p.user_id = u.id
+	LEFT JOIN attachments a ON p.id = a.post_id
+	LEFT JOIN documents d ON a.document_id = d.id
+	WHERE p.course_id = $1
+	ORDER BY p.created_at DESC;
 	`
 
 	rows, err := s.DB.Query(query, courseID)
 	if err != nil {
-		return nil, fmt.Errorf("error querying posts: %w", err)
+		return nil, err
 	}
 	defer rows.Close()
+
+	// Use a map to aggregate attachments with their respective posts.
+	postsMap := make(map[string]*models.PostResponse)
+
+	for rows.Next() {
+		var (
+			// Post fields
+			pID, pCourseID, pUserID, pContent string
+			pCreatedAt, pUpdatedAt            time.Time
+
+			// User fields (nullable, as user may be null)
+			uUsername, uId, uFirstName, uLastName, uAvatar sql.NullString
+
+			// Attachment fields (may be null if no attachment exists)
+			aID, aPostID, aDocumentID, aUploadedBy sql.NullString
+			aUploadDate                            sql.NullTime
+
+			// Document fields (may be null)
+			dID, dUserID, dFileName, dFilePath, dFileType sql.NullString
+			dCreatedAt, dUpdatedAt                        sql.NullTime
+		)
+
+		err = rows.Scan(
+			&pID, &pCourseID, &pUserID, &pContent, &pCreatedAt, &pUpdatedAt,
+			&uUsername, &uId, &uFirstName, &uLastName, &uAvatar,
+			&aID, &aPostID, &aDocumentID, &aUploadedBy, &aUploadDate,
+			&dID, &dUserID, &dFileName, &dFilePath, &dFileType, &dCreatedAt, &dUpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// If the post hasn't been added to the map yet, add it along with the user details.
+		post, exists := postsMap[pID]
+		if !exists {
+			post = &models.PostResponse{
+				Post: models.Post{
+					ID:        pID,
+					UserID:    pUserID,
+					Content:   pContent,
+					CreatedAt: pCreatedAt,
+					UpdatedAt: pUpdatedAt,
+				},
+				User: models.User{
+					Username:  uUsername.String,
+					FirstName: uFirstName.String,
+					LastName:  uLastName.String,
+					Avatar:    utils.NormalizeMedia(uAvatar.String),
+				},
+				// Initialize attachments slice.
+				Attachment: []models.Attachment{},
+			}
+			postsMap[pID] = post
+		}
+
+		// If an attachment exists (its id is non-null), append it.
+		if aID.Valid {
+			attachment := models.Attachment{
+				ID:         aID.String,
+				UploadedBy: aUploadedBy.String,
+			}
+			if aUploadDate.Valid {
+				attachment.UploadDate = aUploadDate.Time
+			}
+			// If document info exists, include it.
+			if dID.Valid {
+				attachment.Document = &models.Document{
+					ID:       dID.String,
+					FileName: dFileName.String,
+					FilePath: utils.NormalizeMedia(dFilePath.String),
+					FileType: dFileType.String,
+				}
+				if dCreatedAt.Valid {
+					attachment.Document.CreatedAt = dCreatedAt.Time
+				}
+				if dUpdatedAt.Valid {
+					attachment.Document.UpdatedAt = dUpdatedAt.Time
+				}
+			}
+			post.Attachment = append(post.Attachment, attachment)
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// Convert the posts map into a slice.
+	posts := make([]models.PostResponse, 0, len(postsMap))
+	for _, post := range postsMap {
+		posts = append(posts, *post)
+	}
+
+	return posts, nil
 }
 
 func (s *PostStorage) DeletePost(courseID, postID, userID string) error {

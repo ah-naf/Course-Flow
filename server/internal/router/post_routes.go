@@ -12,7 +12,6 @@ import (
 func (r *Router) setupPostRouter(router *mux.Router) {
 	postStorage := storage.NewPostStorage(r.DB)
 
-
 	docStorage := storage.NewDocumentStorage(r.DB)
 	docService := services.NewDocumentService(docStorage)
 
@@ -25,6 +24,7 @@ func (r *Router) setupPostRouter(router *mux.Router) {
 
 	postRouter := router.PathPrefix("/posts").Subrouter()
 
+	postRouter.HandleFunc("/{id}", middleware.ConvertToHandlerFunc(postHandler.GetAllPostHandler)).Methods("GET")
 	postRouter.HandleFunc("/{id}", middleware.ConvertToHandlerFunc(postHandler.CreateNewPostHandler, middleware.AuthMiddleware)).Methods("POST")
 	postRouter.HandleFunc("/{id}", middleware.ConvertToHandlerFunc(postHandler.DeletePostHandler, middleware.AuthMiddleware)).Methods("DELETE")
 }

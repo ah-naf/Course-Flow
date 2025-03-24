@@ -14,6 +14,15 @@ func NewPostHandler(postService *services.PostService) *PostHandler {
 	return &PostHandler{postService: postService}
 }
 
+func (h *PostHandler) GetAllPostHandler(w http.ResponseWriter, r *http.Request) error {
+	posts, err := h.postService.GetAllPost(r)
+	if err != nil {
+		return err
+	}
+
+	return utils.WriteJSON(w, http.StatusOK, posts)
+}
+
 func (h *PostHandler) DeletePostHandler(w http.ResponseWriter, r *http.Request) error {
 	err := h.postService.DeletePost(r)
 	if err != nil {

@@ -4,15 +4,15 @@ import "time"
 
 // User represents a registered user in the system.
 type User struct {
-	ID           string     `json:"id"`         // You can store UUIDs as strings or use a UUID type from a library.
-	Email        string     `json:"email"`      // Unique email for login and communication.
-	Username     string     `json:"username"`   // Optional unique username.
-	PasswordHash string     `json:"-"`          // Do NOT expose this in JSON responses.
-	FirstName    string     `json:"firstName"`  // Optional first name.
-	LastName     string     `json:"lastName"`   // Optional last name.
-	CreatedAt    time.Time  `json:"-"`          // Timestamp of account creation.
-	UpdatedAt    time.Time  `json:"-"`          // Timestamp of the last profile update.
-	Avatar       string     `json:"avatar"`
+	ID           string    `json:"id,omitempty"`        // You can store UUIDs as strings or use a UUID type from a library.
+	Email        string    `json:"email,omitempty"`     // Unique email for login and communication.
+	Username     string    `json:"username,omitempty"`  // Optional unique username.
+	PasswordHash string    `json:"-,omitempty"`         // Do NOT expose this in JSON responses.
+	FirstName    string    `json:"firstName,omitempty"` // Optional first name.
+	LastName     string    `json:"lastName,omitempty"`  // Optional last name.
+	CreatedAt    time.Time `json:"-,omitempty"`         // Timestamp of account creation.
+	UpdatedAt    time.Time `json:"-,omitempty"`         // Timestamp of the last profile update.
+	Avatar       string    `json:"avatar"`
 }
 
 type UserRequest struct {

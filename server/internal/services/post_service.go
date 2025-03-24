@@ -1,6 +1,7 @@
 package services
 
 import (
+	"course-flow/internal/models"
 	"course-flow/internal/storage"
 	"course-flow/internal/utils"
 	"net/http"
@@ -21,6 +22,19 @@ func NewPostService(
 		PostStorage:       postStorage,
 		AttachmentService: attachmentService,
 	}
+}
+
+func (s *PostService) GetAllPost(r *http.Request) ([]models.PostResponse, error) {
+	vars := mux.Vars(r)
+	courseID := vars["id"]
+	if courseID == "" {
+		return nil, &utils.ApiError{
+			Code:    http.StatusBadRequest,
+			Message: "Course ID is required",
+		}
+	}
+
+	return s.PostStorage.GetAllPost(courseID)
 }
 
 func (s *PostService) DeletePost(r *http.Request) error {

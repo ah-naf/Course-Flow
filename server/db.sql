@@ -51,10 +51,25 @@ CREATE TABLE posts (
 
 CREATE TABLE attachments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
-  document_id UUID REFERENCES documents(id) ON DELETE CASCADE,
-  uploaded_by UUID REFERENCES users(id) ON DELETE SET NULL,
-  upload_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  post_id UUID,
+  document_id UUID,
+  uploaded_by UUID,
+  upload_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT attachments_post_id_fkey FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+  CONSTRAINT attachments_document_id_fkey FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE,
+  CONSTRAINT attachments_uploaded_by_fkey FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE documents (
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    user_id uuid,
+    file_path text NOT NULL,
+    file_type character varying(50) NOT NULL,
+    created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    file_name character varying(100) NOT NULL,
+    CONSTRAINT documents_pkey PRIMARY KEY (id),
+    CONSTRAINT documents_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE comments (
