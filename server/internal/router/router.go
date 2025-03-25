@@ -26,6 +26,7 @@ func (r *Router) Setup() *mux.Router {
 	r.setupCourseRouter(apiRouter_v1)
 	r.setupCourseMemberRouter(apiRouter_v1)
 	r.setupPostRouter(apiRouter_v1)
+	r.setupAttachmentRouter(apiRouter_v1)
 
 	mediaDir := utils.GetEnv("MEDIA_DIR")
 	fs := http.FileServer(http.Dir(mediaDir))

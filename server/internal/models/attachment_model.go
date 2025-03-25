@@ -11,6 +11,7 @@ type Attachment struct {
 	DocumentID string    `json:"document_id,omitempty"`
 	UploadedBy string    `json:"uploaded_by,omitempty"`
 	UploadDate time.Time `json:"upload_date,omitempty"`
+	User       *User     `json:"user,omitempty"`
 
 	// For convenience, we can include the related document information
 	Document *Document `json:"document,omitempty"`

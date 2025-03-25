@@ -3,8 +3,12 @@ package services
 import (
 	"course-flow/internal/models"
 	"course-flow/internal/storage"
+	"course-flow/internal/utils"
 	"mime/multipart"
+	"net/http"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 type AttachmentService struct {
@@ -17,6 +21,22 @@ func NewAttachmentService(attachmentStorage *storage.AttachmentStorage, document
 		AttachmentStorage: attachmentStorage,
 		DocumentService:   documentService,
 	}
+}
+
+func (s *AttachmentService) GetAllAttachmentsForCourse(r *http.Request) ([]models.Attachment, error) {
+	ctx := r.Context()
+	_, err := utils.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	vars := mux.Vars(r)
+	courseID := vars["id"]
+	if courseID == "" {
+		return nil, &utils.ApiError{Code: http.StatusNotFound, Message: "Course ID not found"}
+	}
+
+	return s.AttachmentStorage.GetAllAttachmentsForCourse(courseID)
 }
 
 // AddAttachmentsToPost saves files using DocumentService and creates attachment records
