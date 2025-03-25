@@ -47,6 +47,7 @@ export interface Attachment {
   uploaded_by: string;
   upload_date: string;
   document: Document;
+  user?: User;
 }
 
 export interface Post {

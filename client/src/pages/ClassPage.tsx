@@ -5,7 +5,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClassBanner } from "@/components/ClassBanner";
 import { CreatePostButton } from "@/components/CreatePostButton";
 import { PostList } from "@/components/PostList";
-import { Course } from "@/utils/types";
 import { Badge } from "@/components/ui/badge";
 import GroupMembers from "@/components/GroupMembers";
 import Attachments from "@/components/Attachments";
@@ -16,7 +15,6 @@ import ClassroomChat from "@/components/ClassroomChat";
 import { useCoursePreview } from "@/hooks/useCourse";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardFooter,
   CardHeader,

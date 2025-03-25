@@ -3,7 +3,7 @@ import React, { useEffect } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner"; // Import sonner for toast notifications
 import { PostCard } from "./PostCard";
-import { Course, Post } from "@/utils/types";
+import { Course } from "@/utils/types";
 import { usePostStore } from "@/store/postStore";
 import { useDeletePost, useGetAllPost } from "@/hooks/usePost"; // Import the query hook
 
@@ -16,7 +16,6 @@ export const PostList: React.FC<PostListProps> = ({ course, classId }) => {
   const {
     posts,
     setPosts, // Add setPosts from the store
-    deletePost,
     addComment,
     editComment,
     deleteComment,
@@ -42,14 +41,6 @@ export const PostList: React.FC<PostListProps> = ({ course, classId }) => {
       });
     }
   }, [error]);
-
-  const handleEditPost = (
-    postId: string,
-    content: string,
-    attachments: File[]
-  ) => {
-    // TODO: handle edit
-  };
 
   const handleDeletePost = (postId: string) => {
     deletePostMutation(postId);
@@ -103,7 +94,6 @@ export const PostList: React.FC<PostListProps> = ({ course, classId }) => {
               course={course}
               classId={classId}
               onAddComment={handleAddComment}
-              onEditPost={handleEditPost}
               onDeletePost={handleDeletePost}
               onEditComment={handleEditComment}
               onDeleteComment={handleDeleteComment}

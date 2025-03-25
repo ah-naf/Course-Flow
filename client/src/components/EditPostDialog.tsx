@@ -1,4 +1,3 @@
-// src/components/EditPostDialog.tsx
 import React, { useState, useRef } from "react";
 import {
   DialogContent,
@@ -19,25 +18,29 @@ import {
   ListsToggle,
   toolbarPlugin,
 } from "@mdxeditor/editor";
-import { Post } from "@/utils/types";
+import { Post, Attachment } from "@/utils/types";
+import { useEditPost } from "@/hooks/usePost";
+
+// Define a type that can be either an existing Attachment or a new File
+type MixedAttachment = Attachment | File;
 
 interface EditPostDialogProps {
-  isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   post: Post;
-  onSubmit: (postId: string, content: string, attachments: File[]) => void;
 }
 
 export const EditPostDialog: React.FC<EditPostDialogProps> = ({
-  isOpen,
   onOpenChange,
   post,
-  onSubmit,
 }) => {
+  const editPostMutation = useEditPost(post.course_id);
   const [postContent, setPostContent] = useState(post.content);
-  const [postAttachments, setPostAttachments] = useState<File[]>(
-    post.attachments
+
+  // Use MixedAttachment type for state
+  const [postAttachments, setPostAttachments] = useState<MixedAttachment[]>(
+    post.attachments || []
   );
+
   const editorRef = useRef<MDXEditorMethods>(null);
 
   // Handle file input for attachments
@@ -58,8 +61,21 @@ export const EditPostDialog: React.FC<EditPostDialogProps> = ({
     e.preventDefault();
     if (!postContent.trim()) return; // Prevent empty posts
 
-    onSubmit(post.id, postContent, postAttachments);
-    onOpenChange(false);
+    editPostMutation.mutate(
+      {
+        postID: post.id,
+        content: postContent,
+        attachments: postAttachments,
+      },
+      {
+        onSuccess: () => onOpenChange(false),
+      }
+    );
+  };
+
+  // Helper function to determine if an attachment is a File or Attachment
+  const isFile = (attachment: MixedAttachment): attachment is File => {
+    return attachment instanceof File;
   };
 
   return (
@@ -131,27 +147,32 @@ export const EditPostDialog: React.FC<EditPostDialogProps> = ({
               <ImageIcon className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-gray-500" />
               Upload Files
             </label>
-            {postAttachments &&
-              postAttachments.map((file, index) => (
-                <div
-                  key={index}
-                  className="flex items-center bg-gray-100 rounded-md p-2 text-sm text-gray-700"
+            {postAttachments.map((attachment, index) => (
+              <div
+                key={index}
+                className="flex items-center bg-gray-100 rounded-md p-2 text-sm text-gray-700"
+              >
+                <span className="truncate max-w-[150px] sm:max-w-[200px]">
+                  {isFile(attachment)
+                    ? attachment.name
+                    : attachment.document.file_name}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleRemoveAttachment(index)}
+                  className="ml-2 text-gray-500 hover:text-red-500"
+                  aria-label={`Remove ${
+                    isFile(attachment)
+                      ? attachment.name
+                      : attachment.document.file_name
+                  }`}
                 >
-                  <span className="truncate max-w-[150px] sm:max-w-[200px]">
-                    {file.name}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleRemoveAttachment(index)}
-                    className="ml-2 text-gray-500 hover:text-red-500"
-                    aria-label={`Remove ${file.name}`}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
           </div>
           <p
             id="attachmentsHelp"

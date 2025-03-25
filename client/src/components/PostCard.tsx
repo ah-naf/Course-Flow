@@ -21,7 +21,7 @@ import ReactMarkdown from "react-markdown";
 import { Dialog } from "@/components/ui/dialog";
 import { EditPostDialog } from "./EditPostDialog";
 import { CommentSection } from "./CommentSection";
-import { Course, Post } from "@/utils/types";
+import { Attachment, Course, Post } from "@/utils/types";
 import { formatRelativeTime } from "@/utils/formatRelativeTime";
 import { useUserStore } from "@/store/userStore";
 import {
@@ -36,12 +36,13 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+type MixedAttachment = Attachment | File;
+
 interface PostCardProps {
   post: Post;
   course: Course;
   classId: string;
   onAddComment: (postId: string, content: string) => void;
-  onEditPost: (postId: string, content: string, attachments: File[]) => void;
   onDeletePost: (postId: string) => void;
   onEditComment: (postId: string, commentId: string, content: string) => void;
   onDeleteComment: (postId: string, commentId: string) => void;
@@ -52,7 +53,6 @@ export const PostCard: React.FC<PostCardProps> = ({
   course,
   classId,
   onAddComment,
-  onEditPost,
   onDeletePost,
   onEditComment,
   onDeleteComment,
@@ -198,12 +198,7 @@ export const PostCard: React.FC<PostCardProps> = ({
 
         {/* Edit Post Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <EditPostDialog
-            isOpen={isEditDialogOpen}
-            onOpenChange={setIsEditDialogOpen}
-            post={post}
-            onSubmit={onEditPost}
-          />
+          <EditPostDialog onOpenChange={setIsEditDialogOpen} post={post} />
         </Dialog>
       </CardContent>
     </Card>

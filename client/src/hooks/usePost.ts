@@ -7,11 +7,64 @@ import { toast } from "sonner";
 
 const API_BASE_URL = "http://localhost:8080/api/v1";
 
+type MixedAttachment = Attachment | File;
+
+interface EditPostData {
+  postID: string;
+  content: string;
+  attachments: MixedAttachment[];
+}
+
+export const useEditPost = (courseID?: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ postID, content, attachments }: EditPostData) => {
+      const formData = new FormData();
+      formData.append("content", content);
+      let docs: string[] = [];
+      attachments.forEach((a) => {
+        let atc: MixedAttachment = a as Attachment;
+        if (atc.id !== undefined) docs.push(atc.id);
+        atc = a as File;
+        if (atc.name !== undefined) formData.append("attachments", atc);
+      });
+      formData.append("docs", docs.join(","));
+
+      const res = await axiosInstance.put(`/posts/${postID}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      return res.data;
+    },
+    onSuccess: () => {
+      if (courseID)
+        queryClient.invalidateQueries({ queryKey: ["posts", courseID] });
+      toast.success("Post updated successfully");
+    },
+    onError: (error) => {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<{ error?: string }>;
+        toast.error("Failed to edit post", {
+          description:
+            axiosError.response?.data?.error || "An unknown error occurred",
+        });
+      } else {
+        toast.error("Failed to edit post", {
+          description: "An unknown error occurred",
+        });
+      }
+    },
+  });
+};
+
 export const useGetAllAttachments = (courseID: string) => {
   return useQuery<Attachment[], Error>({
     queryKey: ["attachments", courseID], // Unique key for caching
     queryFn: async () => {
-      const response = await axiosInstance.get(`/attachments/${courseID}`)
+      const response = await axiosInstance.get(`/attachments/${courseID}`);
       return response.data;
     },
     enabled: !!courseID, // Only fetch if courseID is provided
