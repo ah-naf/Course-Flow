@@ -90,6 +90,8 @@ export const useGetAllPost = (courseID: string) => {
 };
 
 export const useCreatePost = (courseID: string) => {
+  const queryClient = useQueryClient(); // Access the query client to manage cache
+
   return useMutation({
     mutationFn: async ({
       content,
@@ -122,7 +124,10 @@ export const useCreatePost = (courseID: string) => {
         }
       );
 
-      return response.data;
+      return { ...response.data, courseID };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["posts", data.courseID] });
     },
   });
 };
