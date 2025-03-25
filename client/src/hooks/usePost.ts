@@ -1,11 +1,22 @@
 import axiosInstance from "@/api/axiosInstance";
 import { usePostStore } from "@/store/postStore";
-import { Post } from "@/utils/types";
+import { Attachment, Post } from "@/utils/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
 
 const API_BASE_URL = "http://localhost:8080/api/v1";
+
+export const useGetAllAttachments = (courseID: string) => {
+  return useQuery<Attachment[], Error>({
+    queryKey: ["attachments", courseID], // Unique key for caching
+    queryFn: async () => {
+      const response = await axiosInstance.get(`/attachments/${courseID}`)
+      return response.data;
+    },
+    enabled: !!courseID, // Only fetch if courseID is provided
+  });
+};
 
 export const useDeletePost = (courseID: string) => {
   const { setPosts } = usePostStore();
