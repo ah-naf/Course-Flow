@@ -4,7 +4,10 @@ import (
 	"course-flow/internal/models"
 	"course-flow/internal/utils"
 	"database/sql"
+	"fmt"
+	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -14,6 +17,68 @@ type PostStorage struct {
 
 func NewPostStorage(db *sql.DB) *PostStorage {
 	return &PostStorage{DB: db}
+}
+
+func (s *PostStorage) EditPost(postID, userID, content string) error {
+	// Input validation
+	if strings.TrimSpace(content) == "" {
+		return &utils.ApiError{
+			Code:    http.StatusBadRequest,
+			Message: "Content cannot be empty",
+		}
+	}
+	
+	// Begin a transaction
+	tx, err := s.DB.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %v", err)
+	}
+	defer tx.Rollback()
+
+	query := `
+		UPDATE posts
+		SET content = $1, updated_at = $2
+		WHERE id = $3 AND user_id = $4
+	`
+	now := time.Now().UTC() // Use UTC for consistency
+	result, err := tx.Exec(query, content, now, postID, userID)
+	if err != nil {
+		return fmt.Errorf("failed to update post: %v", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %v", err)
+	}
+
+	if rowsAffected == 0 {
+		// Check if the post exists to provide a more specific error
+		var exists bool
+		err = tx.QueryRow("SELECT EXISTS(SELECT 1 FROM posts WHERE id = $1)", postID).Scan(&exists)
+		if err != nil {
+			return fmt.Errorf("failed to check if post exists: %v", err)
+		}
+		if !exists {
+			return &utils.ApiError{
+				Code:    http.StatusNotFound,
+				Message: "Post not found",
+			}
+		}
+		return &utils.ApiError{
+			Code:    http.StatusUnauthorized,
+			Message: "You are not authorized to edit this post",
+		}
+	}
+
+	// Commit the transaction
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %v", err)
+	}
+
+	// Log the successful update
+	log.Printf("Successfully updated post with ID %s by user %s", postID, userID)
+
+	return nil
 }
 
 func (s *PostStorage) GetAllPost(courseID string) ([]models.PostResponse, error) {

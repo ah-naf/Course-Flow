@@ -14,6 +14,18 @@ func NewPostHandler(postService *services.PostService) *PostHandler {
 	return &PostHandler{postService: postService}
 }
 
+func (h *PostHandler) EditPostHandler(w http.ResponseWriter, r *http.Request) error {
+	// Parse the multipart form data (20MB max size)
+	if err := r.ParseMultipartForm(20 << 20); err != nil {
+		return &utils.ApiError{
+			Code:    http.StatusBadRequest,
+			Message: "Failed to parse form data: " + err.Error(),
+		}
+	}
+
+	return h.postService.EditPost(r)
+}
+
 func (h *PostHandler) GetAllPostHandler(w http.ResponseWriter, r *http.Request) error {
 	posts, err := h.postService.GetAllPost(r)
 	if err != nil {

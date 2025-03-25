@@ -24,7 +24,12 @@ func (r *Router) setupPostRouter(router *mux.Router) {
 
 	postRouter := router.PathPrefix("/posts").Subrouter()
 
+	// Get all posts for a course id
 	postRouter.HandleFunc("/{id}", middleware.ConvertToHandlerFunc(postHandler.GetAllPostHandler)).Methods("GET")
+	// Create new posts for a course id
 	postRouter.HandleFunc("/{id}", middleware.ConvertToHandlerFunc(postHandler.CreateNewPostHandler, middleware.AuthMiddleware)).Methods("POST")
+	// Delete a post with specific post ID
 	postRouter.HandleFunc("/{id}", middleware.ConvertToHandlerFunc(postHandler.DeletePostHandler, middleware.AuthMiddleware)).Methods("DELETE")
+	// Edit a post with specific post ID
+	postRouter.HandleFunc("/{id}", middleware.ConvertToHandlerFunc(postHandler.EditPostHandler, middleware.AuthMiddleware)).Methods("PUT")
 }

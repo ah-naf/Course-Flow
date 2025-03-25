@@ -23,6 +23,26 @@ func NewAttachmentService(attachmentStorage *storage.AttachmentStorage, document
 	}
 }
 
+func (s *AttachmentService) DeleteAttachment(attachmentID string, r *http.Request) error {
+	ctx := r.Context()
+	userID, err := utils.GetUserIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	return s.AttachmentStorage.DeleteAttachment(attachmentID, userID)
+}
+
+func (s *AttachmentService) GetAllAttachmentsForPosts(postID string, r *http.Request) ([]models.Attachment, error) {
+	ctx := r.Context()
+	_, err := utils.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.AttachmentStorage.GetAllAttachmentsForPost(postID)
+}
+
 func (s *AttachmentService) GetAllAttachmentsForCourse(r *http.Request) ([]models.Attachment, error) {
 	ctx := r.Context()
 	_, err := utils.GetUserIDFromContext(ctx)
