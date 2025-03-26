@@ -19,6 +19,236 @@ func NewPostStorage(db *sql.DB) *PostStorage {
 	return &PostStorage{DB: db}
 }
 
+func (s *PostStorage) GetAllCommentsForPost(postID string) ([]models.Comment, error) {
+	query := `
+		SELECT 
+			c.id AS comment_id,
+			c.post_id,
+			c.user_id,
+			c.content,
+			c.created_at,
+			u.id AS user_id,
+			u.email,
+			u.username,
+			u.first_name,
+			u.last_name,
+			u.avatar
+		FROM comments c
+		LEFT JOIN users u ON c.user_id = u.id
+		WHERE c.post_id = $1
+		ORDER BY c.created_at DESC
+	`
+
+	rows, err := s.DB.Query(query, postID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query comments for post %s: %v", postID, err)
+	}
+	defer rows.Close()
+
+	var comments []models.Comment
+	commentMap := make(map[string]*models.Comment)
+
+	for rows.Next() {
+		var (
+			commentID, postID, userID   string
+			content                     string
+			createdAt                   time.Time
+			uID, email, username        sql.NullString
+			firstName, lastName, avatar sql.NullString
+		)
+
+		err := rows.Scan(
+			&commentID, &postID, &userID, &content, &createdAt,
+			&uID, &email, &username, &firstName, &lastName, &avatar,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan row: %v", err)
+		}
+
+		// Create or update the comment in the map
+		comment, exists := commentMap[commentID]
+		if !exists {
+			var user *models.User
+			if uID.Valid { // Only create a User struct if the user exists
+				user = &models.User{
+					ID:        uID.String,
+					Email:     email.String,
+					Username:  username.String,
+					FirstName: firstName.String,
+					LastName:  lastName.String,
+					Avatar:    avatar.String,
+				}
+				user.Avatar = utils.NormalizeMedia(user.Avatar)
+			}
+
+			comment = &models.Comment{
+				ID:        commentID,
+				PostID:    postID,
+				UserID:    userID,
+				Content:   content,
+				CreatedAt: createdAt,
+				User:      user,
+			}
+			commentMap[commentID] = comment
+			comments = append(comments, *comment)
+		}
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %v", err)
+	}
+
+	return comments, nil
+}
+
+func (s *PostStorage) DeleteComment(commentID, userID, postID string) error {
+	tx, err := s.DB.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %v", err)
+	}
+	defer tx.Rollback()
+
+	adminQuery := `
+		SELECT c.admin_id 
+		FROM courses c
+		JOIN posts p
+		ON c.id = p.course_id
+		WHERE p.id = $1
+	`
+
+	var adminID string
+	err = tx.QueryRow(adminQuery, postID).Scan(&adminID)
+	if err == sql.ErrNoRows {
+		return &utils.ApiError{Code: http.StatusNotFound, Message: "Post not found"}
+	}
+	if err != nil {
+		return fmt.Errorf("failed to fetch course admin: %v", err)
+	}
+
+	if adminID != userID {
+		var whoCommented string
+		err := tx.QueryRow("SELECT user_id FROM comments WHERE id = $1", commentID).Scan(&whoCommented)
+		if err == sql.ErrNoRows {
+			return &utils.ApiError{Code: http.StatusNotFound, Message: "Comment not found"}
+		}
+		if err != nil {
+			return fmt.Errorf("Error scanning user id from comment: %v", err)
+		}
+
+		if whoCommented != userID {
+			return &utils.ApiError{Code: http.StatusUnauthorized, Message: "You are not authorized to delete this comment"}
+		}
+	}
+
+	query := `
+		DELETE FROM comments
+		WHERE id = $1
+	`
+
+	result, err := tx.Exec(query, commentID)
+	if err != nil {
+		return fmt.Errorf("failed to delete comment: %v", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %v", err)
+	}
+
+	if rowsAffected == 0 {
+		return &utils.ApiError{Code: http.StatusUnauthorized, Message: "Comment not found or you are not authorized"}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %v", err)
+	}
+
+	log.Printf("Successfully deleted comment with id %v by user %v\n", commentID, userID)
+	return nil
+}
+
+func (s *PostStorage) EditComment(commentID, comment, userID string) error {
+	if strings.TrimSpace(comment) == "" {
+		return &utils.ApiError{
+			Code:    http.StatusBadRequest,
+			Message: "Comment cannot be empty",
+		}
+	}
+
+	tx, err := s.DB.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %v", err)
+	}
+	defer tx.Rollback()
+
+	query := `
+		UPDATE comments
+		SET content = $1
+		WHERE user_id = $2 AND id = $3
+	`
+
+	result, err := tx.Exec(query, comment, userID, commentID)
+	if err != nil {
+		return fmt.Errorf("failed to edit comment: %v", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %v", err)
+	}
+
+	if rowsAffected == 0 {
+		return &utils.ApiError{Code: http.StatusNotFound, Message: "Comment not found"}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %v", err)
+	}
+
+	log.Printf("Successfully edited comment with id %v by user %v\n", commentID, userID)
+	return nil
+}
+
+func (s *PostStorage) AddComment(postID, comment, userID string) error {
+	if strings.TrimSpace(comment) == "" {
+		return &utils.ApiError{
+			Code:    http.StatusBadRequest,
+			Message: "Comment cannot be empty",
+		}
+	}
+
+	tx, err := s.DB.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %v", err)
+	}
+	defer tx.Rollback()
+
+	query := `
+		INSERT INTO comments (post_id, user_id, content, created_at)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id
+	`
+
+	var commentID string
+	err = tx.QueryRow(query, postID, userID, comment, time.Now().UTC()).Scan(&commentID)
+	if err != nil {
+		if err.Error() == "pq: insert or update on table \"comments\" violates foreign key constraint \"comments_post_id_fkey\"" {
+			return &utils.ApiError{Code: http.StatusNotFound, Message: fmt.Sprintf("Post not found with id %s", postID)}
+		}
+		if err.Error() == "pq: insert or update on table \"comments\" violates foreign key constraint \"comments_user_id_fkey\"" {
+			return &utils.ApiError{Code: http.StatusNotFound, Message: fmt.Sprintf("User not found with id %s", userID)}
+		}
+		return fmt.Errorf("failed to insert comment: %v", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %v", err)
+	}
+
+	log.Printf("Successfully added comment with id %s to post %s by user %s", commentID, postID, userID)
+	return nil
+}
+
 func (s *PostStorage) EditPost(postID, userID, content string) error {
 	// Input validation
 	if strings.TrimSpace(content) == "" {
