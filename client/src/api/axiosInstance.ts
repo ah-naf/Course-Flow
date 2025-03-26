@@ -9,7 +9,7 @@ interface CustomAxiosRequestConfig extends AxiosRequestConfig {
   _retry?: boolean;
 }
 
-const BASE_URL = "http://localhost:8080/api/v1"
+const BASE_URL = "http://localhost:8080/api/v1";
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL, // your API base URL
@@ -56,6 +56,7 @@ axiosInstance.interceptors.response.use(
         // Retry the original request with the new token
         return axiosInstance(originalRequest);
       } catch (refreshError) {
+        window.location.href = "/logout";
         // If token refresh fails, handle the error (e.g., force logout)
         return Promise.reject(refreshError);
       }
