@@ -255,9 +255,7 @@ func (s *AttachmentStorage) DeleteAttachment(id, userID string) error {
 		return fmt.Errorf("failed to commit transaction: %v", err)
 	}
 
-	// Log the deletion
-	log.Printf("Successfully deleted attachment with ID: %s", id)
-
+	log.Printf("Successfully deleted attachment %s by user %s", id, userID)
 	return nil
 }
 
@@ -268,12 +266,17 @@ func (s *AttachmentStorage) SaveAttachment(attachment *models.Attachment) error 
 		VALUES ($1, $2, $3, $4)
 		RETURNING id
 	`
-
-	return s.DB.QueryRow(
+	err := s.DB.QueryRow(
 		query,
 		attachment.PostID,
 		attachment.DocumentID,
 		attachment.UploadedBy,
 		attachment.UploadDate,
 	).Scan(&attachment.ID)
+	if err != nil {
+		return fmt.Errorf("failed to save attachment: %v", err)
+	}
+	
+	log.Printf("Successfully saved attachment with id %s", attachment.ID)
+	return nil
 }

@@ -5,6 +5,8 @@ import (
 	"course-flow/internal/utils"
 	"database/sql"
 	"errors"
+	"fmt"
+	"log"
 	"net/http"
 	"time"
 )
@@ -31,7 +33,7 @@ func (s *AuthStorage) RetrieveUserPassword(username string) (*models.User, error
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, &utils.ApiError{Code: http.StatusUnauthorized, Message: "Invalid username or password"}
 		}
-		return nil, err
+		return nil, fmt.Errorf("Error scanning user row: %v", err)
 	}
 	user.Avatar = utils.NormalizeMedia(user.Avatar)
 	return &user, nil
@@ -48,6 +50,8 @@ func (s *AuthStorage) SaveRefreshToken(userID, refreshToken string, expiresAt ti
 	if err != nil {
 		return &utils.ApiError{Code: http.StatusInternalServerError, Message: "Failed to save refresh token"}
 	}
+
+	log.Printf("Successfully saved refresh token for userID: %s", userID)
 	return nil
 }
 
@@ -64,7 +68,7 @@ func (s *AuthStorage) VerifyRefreshToken(refreshToken string) (string, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return "", &utils.ApiError{Code: http.StatusForbidden, Message: "Refresh token is invalid or expired"}
 		}
-		return "", err
+		return "", fmt.Errorf("Error scanning refresh_tokens: %v", err)
 	}
 	return userID, nil
 }
@@ -81,6 +85,8 @@ func (s *AuthStorage) DeleteRefreshToken(refreshToken string) error {
 	if rowsAffected == 0 {
 		return &utils.ApiError{Code: http.StatusNotFound, Message: "Refresh token not found"}
 	}
+
+	log.Printf("Successfully deleted refresh token: %s", refreshToken)
 	return nil
 }
 
@@ -97,5 +103,6 @@ func (s *AuthStorage) DeleteAllTokensForUser(userID string) error {
 		return &utils.ApiError{Code: http.StatusNotFound, Message: "No refresh tokens found for the user"}
 	}
 
+	log.Printf("Successfully deleted all refresh tokens for userID: %s", userID)
 	return nil
 }

@@ -5,6 +5,8 @@ import (
 	"course-flow/internal/utils"
 	"database/sql"
 	"errors"
+	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -43,7 +45,7 @@ func (s *UserStorage) GetUserWithID(userID string) (*models.User, error) {
 				Message: "User not found",
 			}
 		}
-		return nil, err
+		return nil, fmt.Errorf("error fetching user with id %s: %w", userID, err)
 	}
 	user.Avatar = utils.NormalizeMedia(user.Avatar)
 	return &user, nil
@@ -52,7 +54,7 @@ func (s *UserStorage) GetUserWithID(userID string) (*models.User, error) {
 func (s *UserStorage) EditUserDetails(user *models.User) error {
 	tx, err := s.DB.Begin()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 
 	query := `
@@ -86,14 +88,15 @@ func (s *UserStorage) EditUserDetails(user *models.User) error {
 				Message: "user not found or you dont have the permission",
 			}
 		}
-		return err
+		return fmt.Errorf("failed to update user details for user with id %s: %w", user.ID, err)
 	}
 
 	if err := tx.Commit(); err != nil {
 		tx.Rollback()
-		return err
+		return fmt.Errorf("failed to commit transaction for user with id %s: %w", user.ID, err)
 	}
 	user.Avatar = utils.NormalizeMedia(user.Avatar)
+	log.Printf("Successfully updated user details for user with id %s", user.ID)
 	return nil
 }
 
@@ -121,7 +124,7 @@ func (s *UserStorage) GetUserWithEmail(user *models.User) error {
 				Message: "User not found with the provided email",
 			}
 		}
-		return err
+		return fmt.Errorf("error fetching user with email %s: %w", user.Email, err)
 	}
 	user.Avatar = utils.NormalizeMedia(user.Avatar)
 	return nil
@@ -130,14 +133,14 @@ func (s *UserStorage) GetUserWithEmail(user *models.User) error {
 func (s *UserStorage) GetAllUser() ([]*models.User, error) {
 	rows, err := s.DB.Query("SELECT * FROM users")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to query users: %w", err)
 	}
 
 	var users []*models.User
 	for rows.Next() {
 		user := new(models.User)
 		if err := rows.Scan(&user.ID, &user.Email, &user.Username, &user.PasswordHash, &user.FirstName, &user.LastName, &user.CreatedAt, &user.UpdatedAt, &user.Avatar); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to scan user row: %w", err)
 		}
 		user.Avatar = utils.NormalizeMedia(user.Avatar)
 		users = append(users, user)
@@ -162,8 +165,12 @@ func (s *UserStorage) SaveUser(user *models.User) error {
 		&user.UpdatedAt,
 		&user.Avatar,
 	)
+	if err != nil {
+		return fmt.Errorf("failed to save user: %w", err)
+	}
 	user.Avatar = utils.NormalizeMedia(user.Avatar)
-	return err
+	log.Printf("Successfully saved new user with id %s and email %s", user.ID, user.Email)
+	return nil
 }
 
 func (s *UserStorage) CheckForUsernameOrEmail(user *models.User) error {
@@ -172,14 +179,14 @@ func (s *UserStorage) CheckForUsernameOrEmail(user *models.User) error {
 	`
 	rows, err := s.DB.Query(query, user.Email, user.Username)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to query for username or email: %w", err)
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		var dbUsername, dbEmail string
 		if err := rows.Scan(&dbUsername, &dbEmail); err != nil {
-			return err
+			return fmt.Errorf("failed to scan username or email: %w", err)
 		}
 
 		// Check for duplicate username.

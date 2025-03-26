@@ -5,6 +5,7 @@ import (
 	"course-flow/internal/utils"
 	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -50,11 +51,7 @@ func (s *CourseStorage) UpdateCourseSetting(userID string, course *models.Course
 		return err
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
+	rowsAffected, _ := result.RowsAffected()
 	if rowsAffected == 0 {
 		tx.Rollback()
 		return &utils.ApiError{
@@ -68,6 +65,7 @@ func (s *CourseStorage) UpdateCourseSetting(userID string, course *models.Course
 		return err
 	}
 
+	log.Printf("Successfully updated course settings for course %s by user %s", course.ID, userID)
 	return nil
 }
 
@@ -196,7 +194,7 @@ func (s *CourseStorage) LeaveCourse(courseID, userID string) error {
 	var isAdmin bool
 	err := s.DB.QueryRow(adminQuery, courseID, userID).Scan(&isAdmin)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error checking if user is admin: %v", err)
 	}
 
 	// If user is admin, they cannot leave the course
@@ -224,11 +222,7 @@ func (s *CourseStorage) LeaveCourse(courseID, userID string) error {
 		return err
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
+	rowsAffected, _ := result.RowsAffected()
 
 	if rowsAffected == 0 {
 		tx.Rollback()
@@ -243,6 +237,7 @@ func (s *CourseStorage) LeaveCourse(courseID, userID string) error {
 		return err
 	}
 
+	log.Printf("User %s successfully left course %s", userID, courseID)
 	return nil
 }
 
@@ -260,14 +255,10 @@ func (s *CourseStorage) DeleteCourse(courseID, adminID string) error {
 	result, err := tx.Exec(query, courseID, adminID)
 	if err != nil {
 		tx.Rollback()
-		return err
+		return fmt.Errorf("Error deleting course: %v", err)
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
+	rowsAffected, _ := result.RowsAffected()
 	if rowsAffected == 0 {
 		tx.Rollback()
 		return &utils.ApiError{
@@ -281,6 +272,7 @@ func (s *CourseStorage) DeleteCourse(courseID, adminID string) error {
 		return err
 	}
 
+	log.Printf("Successfully deleted course %s by admin %s", courseID, adminID)
 	return nil
 }
 
@@ -294,13 +286,10 @@ func (s *CourseStorage) ArchiveCourse(courseID, adminID string, archived bool) e
 
 	result, err := s.DB.Exec(query, courseID, adminID, archived, now)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error archiving course: %v", err)
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
+	rowsAffected, _ := result.RowsAffected()
 	if rowsAffected == 0 {
 		return &utils.ApiError{
 			Code:    404,
@@ -308,6 +297,7 @@ func (s *CourseStorage) ArchiveCourse(courseID, adminID string, archived bool) e
 		}
 	}
 
+	log.Printf("Successfully updated archive status for course %s to %v by admin %s", courseID, archived, adminID)
 	return nil
 }
 
@@ -337,7 +327,7 @@ func (s *CourseStorage) GetCourseByUserID(userID string, archieved bool) ([]*mod
 
 	rows, err := s.DB.Query(query, userID, archieved)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error getting course by userid: %v", err)
 	}
 	defer rows.Close()
 
@@ -360,7 +350,7 @@ func (s *CourseStorage) GetCourseByUserID(userID string, archieved bool) ([]*mod
 			&course.UpdatedAt,
 			&course.JoinCode,
 		); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Error scanning get course: %v", err)
 		}
 		course.CoverPic = utils.NormalizeMedia(course.CoverPic)
 		course.Admin.Avatar = utils.NormalizeMedia(course.Admin.Avatar)
@@ -396,6 +386,7 @@ func (s *CourseStorage) JoinCourse(joinCode, userID string) error {
 		return err
 	}
 
+	log.Printf("User %s successfully joined course %s", userID, courseID)
 	return nil
 }
 
@@ -418,7 +409,7 @@ func (s *CourseStorage) GetCoursesByInstructor(userID string) ([]*models.CourseL
 
 	rows, err := s.DB.Query(query, userID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error getting course by instructor: %v", err)
 	}
 	defer rows.Close()
 
@@ -436,7 +427,7 @@ func (s *CourseStorage) GetCoursesByInstructor(userID string) ([]*models.CourseL
 			&course.Admin.LastName,
 			&course.Admin.Avatar,
 		); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Error scanning course by instructor: %v", err)
 		}
 		course.CoverPic = utils.NormalizeMedia(course.CoverPic)
 		course.Admin.Avatar = utils.NormalizeMedia(course.Admin.Avatar)
@@ -482,10 +473,15 @@ func (s *CourseStorage) CreateNewCourse(course *models.Course) error {
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" && pqErr.Constraint == "unique_joincode" {
 			return &utils.ApiError{Code: http.StatusConflict, Message: fmt.Sprintf("class id '%s' already exists", course.JoinCode)}
 		}
-		return err
+		return fmt.Errorf("Error getting newly added course id: %v", err)
 	}
 
 	err = s.AddCourseMember(course.ID, course.AdminID, 3) // 3 for instructor
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Successfully created new course %s with join code %s", course.ID, course.JoinCode)
 	return nil
 }
 
@@ -499,7 +495,7 @@ func (s *CourseStorage) CheckCourseExists(joinCode string) (string, error) {
 		return "", &utils.ApiError{Code: http.StatusNotFound, Message: "Course not found or is archived"}
 	}
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("Error checking if course exist: %v", err)
 	}
 
 	return courseID, nil
@@ -518,7 +514,7 @@ func (s *CourseStorage) CheckCourseMembership(courseID, userID string) (bool, er
 
 	err := s.DB.QueryRow(checkQuery, courseID, userID).Scan(&isMember)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("Error checking course membership: %v", err)
 	}
 
 	return isMember, nil
@@ -533,8 +529,9 @@ func (s *CourseStorage) AddCourseMember(courseID, userID string, role int) error
 
 	_, err := s.DB.Exec(insertQuery, courseID, userID, role)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error inserting course member: %v", err)
 	}
 
+	log.Printf("Successfully added course member %s to course %s with role %d", userID, courseID, role)
 	return nil
 }

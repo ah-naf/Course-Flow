@@ -4,6 +4,8 @@ import (
 	"course-flow/internal/models"
 	"course-flow/internal/utils"
 	"database/sql"
+	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -42,7 +44,7 @@ func (s *CourseMemberStorage) ChangeRole(courseID, userID, memberID string, role
 					Message: "You are not a member of this course",
 				}
 			}
-			return err
+			return fmt.Errorf("Error scanning course_members: %v", err)
 		}
 
 		// Check if user has sufficient privileges
@@ -62,13 +64,10 @@ func (s *CourseMemberStorage) ChangeRole(courseID, userID, memberID string, role
 	`
 	result, err := s.DB.Exec(query, role, courseID, memberID)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error updating role: %v", err)
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
+	rowsAffected, _ := result.RowsAffected()
 
 	if rowsAffected == 0 {
 		return &utils.ApiError{
@@ -77,6 +76,7 @@ func (s *CourseMemberStorage) ChangeRole(courseID, userID, memberID string, role
 		}
 	}
 
+	log.Printf("Successfully changed role for member %s in course %s to role %d by user %s", memberID, courseID, role, userID)
 	return nil
 }
 
@@ -98,7 +98,7 @@ func (s *CourseMemberStorage) GetAllMember(courseID string) ([]*models.CourseMem
 
 	rows, err := s.DB.Query(query, courseID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error executing get member query: %v", err)
 	}
 	defer rows.Close()
 
@@ -115,7 +115,7 @@ func (s *CourseMemberStorage) GetAllMember(courseID string) ([]*models.CourseMem
 			&member.CreatedAt,
 			&member.Role,
 		); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Error scanning row for get member: %v", err)
 		}
 
 		member.Avatar = utils.NormalizeMedia(member.Avatar)

@@ -27,7 +27,7 @@ func (s *PostStorage) EditPost(postID, userID, content string) error {
 			Message: "Content cannot be empty",
 		}
 	}
-	
+
 	// Begin a transaction
 	tx, err := s.DB.Begin()
 	if err != nil {
@@ -75,9 +75,7 @@ func (s *PostStorage) EditPost(postID, userID, content string) error {
 		return fmt.Errorf("failed to commit transaction: %v", err)
 	}
 
-	// Log the successful update
-	log.Printf("Successfully updated post with ID %s by user %s", postID, userID)
-
+	log.Printf("Successfully updated post with id %s by user %s", postID, userID)
 	return nil
 }
 
@@ -98,7 +96,7 @@ func (s *PostStorage) GetAllPost(courseID string) ([]models.PostResponse, error)
 
 	rows, err := s.DB.Query(query, courseID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to query posts for course %s: %v", courseID, err)
 	}
 	defer rows.Close()
 
@@ -130,7 +128,7 @@ func (s *PostStorage) GetAllPost(courseID string) ([]models.PostResponse, error)
 			&dID, &dUserID, &dFileName, &dFilePath, &dFileType, &dCreatedAt, &dUpdatedAt,
 		)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to scan row for post with id %s: %v", pID, err)
 		}
 
 		// If the post hasn't been added to the map yet, add it along with the user details.
@@ -185,7 +183,7 @@ func (s *PostStorage) GetAllPost(courseID string) ([]models.PostResponse, error)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error iterating over posts rows: %v", err)
 	}
 
 	// Convert the posts map into a slice.
@@ -213,7 +211,7 @@ func (s *PostStorage) DeletePost(courseID, postID, userID string) error {
 				Message: "Course not found",
 			}
 		}
-		return err
+		return fmt.Errorf("failed to query course with id %s: %v", courseID, err)
 	}
 
 	// Check if user is either the admin or the post author
@@ -231,7 +229,7 @@ func (s *PostStorage) DeletePost(courseID, postID, userID string) error {
 				Message: "Post not found",
 			}
 		}
-		return err
+		return fmt.Errorf("failed to query post with id %s for course %s: %v", postID, courseID, err)
 	}
 
 	// Check if user is neither admin nor author
@@ -250,12 +248,12 @@ func (s *PostStorage) DeletePost(courseID, postID, userID string) error {
 	`
 	result, err := s.DB.Exec(deleteQuery, postID, courseID)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to delete post with id %s for course %s: %v", postID, courseID, err)
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get rows affected for deletion of post with id %s: %v", postID, err)
 	}
 
 	if rowsAffected == 0 {
@@ -265,6 +263,7 @@ func (s *PostStorage) DeletePost(courseID, postID, userID string) error {
 		}
 	}
 
+	log.Printf("Successfully deleted post with id %s for course %s by user %s", postID, courseID, userID)
 	return nil
 }
 
@@ -279,7 +278,7 @@ func (s *PostStorage) CreatePost(courseID, userID, content string) (string, erro
 	var postPermission int
 	err := s.DB.QueryRow(courseQuery, courseID).Scan(&adminID, &postPermission)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to query course with id %s: %v", courseID, err)
 	}
 
 	if adminID != userID {
@@ -298,7 +297,7 @@ func (s *PostStorage) CreatePost(courseID, userID, content string) (string, erro
 					Message: "You are not a member of this course",
 				}
 			}
-			return "", err
+			return "", fmt.Errorf("failed to query role for user %s in course %s: %v", userID, courseID, err)
 		}
 
 		// Check if user's role meets the course's post_permission requirement
@@ -318,7 +317,7 @@ func (s *PostStorage) CreatePost(courseID, userID, content string) (string, erro
 	now := time.Now().UTC() // Use UTC for consistency
 	err = s.DB.QueryRow(query, courseID, userID, content, now, now).Scan(&postID)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to create post in course %s for user %s: %v", courseID, userID, err)
 	}
 
 	if postID == "" {
@@ -327,5 +326,7 @@ func (s *PostStorage) CreatePost(courseID, userID, content string) (string, erro
 			Message: "Failed to create post",
 		}
 	}
+
+	log.Printf("Successfully created post with id %s in course %s by user %s", postID, courseID, userID)
 	return postID, nil
 }
