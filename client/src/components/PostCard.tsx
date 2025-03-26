@@ -177,7 +177,7 @@ export const PostCard: React.FC<PostCardProps> = ({
 
         {/* Comment Section */}
         <div className="mt-6">
-          <CommentSection postId={post.id} background_color={course.background_color} />
+          <CommentSection course={course} postId={post.id} background_color={course.background_color} />
         </div>
 
         {/* Edit Post Dialog */}

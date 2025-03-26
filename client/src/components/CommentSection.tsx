@@ -20,18 +20,20 @@ import {
 } from "lucide-react";
 import { Dialog } from "@/components/ui/dialog";
 import { EditCommentDialog } from "./EditCommentDialog";
-import { Comment } from "@/utils/types";
+import { Comment, Course } from "@/utils/types";
 import { formatRelativeTime } from "@/utils/formatRelativeTime";
 import { useGetComment } from "@/hooks/usePost";
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/store/userStore";
 
 interface CommentSectionProps {
+  course: Course;
   postId: string;
   background_color: string;
 }
 
 export const CommentSection: React.FC<CommentSectionProps> = ({
+  course,
   postId,
   background_color,
 }) => {
@@ -42,6 +44,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     isLoading,
   } = useGetComment(postId);
   const { user } = useUserStore();
+  console.log({ comments, user });
   const [commentText, setCommentText] = useState("");
   const [editCommentId, setEditCommentId] = useState<string | null>(null);
 
@@ -129,33 +132,41 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                       <span className="text-xs text-gray-400">
                         {formatRelativeTime(comment.timestamp)}
                       </span>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 hover:text-gray-700"
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuItem
-                            onClick={() => setEditCommentId(comment.id)}
-                            className="cursor-pointer"
-                          >
-                            <Edit className="mr-2 h-4 w-4" />
-                            <span>Edit</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            // onClick={() => onDeleteComment(postId, comment.id)}
-                            className="cursor-pointer text-red-500 hover:text-red-700"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            <span>Delete</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      {(comment.user.id == user?.id ||
+                        user?.id === course.admin.id) && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 hover:text-gray-700"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            {comment.user.id === user?.id && (
+                              <DropdownMenuItem
+                                onClick={() => setEditCommentId(comment.id)}
+                                className="cursor-pointer"
+                              >
+                                <Edit className="mr-2 h-4 w-4" />
+                                <span>Edit</span>
+                              </DropdownMenuItem>
+                            )}
+                            {(comment.user.id === user?.id ||
+                              user?.id === course.admin.id) && (
+                              <DropdownMenuItem
+                                // onClick={() => onDeleteComment(postId, comment.id)}
+                                className="cursor-pointer text-red-500 hover:text-red-700"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                <span>Delete</span>
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
                   </div>
                   <p className="text-sm text-gray-600 mt-2">
