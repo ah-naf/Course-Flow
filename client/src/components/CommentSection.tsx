@@ -16,153 +16,202 @@ import {
   MoreVertical,
   Edit,
   Trash2,
-  Link as LinkIcon,
+  AlertCircle,
 } from "lucide-react";
 import { Dialog } from "@/components/ui/dialog";
 import { EditCommentDialog } from "./EditCommentDialog";
 import { Comment } from "@/utils/types";
 import { formatRelativeTime } from "@/utils/formatRelativeTime";
+import { useGetComment } from "@/hooks/usePost";
+import { cn } from "@/lib/utils";
+import { useUserStore } from "@/store/userStore";
 
 interface CommentSectionProps {
-  comments: Comment[];
   postId: string;
-  classId: string;
-  onAddComment: (postId: string, content: string) => void;
-  onEditComment: (postId: string, commentId: string, content: string) => void;
-  onDeleteComment: (postId: string, commentId: string) => void;
-  backgroundColor: string;
+  background_color: string;
 }
 
 export const CommentSection: React.FC<CommentSectionProps> = ({
-  comments,
   postId,
-  classId,
-  onAddComment,
-  onEditComment,
-  onDeleteComment,
-  backgroundColor,
+  background_color,
 }) => {
+  const {
+    data: comments = [],
+    error,
+    isError,
+    isLoading,
+  } = useGetComment(postId);
+  const { user } = useUserStore();
   const [commentText, setCommentText] = useState("");
   const [editCommentId, setEditCommentId] = useState<string | null>(null);
 
   const handleSubmitComment = (e: React.FormEvent) => {
     e.preventDefault();
     if (!commentText.trim()) return;
-    onAddComment(postId, commentText);
+    // Add your comment submission logic here
     setCommentText("");
   };
+
+  if (isLoading) {
+    return (
+      <div className={cn("mt-4 animate-pulse")}>
+        <div className="space-y-3">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="flex space-x-3">
+              <div className="h-8 w-8 rounded-full bg-gray-200" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 w-32 bg-gray-200 rounded" />
+                <div className="h-3 w-full bg-gray-200 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className={cn("mt-4")}>
+        <Separator className="my-4" />
+        <div className="flex items-center gap-2 text-red-600 bg-red-50 p-3 rounded-lg">
+          <AlertCircle className="h-5 w-5" />
+          <p className="text-sm">
+            {error?.message || "Failed to load comments"}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mt-4">
       <Separator className="my-4" />
-      <h4 className="font-semibold text-gray-700 mb-2 flex items-center">
-        <MessageSquare className="h-4 w-4 mr-2" />
-        Comments ({comments.length})
+      <h4 className="font-semibold text-gray-700 mb-4 flex items-center">
+        <MessageSquare className="h-5 w-5 mr-2 text-indigo-500" />
+        Comments ({comments ? comments.length : 0})
       </h4>
 
-      <div className="space-y-3 mb-4">
-        {comments.map((comment) => (
-          <div key={comment.id} className="flex space-x-3">
-            <Avatar className="h-8 w-8 flex-shrink-0">
-              <AvatarImage
-                src={comment.user.avatar || "/api/placeholder/32/32"}
-              />
-              <AvatarFallback
-                className="text-white text-sm"
-                style={{ backgroundColor }}
-              >
-                {comment.user.initial}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 bg-gray-50 rounded-lg p-3">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-sm font-medium">{comment.user.username}</p>
-                  <p className="text-xs text-gray-500">
-                    {formatRelativeTime(comment.timestamp)}
+      <div className="space-y-4 mb-6">
+        {!comments || comments.length === 0 ? (
+          <div className="text-center py-6 text-gray-500 bg-gray-50 rounded-lg">
+            <p className="text-sm">No comments yet. Be the first to comment!</p>
+          </div>
+        ) : (
+          comments.map((comment) => (
+            <div
+              key={comment.id}
+              className="flex space-x-3 group hover:bg-gray-50 p-2 rounded-lg transition-colors"
+            >
+              <Avatar className="h-9 w-9 flex-shrink-0">
+                <AvatarImage src={comment.user.avatar} />
+                <AvatarFallback
+                  className="text-white text-sm"
+                  style={{ backgroundColor: background_color }}
+                >
+                  {comment.user.initial}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-gray-800">
+                          {comment.user.firstName} {comment.user.lastName}
+                        </p>
+                        <span className="text-xs text-gray-500">
+                          @{comment.user.username}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400">
+                        {formatRelativeTime(comment.timestamp)}
+                      </span>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 hover:text-gray-700"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem
+                            onClick={() => setEditCommentId(comment.id)}
+                            className="cursor-pointer"
+                          >
+                            <Edit className="mr-2 h-4 w-4" />
+                            <span>Edit</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            // onClick={() => onDeleteComment(postId, comment.id)}
+                            className="cursor-pointer text-red-500 hover:text-red-700"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            <span>Delete</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2">
+                    {comment.content}
                   </p>
                 </div>
-                {/* Comment Options Dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-gray-500 hover:text-gray-700"
-                      aria-label="Comment options"
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem
-                      onClick={() => setEditCommentId(comment.id)}
-                      className="cursor-pointer"
-                    >
-                      <Edit className="mr-2 h-4 w-4" />
-                      <span>Edit</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => onDeleteComment(postId, comment.id)}
-                      className="cursor-pointer text-red-500 hover:text-red-700"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      <span>Delete</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
               </div>
-              <p className="text-sm mt-1">{comment.content}</p>
-            </div>
-            {/* Edit Comment Dialog */}
-            {editCommentId === comment.id && (
-              <Dialog
-                open={!!editCommentId}
-                onOpenChange={() => setEditCommentId(null)}
-              >
-                <EditCommentDialog
-                  isOpen={!!editCommentId}
+              {editCommentId === comment.id && (
+                <Dialog
+                  open={!!editCommentId}
                   onOpenChange={() => setEditCommentId(null)}
-                  comment={comment}
-                  onSubmit={(commentId, content) => {
-                    onEditComment(postId, commentId, content);
-                    setEditCommentId(null);
-                  }}
-                />
-              </Dialog>
-            )}
-          </div>
-        ))}
+                >
+                  <EditCommentDialog
+                    isOpen={!!editCommentId}
+                    onOpenChange={() => setEditCommentId(null)}
+                    comment={comment}
+                    onSubmit={(commentId, content) => {
+                      // onEditComment(postId, commentId, content);
+                      setEditCommentId(null);
+                    }}
+                  />
+                </Dialog>
+              )}
+            </div>
+          ))
+        )}
       </div>
 
-      <form
-        onSubmit={handleSubmitComment}
-        className="flex items-center space-x-2"
-      >
-        <Avatar className="h-8 w-8 flex-shrink-0">
-          <AvatarImage src="/api/placeholder/32/32" />
+      <form onSubmit={handleSubmitComment} className="flex items-center gap-3">
+        <Avatar className="h-9 w-9 flex-shrink-0">
+          <AvatarImage src={user?.avatar} />
           <AvatarFallback
-            className="text-white text-xs"
-            style={{ backgroundColor }}
+            className="text-white text-sm font-semibold"
+            style={{ backgroundColor: background_color }}
           >
-            U
+            {user?.firstName[0]}
+            {user?.lastName[0]}
           </AvatarFallback>
         </Avatar>
-        <Input
-          value={commentText}
-          onChange={(e) => setCommentText(e.target.value)}
-          placeholder="Add a comment..."
-          className="flex-1 text-sm"
-        />
-        <Button
-          type="submit"
-          size="sm"
-          variant="ghost"
-          disabled={!commentText.trim()}
-          className="text-primary hover:bg-primary/10"
-        >
-          <Send className="h-4 w-4" />
-        </Button>
+        <div className="flex-1 relative">
+          <Input
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            placeholder="Add a comment..."
+            className="w-full pr-10 text-sm rounded-full border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
+          />
+          <Button
+            type="submit"
+            size="sm"
+            variant="ghost"
+            disabled={!commentText.trim()}
+            className="absolute right-1 top-1/2 -translate-y-1/2 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full"
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
       </form>
     </div>
   );

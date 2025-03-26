@@ -36,26 +36,18 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-type MixedAttachment = Attachment | File;
-
 interface PostCardProps {
   post: Post;
   course: Course;
   classId: string;
-  onAddComment: (postId: string, content: string) => void;
   onDeletePost: (postId: string) => void;
-  onEditComment: (postId: string, commentId: string, content: string) => void;
-  onDeleteComment: (postId: string, commentId: string) => void;
 }
 
 export const PostCard: React.FC<PostCardProps> = ({
   post,
   course,
   classId,
-  onAddComment,
   onDeletePost,
-  onEditComment,
-  onDeleteComment,
 }) => {
   const { user } = useUserStore();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -185,15 +177,7 @@ export const PostCard: React.FC<PostCardProps> = ({
 
         {/* Comment Section */}
         <div className="mt-6">
-          <CommentSection
-            comments={[]} // Ensure comments are passed correctly
-            postId={post.id}
-            classId={classId}
-            onAddComment={onAddComment}
-            onEditComment={onEditComment}
-            onDeleteComment={onDeleteComment}
-            backgroundColor={course.background_color}
-          />
+          <CommentSection postId={post.id} background_color={course.background_color} />
         </div>
 
         {/* Edit Post Dialog */}

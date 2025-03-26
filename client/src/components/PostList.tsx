@@ -13,13 +13,7 @@ interface PostListProps {
 }
 
 export const PostList: React.FC<PostListProps> = ({ course, classId }) => {
-  const {
-    posts,
-    setPosts, // Add setPosts from the store
-    addComment,
-    editComment,
-    deleteComment,
-  } = usePostStore();
+  const { posts, setPosts } = usePostStore();
 
   // Fetch posts using the useGetAllPost hook
   const { data: fetchedPosts, isLoading, error } = useGetAllPost(course.id);
@@ -46,30 +40,6 @@ export const PostList: React.FC<PostListProps> = ({ course, classId }) => {
     deletePostMutation(postId);
   };
 
-  const handleAddComment = (postId: string, content: string) => {
-    addComment(postId, content, {
-      id: "current-user",
-      firstName: "You",
-      lastName: "",
-      username: "You",
-      email: "",
-      avatar: "",
-      initial: "U",
-    });
-  };
-
-  const handleEditComment = (
-    postId: string,
-    commentId: string,
-    content: string
-  ) => {
-    editComment(postId, commentId, content);
-  };
-
-  const handleDeleteComment = (postId: string, commentId: string) => {
-    deleteComment(postId, commentId);
-  };
-
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-4">Posts</h2>
@@ -93,10 +63,7 @@ export const PostList: React.FC<PostListProps> = ({ course, classId }) => {
               post={{ ...post, course_id: course.id }}
               course={course}
               classId={classId}
-              onAddComment={handleAddComment}
               onDeletePost={handleDeletePost}
-              onEditComment={handleEditComment}
-              onDeleteComment={handleDeleteComment}
             />
           ))}
         </div>

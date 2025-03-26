@@ -1,6 +1,6 @@
 import axiosInstance from "@/api/axiosInstance";
 import { usePostStore } from "@/store/postStore";
-import { Attachment, Post } from "@/utils/types";
+import { Attachment, Comment, Post } from "@/utils/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
@@ -14,6 +14,17 @@ interface EditPostData {
   content: string;
   attachments: MixedAttachment[];
 }
+
+export const useGetComment = (postID: string) => {
+  return useQuery<Comment[], Error>({
+    queryKey: ["comments", postID],
+    queryFn: async () => {
+      const response = await axiosInstance.get(`/posts/comment/${postID}`);
+      return response.data;
+    },
+    enabled: !!postID,
+  });
+};
 
 export const useEditPost = (courseID?: string) => {
   const queryClient = useQueryClient();
@@ -40,7 +51,7 @@ export const useEditPost = (courseID?: string) => {
       return res.data;
     },
     onSuccess: () => {
-      console.log(courseID)
+      console.log(courseID);
       if (courseID) {
         console.log(courseID);
         queryClient.invalidateQueries({ queryKey: ["posts", courseID] });
