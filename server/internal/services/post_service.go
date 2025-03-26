@@ -27,6 +27,21 @@ func NewPostService(
 	}
 }
 
+func (s *PostService) AddComment(comment string, r *http.Request) error {
+	userID, err := utils.GetUserIDFromContext(r.Context())
+	if err != nil {
+		return err
+	}
+
+	vars := mux.Vars(r)
+	postID := vars["post_id"]
+	if postID == "" {
+		return &utils.ApiError{Code: http.StatusNotFound, Message: "Post ID not found"}
+	}
+
+	return s.PostStorage.AddComment(postID, comment, userID)
+}
+
 func (s *PostService) EditPost(r *http.Request) error {
 	userID, err := utils.GetUserIDFromContext(r.Context())
 	if err != nil {

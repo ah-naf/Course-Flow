@@ -3,6 +3,7 @@ package handlers
 import (
 	"course-flow/internal/services"
 	"course-flow/internal/utils"
+	"encoding/json"
 	"net/http"
 )
 
@@ -12,6 +13,23 @@ type PostHandler struct {
 
 func NewPostHandler(postService *services.PostService) *PostHandler {
 	return &PostHandler{postService: postService}
+}
+
+func (h *PostHandler) AddCommentHandler(w http.ResponseWriter, r *http.Request) error {
+	var req struct {
+		Comment string `json:"content"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return err
+	}
+
+	err := h.postService.AddComment(req.Comment, r)
+	if err != nil {
+		return err
+	}
+
+	return utils.WriteJSON(w, http.StatusCreated, map[string]string{"message": "Comment created successfully"})
 }
 
 func (h *PostHandler) EditPostHandler(w http.ResponseWriter, r *http.Request) error {
