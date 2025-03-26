@@ -33,4 +33,5 @@ func (r *Router) setupPostRouter(router *mux.Router) {
 	// Edit a post with specific post ID
 	postRouter.HandleFunc("/{id}", middleware.ConvertToHandlerFunc(postHandler.EditPostHandler, middleware.AuthMiddleware)).Methods("PUT")
 	postRouter.HandleFunc("/comment/{post_id}", middleware.ConvertToHandlerFunc(postHandler.AddCommentHandler, middleware.AuthMiddleware)).Methods("POST")
+	postRouter.HandleFunc("/comment/{post_id}", middleware.ConvertToHandlerFunc(postHandler.GetCommentForPostHandler, middleware.AuthMiddleware)).Methods("GET")
 }

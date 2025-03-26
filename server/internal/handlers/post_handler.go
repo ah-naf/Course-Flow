@@ -15,6 +15,15 @@ func NewPostHandler(postService *services.PostService) *PostHandler {
 	return &PostHandler{postService: postService}
 }
 
+func (h *PostHandler) GetCommentForPostHandler(w http.ResponseWriter, r *http.Request) error {
+	comments, err := h.postService.GetCommentForPost(r)
+	if err != nil {
+		return err
+	}
+
+	return utils.WriteJSON(w, http.StatusOK, comments)
+}
+
 func (h *PostHandler) AddCommentHandler(w http.ResponseWriter, r *http.Request) error {
 	var req struct {
 		Comment string `json:"content"`
