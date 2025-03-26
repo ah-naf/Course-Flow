@@ -15,6 +15,23 @@ func NewPostHandler(postService *services.PostService) *PostHandler {
 	return &PostHandler{postService: postService}
 }
 
+func (h *PostHandler) EditommentHandler(w http.ResponseWriter, r *http.Request) error {
+	var req struct {
+		Comment string `json:"content"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return err
+	}
+
+	err := h.postService.EditComment(req.Comment, r)
+	if err != nil {
+		return err
+	}
+
+	return utils.WriteJSON(w, http.StatusCreated, map[string]string{"message": "Comment editted successfully"})
+}
+
 func (h *PostHandler) GetCommentForPostHandler(w http.ResponseWriter, r *http.Request) error {
 	comments, err := h.postService.GetCommentForPost(r)
 	if err != nil {
