@@ -90,7 +90,7 @@ export const PostList: React.FC<PostListProps> = ({ course, classId }) => {
           {posts.map((post) => (
             <PostCard
               key={post.id}
-              post={post}
+              post={{ ...post, course_id: course.id }}
               course={course}
               classId={classId}
               onAddComment={handleAddComment}

@@ -40,8 +40,11 @@ export const useEditPost = (courseID?: string) => {
       return res.data;
     },
     onSuccess: () => {
-      if (courseID)
+      console.log(courseID)
+      if (courseID) {
+        console.log(courseID);
         queryClient.invalidateQueries({ queryKey: ["posts", courseID] });
+      }
       toast.success("Post updated successfully");
     },
     onError: (error) => {
