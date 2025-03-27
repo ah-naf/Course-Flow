@@ -15,6 +15,163 @@ interface EditPostData {
   attachments: MixedAttachment[];
 }
 
+export const useEditComment = (commentID: string, postID: string) => {
+  const queryClient = useQueryClient(); // Access the query client to manage cache
+
+  return useMutation({
+    mutationFn: async (content: string) => {
+      await axiosInstance.put(`/posts/comment/${commentID}`, { content });
+      return { content };
+    },
+    onMutate: async (content: string) => {
+      // Cancel any outgoing refetches to avoid overwriting our optimistic update
+      await queryClient.cancelQueries({ queryKey: ["comments", postID] });
+
+      // Snapshot the previous comment state
+      const previousComments = queryClient.getQueryData<Post[]>([
+        "comments",
+        postID,
+      ]);
+
+      // Optimistically update the store and query cache
+      if (previousComments) {
+        const updatedComments = previousComments.map((comment) => {
+          if (comment.id === commentID) {
+            return { ...comment, content };
+          }
+          return comment;
+        });
+
+        queryClient.setQueryData(["comments", postID], updatedComments); // Update the cache
+      }
+
+      // Return the previous state for rollback in case of error
+      return { previousComments };
+    },
+    // On error, revert to the previous state and show an error toast
+    onError: (error, _, context) => {
+      if (context?.previousComments) {
+        queryClient.setQueryData(
+          ["comments", postID],
+          context.previousComments
+        ); // Revert the cache
+      }
+
+      // Show error toast
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<{ error?: string }>;
+        toast.error("Failed to edit comment", {
+          description:
+            axiosError.response?.data?.error || "An unknown error occurred",
+          duration: 5000,
+        });
+      } else {
+        toast.error("Failed to edit comment", {
+          description: "An unknown error occurred",
+          duration: 5000,
+        });
+      }
+    },
+    // Always refetch after success or error to ensure the cache is up-to-date
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments", postID] });
+    },
+  });
+};
+
+export const useDeleteComment = (postID: string) => {
+  const queryClient = useQueryClient(); // Access the query client to manage cache
+
+  return useMutation({
+    mutationFn: async (commentID: string) => {
+      await axiosInstance.delete(
+        `/posts/comment/${commentID}?post_id=${postID}`
+      );
+      return commentID;
+    },
+    onMutate: async (commentID: string) => {
+      // Cancel any outgoing refetches to avoid overwriting our optimistic update
+      await queryClient.cancelQueries({ queryKey: ["comments", postID] });
+
+      // Snapshot the previous comment state
+      const previousComments = queryClient.getQueryData<Post[]>([
+        "comments",
+        postID,
+      ]);
+
+      // Optimistically update the store and query cache
+      if (previousComments) {
+        const updatedComments = previousComments.filter(
+          (comment) => comment.id !== commentID
+        );
+
+        queryClient.setQueryData(["comments", postID], updatedComments); // Update the cache
+      }
+
+      // Return the previous state for rollback in case of error
+      return { previousComments };
+    },
+    // On error, revert to the previous state and show an error toast
+    onError: (error, _, context) => {
+      if (context?.previousComments) {
+        queryClient.setQueryData(
+          ["comments", postID],
+          context.previousComments
+        ); // Revert the cache
+      }
+
+      // Show error toast
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<{ error?: string }>;
+        toast.error("Failed to delete comment", {
+          description:
+            axiosError.response?.data?.error || "An unknown error occurred",
+          duration: 5000,
+        });
+      } else {
+        toast.error("Failed to delete comment", {
+          description: "An unknown error occurred",
+          duration: 5000,
+        });
+      }
+    },
+    // Always refetch after success or error to ensure the cache is up-to-date
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments", postID] });
+    },
+  });
+};
+
+export const useAddComment = (postID: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (content: string) => {
+      const res = await axiosInstance.post(`/posts/comment/${postID}`, {
+        content,
+      });
+
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments", postID] });
+    },
+    onError: (error) => {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<{ error?: string }>;
+        toast.error("Failed to add comment", {
+          description:
+            axiosError.response?.data?.error || "An unknown error occurred",
+        });
+      } else {
+        toast.error("Failed to add comment", {
+          description: "An unknown error occurred",
+        });
+      }
+    },
+  });
+};
+
 export const useGetComment = (postID: string) => {
   return useQuery<Comment[], Error>({
     queryKey: ["comments", postID],

@@ -9,29 +9,30 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Comment } from "@/utils/types";
+import { useEditComment } from "@/hooks/usePost";
 
 interface EditCommentDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   comment: Comment;
-  onSubmit: (commentId: string, content: string) => void;
+  postID: string;
 }
 
 export const EditCommentDialog: React.FC<EditCommentDialogProps> = ({
   isOpen,
   onOpenChange,
   comment,
-  onSubmit,
+  postID,
 }) => {
   const [commentText, setCommentText] = useState(comment.content);
-
+  const editCommentMutation = useEditComment(comment.id, postID);
   // Handle comment submission
   const handleSubmitEditComment = (e: React.FormEvent) => {
     e.preventDefault();
     if (!commentText.trim()) return; // Prevent empty comments
-
-    onSubmit(comment.id, commentText);
-    onOpenChange(false);
+    editCommentMutation.mutate(commentText, {
+      onSuccess: () => onOpenChange(false),
+    });
   };
 
   return (

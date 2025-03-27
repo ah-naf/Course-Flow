@@ -22,7 +22,11 @@ import { Dialog } from "@/components/ui/dialog";
 import { EditCommentDialog } from "./EditCommentDialog";
 import { Comment, Course } from "@/utils/types";
 import { formatRelativeTime } from "@/utils/formatRelativeTime";
-import { useGetComment } from "@/hooks/usePost";
+import {
+  useAddComment,
+  useDeleteComment,
+  useGetComment,
+} from "@/hooks/usePost";
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/store/userStore";
 
@@ -44,15 +48,22 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     isLoading,
   } = useGetComment(postId);
   const { user } = useUserStore();
-  console.log({ comments, user });
   const [commentText, setCommentText] = useState("");
   const [editCommentId, setEditCommentId] = useState<string | null>(null);
+  const addCommentMutation = useAddComment(postId);
+  const deleteCommentMutation = useDeleteComment(postId);
 
   const handleSubmitComment = (e: React.FormEvent) => {
     e.preventDefault();
     if (!commentText.trim()) return;
-    // Add your comment submission logic here
-    setCommentText("");
+
+    addCommentMutation.mutate(commentText, {
+      onSuccess: () => setCommentText(""),
+    });
+  };
+
+  const handleCommentDelete = (commentID: string) => {
+    deleteCommentMutation.mutate(commentID);
   };
 
   if (isLoading) {
@@ -157,7 +168,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                             {(comment.user.id === user?.id ||
                               user?.id === course.admin.id) && (
                               <DropdownMenuItem
-                                // onClick={() => onDeleteComment(postId, comment.id)}
+                                onClick={() => handleCommentDelete(comment.id)}
                                 className="cursor-pointer text-red-500 hover:text-red-700"
                               >
                                 <Trash2 className="mr-2 h-4 w-4" />
@@ -169,7 +180,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                       )}
                     </div>
                   </div>
-                  <p className="text-sm text-gray-600 mt-2">
+                  <p className="text-sm text-gray-800 mt-2">
                     {comment.content}
                   </p>
                 </div>
@@ -183,10 +194,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                     isOpen={!!editCommentId}
                     onOpenChange={() => setEditCommentId(null)}
                     comment={comment}
-                    onSubmit={(commentId, content) => {
-                      // onEditComment(postId, commentId, content);
-                      setEditCommentId(null);
-                    }}
+                    postID={postId}
                   />
                 </Dialog>
               )}
