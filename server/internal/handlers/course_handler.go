@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"course-flow/internal/models"
+	"course-flow/internal/types"
 	"course-flow/internal/services"
 	"course-flow/internal/utils"
 	"encoding/json"
@@ -27,7 +27,7 @@ func (h *CourseHandler) UpdateCourseSettingHandler(w http.ResponseWriter, r *htt
 		}
 	}
 
-	var courseReq models.CoursePreviewResponse
+	var courseReq types.CoursePreviewResponse
 
 	// Get form values
 	courseReq.Name = r.FormValue("name")
@@ -167,7 +167,7 @@ func (h *CourseHandler) CreateCourseHandler(w http.ResponseWriter, r *http.Reque
 		}
 	}
 
-	var courseReq models.Course
+	var courseReq types.Course
 
 	// Get form values
 	courseReq.JoinCode = r.FormValue("id")

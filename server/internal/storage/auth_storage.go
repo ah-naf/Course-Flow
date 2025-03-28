@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"course-flow/internal/models"
+	"course-flow/internal/types"
 	"course-flow/internal/utils"
 	"database/sql"
 	"errors"
@@ -22,8 +22,8 @@ func NewAuthStorage(db *sql.DB) *AuthStorage {
 }
 
 // Retrieve password for
-func (s *AuthStorage) RetrieveUserPassword(username string) (*models.User, error) {
-	var user models.User
+func (s *AuthStorage) RetrieveUserPassword(username string) (*types.User, error) {
+	var user types.User
 	query := `
 	SELECT id, password_hash, username, first_name, last_name, avatar, updated_at, email FROM users
 	WHERE username = $1

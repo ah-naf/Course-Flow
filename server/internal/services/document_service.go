@@ -1,7 +1,7 @@
 package services
 
 import (
-	"course-flow/internal/models"
+	"course-flow/internal/types"
 	"course-flow/internal/storage"
 	"course-flow/internal/utils"
 	"fmt"
@@ -18,7 +18,7 @@ import (
 
 // fileResult is used to capture the result for each file saved.
 type fileResult struct {
-	metadata models.Document
+	metadata types.Document
 	err      error
 }
 
@@ -33,7 +33,7 @@ func NewDocumentService(documentStorage *storage.DocumentStorage) *DocumentServi
 // SaveFilesToLocal processes a slice of file headers concurrently.
 // It returns a slice of file paths (one for each successfully saved file)
 // or an error if any file fails to save.
-func (s *DocumentService) SaveFilesToLocal(fileHeaders []*multipart.FileHeader, userID string) ([]models.Document, error) {
+func (s *DocumentService) SaveFilesToLocal(fileHeaders []*multipart.FileHeader, userID string) ([]types.Document, error) {
 	// channel to limit concurrency. For example we will handle 10 file concurrently at a time
 	concurrencyLimit := 10
 	sem := make(chan struct{}, concurrencyLimit)
@@ -79,7 +79,7 @@ func (s *DocumentService) SaveFilesToLocal(fileHeaders []*multipart.FileHeader, 
 			}
 
 			// Create document metadata (ID is omitted).
-			doc := models.Document{
+			doc := types.Document{
 				UserID:    userID,
 				FileName:  fh.Filename,
 				FilePath:  filePath,
@@ -106,7 +106,7 @@ func (s *DocumentService) SaveFilesToLocal(fileHeaders []*multipart.FileHeader, 
 	close(result)
 
 	// Collect results
-	var files []models.Document
+	var files []types.Document
 	for res := range result {
 		if res.err != nil {
 			return nil, res.err
@@ -118,8 +118,8 @@ func (s *DocumentService) SaveFilesToLocal(fileHeaders []*multipart.FileHeader, 
 }
 
 // UploadDocument saves the document metadata
-func (s *DocumentService) UploadDocument(userID, filePath, fileType, fileName string) (*models.Document, error) {
-	doc := &models.Document{
+func (s *DocumentService) UploadDocument(userID, filePath, fileType, fileName string) (*types.Document, error) {
+	doc := &types.Document{
 		UserID:    userID,
 		FilePath:  filePath,
 		FileType:  fileType,
@@ -135,7 +135,7 @@ func (s *DocumentService) UploadDocument(userID, filePath, fileType, fileName st
 }
 
 // GetDocument retrieves a document by ID
-func (s *DocumentService) GetDocument(id string) (*models.Document, error) {
+func (s *DocumentService) GetDocument(id string) (*types.Document, error) {
 	return s.DocumentStorage.GetDocument(id)
 }
 

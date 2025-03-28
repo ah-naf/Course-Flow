@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"course-flow/internal/models"
+	"course-flow/internal/types"
 	"course-flow/internal/utils"
 	"database/sql"
 	"fmt"
@@ -20,7 +20,7 @@ func NewDocumentStorage(db *sql.DB) *DocumentStorage {
 }
 
 // stores a document in the database
-func (s *DocumentStorage) SaveDocument(doc *models.Document) error {
+func (s *DocumentStorage) SaveDocument(doc *types.Document) error {
 	query := `
 		INSERT INTO documents (user_id, file_name, file_path, file_type, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6) RETURNING id
@@ -35,8 +35,8 @@ func (s *DocumentStorage) SaveDocument(doc *models.Document) error {
 }
 
 // GetDocument retrieves a document by its ID
-func (s *DocumentStorage) GetDocument(id string) (*models.Document, error) {
-	var doc models.Document
+func (s *DocumentStorage) GetDocument(id string) (*types.Document, error) {
+	var doc types.Document
 	query := `SELECT id, user_id, file_name, file_path, file_type, created_at, updated_at FROM documents WHERE id = $1`
 	err := s.DB.QueryRow(query, id).Scan(&doc.ID, &doc.UserID, &doc.FileName, &doc.FilePath, &doc.FileType, &doc.CreatedAt, &doc.UpdatedAt)
 	if err != nil {

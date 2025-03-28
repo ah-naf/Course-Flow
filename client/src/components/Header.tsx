@@ -1,5 +1,5 @@
 // src/components/Header.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Menu, ChevronRight, LogOut, User, BookOpen, Plus } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,8 @@ import NotificationDialog from "@/components/NotificationDialog"; // Import the 
 import ProfileDialog from "./ProfileDialog";
 import { useLogout } from "@/hooks/useAuth";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Notification } from "@/utils/types";
+import { useNotificationStore } from "@/store/notificationStore";
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -24,10 +26,59 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = "" }) => {
   const { user, logout } = useUserStore();
+  const { addNotification } = useNotificationStore();
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const logoutMutation = useLogout();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const [ws, setWs] = useState<WebSocket | null>(null);
+
+  useEffect(() => {
+    // Get the access token from localStorage
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      console.error("No access token found in localStorage");
+      return;
+    }
+
+    // Create WebSocket connection
+    const websocket = new WebSocket(
+      `ws://localhost:8080/api/v1/ws?token=${token}`
+    );
+
+    // Set the Authorization header (Note: WebSocket in browsers doesn't support headers directly,
+    // so we may need to pass the token in a different way depending on the backend setup.
+    // For now, we'll assume the backend extracts it from a query param or handles it via the initial connection.)
+    websocket.onopen = () => {
+      console.log("WebSocket connection established");
+    };
+
+    websocket.onmessage = (event) => {
+      console.log("Received WebSocket message:", event.data);
+      const data = JSON.parse(event.data) as Notification;
+      console.log(data);
+      addNotification(data);
+    };
+
+    websocket.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    websocket.onclose = () => {
+      console.log("WebSocket connection closed");
+    };
+
+    // Store the WebSocket instance in state
+    setWs(websocket);
+
+    // Cleanup on component unmount
+    return () => {
+      if (websocket) {
+        websocket.close();
+      }
+    };
+  }, []); // Empty dependency array means this runs once on mount
 
   const handleLogout = () => {
     const token = localStorage.getItem("refresh_token");

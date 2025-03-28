@@ -3,6 +3,7 @@ package router
 import (
 	"course-flow/internal/handlers"
 	"course-flow/internal/middleware"
+	"course-flow/internal/notifications"
 	"course-flow/internal/services"
 	"course-flow/internal/storage"
 
@@ -20,7 +21,10 @@ func (r *Router) setupPostRouter(router *mux.Router) {
 	attchmentService := services.NewAttachmentService(attachmentStorage, docService)
 
 	postService := services.NewPostService(postStorage, attchmentService)
-	postHandler := handlers.NewPostHandler(postService)
+
+	postCreatedNotifier := notifications.NewPostCreatedNotifier(r.Hub, r.DB)
+
+	postHandler := handlers.NewPostHandler(postService, postCreatedNotifier)
 
 	postRouter := router.PathPrefix("/posts").Subrouter()
 

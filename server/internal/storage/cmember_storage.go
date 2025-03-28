@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"course-flow/internal/models"
+	"course-flow/internal/types"
 	"course-flow/internal/utils"
 	"database/sql"
 	"fmt"
@@ -80,7 +80,7 @@ func (s *CourseMemberStorage) ChangeRole(courseID, userID, memberID string, role
 	return nil
 }
 
-func (s *CourseMemberStorage) GetAllMember(courseID string) ([]*models.CourseMember, error) {
+func (s *CourseMemberStorage) GetAllMember(courseID string) ([]*types.CourseMember, error) {
 	query := `
 		SELECT 
 			u.id,
@@ -102,9 +102,9 @@ func (s *CourseMemberStorage) GetAllMember(courseID string) ([]*models.CourseMem
 	}
 	defer rows.Close()
 
-	var members []*models.CourseMember
+	var members []*types.CourseMember
 	for rows.Next() {
-		var member models.CourseMember
+		var member types.CourseMember
 		if err := rows.Scan(
 			&member.ID,
 			&member.Email,

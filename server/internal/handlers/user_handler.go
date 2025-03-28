@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"course-flow/internal/models"
+	"course-flow/internal/types"
 	"course-flow/internal/services"
 	"course-flow/internal/utils"
 	"net/http"
@@ -34,7 +34,7 @@ func (h *UserHandler) EditUserDetailsHadnler(w http.ResponseWriter, r *http.Requ
 		}
 	}
 
-	var user models.User
+	var user types.User
 	user.FirstName = r.FormValue("first_name")
 	user.LastName = r.FormValue("last_name")
 

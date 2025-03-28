@@ -1,7 +1,7 @@
 package services
 
 import (
-	"course-flow/internal/models"
+	"course-flow/internal/types"
 	"course-flow/internal/storage"
 	"course-flow/internal/utils"
 	"fmt"
@@ -26,7 +26,7 @@ func NewAuthService(userStorage *storage.UserStorage, authStorage *storage.AuthS
 	}
 }
 
-func (s *AuthService) SocialLogin(userReq models.User) (*models.LoginResponse, error) {
+func (s *AuthService) SocialLogin(userReq types.User) (*types.LoginResponse, error) {
 	err := s.UserStorage.CheckForUsernameOrEmail(&userReq)
 	if err == nil {
 		// if user not found, create new one.
@@ -58,14 +58,14 @@ func (s *AuthService) SocialLogin(userReq models.User) (*models.LoginResponse, e
 		return nil, err
 	}
 
-	return &models.LoginResponse{
+	return &types.LoginResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil
 }
 
 // validate the user and generate JWT token
-func (s *AuthService) Login(userReq *models.LoginRequest) (*models.LoginResponse, *models.User, error) {
+func (s *AuthService) Login(userReq *types.LoginRequest) (*types.LoginResponse, *types.User, error) {
 	// retrieve the hashed password fromm db
 	user, err := s.AuthStorage.RetrieveUserPassword(userReq.Username)
 	if err != nil {
@@ -97,14 +97,14 @@ func (s *AuthService) Login(userReq *models.LoginRequest) (*models.LoginResponse
 	}
 
 	// if the token is successfully saved, send it to user
-	return &models.LoginResponse{
+	return &types.LoginResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, user, nil
 }
 
 // Creates new user on registration
-func (s *AuthService) CreateUser(userReq *models.UserRequest) (*models.User, error) {
+func (s *AuthService) CreateUser(userReq *types.UserRequest) (*types.User, error) {
 	// Trim space
 	userReq.Email, userReq.FirstName, userReq.LastName, userReq.Username = strings.TrimSpace(userReq.Email), strings.TrimSpace(userReq.FirstName), strings.TrimSpace(userReq.LastName), strings.TrimSpace(userReq.Username)
 
@@ -123,7 +123,7 @@ func (s *AuthService) CreateUser(userReq *models.UserRequest) (*models.User, err
 		}
 	}
 
-	user := &models.User{
+	user := &types.User{
 		Email:        userReq.Email,
 		Username:     userReq.Username,
 		FirstName:    userReq.FirstName,

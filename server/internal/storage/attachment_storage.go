@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"course-flow/internal/models"
+	"course-flow/internal/types"
 	"course-flow/internal/utils"
 	"database/sql"
 	"fmt"
@@ -20,7 +20,7 @@ func NewAttachmentStorage(db *sql.DB) *AttachmentStorage {
 	}
 }
 
-func (s *AttachmentStorage) GetAllAttachmentsForPost(postID string) ([]models.Attachment, error) {
+func (s *AttachmentStorage) GetAllAttachmentsForPost(postID string) ([]types.Attachment, error) {
 	query := `
 		SELECT 
 			a.id AS attachment_id,
@@ -52,8 +52,8 @@ func (s *AttachmentStorage) GetAllAttachmentsForPost(postID string) ([]models.At
 	}
 	defer rows.Close()
 
-	var attachments []models.Attachment
-	attachmentMap := make(map[string]*models.Attachment)
+	var attachments []types.Attachment
+	attachmentMap := make(map[string]*types.Attachment)
 
 	for rows.Next() {
 		var (
@@ -78,9 +78,9 @@ func (s *AttachmentStorage) GetAllAttachmentsForPost(postID string) ([]models.At
 		// Create or update the attachment in the map
 		attachment, exists := attachmentMap[attachmentID]
 		if !exists {
-			var user *models.User
+			var user *types.User
 			if userID.Valid { // Only create a User struct if the user exists
-				user = &models.User{
+				user = &types.User{
 					ID:        userID.String,
 					Email:     email.String,
 					Username:  username.String,
@@ -91,12 +91,12 @@ func (s *AttachmentStorage) GetAllAttachmentsForPost(postID string) ([]models.At
 				user.Avatar = utils.NormalizeMedia(user.Avatar)
 			}
 
-			attachment = &models.Attachment{
+			attachment = &types.Attachment{
 				ID:         attachmentID,
 				PostID:     postID,
 				DocumentID: documentID,
 				UploadDate: uploadDate,
-				Document: &models.Document{
+				Document: &types.Document{
 					ID:        docID,
 					FileName:  fileName,
 					FilePath:  filePath,
@@ -119,7 +119,7 @@ func (s *AttachmentStorage) GetAllAttachmentsForPost(postID string) ([]models.At
 	return attachments, nil
 }
 
-func (s *AttachmentStorage) GetAllAttachmentsForCourse(courseID string) ([]models.Attachment, error) {
+func (s *AttachmentStorage) GetAllAttachmentsForCourse(courseID string) ([]types.Attachment, error) {
 	query := `
 		SELECT 
 			a.id AS attachment_id,
@@ -152,8 +152,8 @@ func (s *AttachmentStorage) GetAllAttachmentsForCourse(courseID string) ([]model
 	}
 	defer rows.Close()
 
-	var attachments []models.Attachment
-	attachmentMap := make(map[string]*models.Attachment)
+	var attachments []types.Attachment
+	attachmentMap := make(map[string]*types.Attachment)
 
 	for rows.Next() {
 		var (
@@ -178,9 +178,9 @@ func (s *AttachmentStorage) GetAllAttachmentsForCourse(courseID string) ([]model
 		// Create or update the attachment in the map
 		attachment, exists := attachmentMap[attachmentID]
 		if !exists {
-			var user *models.User
+			var user *types.User
 			if userID.Valid { // Only create a User struct if the user exists
-				user = &models.User{
+				user = &types.User{
 					ID:        userID.String,
 					Email:     email.String,
 					Username:  username.String,
@@ -191,12 +191,12 @@ func (s *AttachmentStorage) GetAllAttachmentsForCourse(courseID string) ([]model
 				user.Avatar = utils.NormalizeMedia(user.Avatar)
 			}
 
-			attachment = &models.Attachment{
+			attachment = &types.Attachment{
 				ID:         attachmentID,
 				PostID:     postID,
 				DocumentID: documentID,
 				UploadDate: uploadDate,
-				Document: &models.Document{
+				Document: &types.Document{
 					ID:        docID,
 					FileName:  fileName,
 					FilePath:  filePath,
@@ -260,7 +260,7 @@ func (s *AttachmentStorage) DeleteAttachment(id, userID string) error {
 }
 
 // SaveAttachment stores an attachment in the database
-func (s *AttachmentStorage) SaveAttachment(attachment *models.Attachment) error {
+func (s *AttachmentStorage) SaveAttachment(attachment *types.Attachment) error {
 	query := `
 		INSERT INTO attachments (post_id, document_id, uploaded_by, upload_date)
 		VALUES ($1, $2, $3, $4)

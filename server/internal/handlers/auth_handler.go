@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"context"
-	"course-flow/internal/models"
 	"course-flow/internal/services"
+	"course-flow/internal/types"
 	"course-flow/internal/utils"
 	"encoding/json"
 	"fmt"
@@ -28,7 +28,7 @@ func NewAuthHandler(service *services.AuthService) *AuthHandler {
 
 // Handles POST /api/auth/login resquests to login user
 func (h *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) error {
-	var req models.LoginRequest
+	var req types.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return err
 	}
@@ -40,8 +40,8 @@ func (h *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) error
 	}
 
 	resp := struct {
-		models.LoginResponse
-		models.User
+		types.LoginResponse
+		types.User
 	}{*tokens, *user}
 
 	return utils.WriteJSON(w, http.StatusOK, resp)
@@ -49,7 +49,7 @@ func (h *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) error
 
 // Handles POST /api/auth/register requests to register a new user.
 func (h *AuthHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) error {
-	var userReq models.UserRequest
+	var userReq types.UserRequest
 	if err := json.NewDecoder(r.Body).Decode(&userReq); err != nil {
 		return err
 	}
@@ -179,7 +179,7 @@ func (h *AuthHandler) HandleGoogleCallback(w http.ResponseWriter, r *http.Reques
 		return &utils.ApiError{Code: http.StatusInternalServerError, Message: "Failed to decode user info"}
 	}
 
-	loginResp, err := h.Service.SocialLogin(models.User{
+	loginResp, err := h.Service.SocialLogin(types.User{
 		Email:     userInfo.Email,
 		FirstName: userInfo.GivenName,
 		LastName:  userInfo.FamilyName,
@@ -311,7 +311,7 @@ func (h *AuthHandler) HandleGitHubCallback(w http.ResponseWriter, r *http.Reques
 		username = userInfo.Email
 	}
 
-	loginResp, err := h.Service.SocialLogin(models.User{
+	loginResp, err := h.Service.SocialLogin(types.User{
 		Email:     userInfo.Email,
 		FirstName: firstName,
 		LastName:  lastName,

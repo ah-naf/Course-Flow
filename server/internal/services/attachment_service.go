@@ -1,7 +1,7 @@
 package services
 
 import (
-	"course-flow/internal/models"
+	"course-flow/internal/types"
 	"course-flow/internal/storage"
 	"course-flow/internal/utils"
 	"mime/multipart"
@@ -33,7 +33,7 @@ func (s *AttachmentService) DeleteAttachment(attachmentID string, r *http.Reques
 	return s.AttachmentStorage.DeleteAttachment(attachmentID, userID)
 }
 
-func (s *AttachmentService) GetAllAttachmentsForPosts(postID string, r *http.Request) ([]models.Attachment, error) {
+func (s *AttachmentService) GetAllAttachmentsForPosts(postID string, r *http.Request) ([]types.Attachment, error) {
 	ctx := r.Context()
 	_, err := utils.GetUserIDFromContext(ctx)
 	if err != nil {
@@ -43,7 +43,7 @@ func (s *AttachmentService) GetAllAttachmentsForPosts(postID string, r *http.Req
 	return s.AttachmentStorage.GetAllAttachmentsForPost(postID)
 }
 
-func (s *AttachmentService) GetAllAttachmentsForCourse(r *http.Request) ([]models.Attachment, error) {
+func (s *AttachmentService) GetAllAttachmentsForCourse(r *http.Request) ([]types.Attachment, error) {
 	ctx := r.Context()
 	_, err := utils.GetUserIDFromContext(ctx)
 	if err != nil {
@@ -60,7 +60,7 @@ func (s *AttachmentService) GetAllAttachmentsForCourse(r *http.Request) ([]model
 }
 
 // AddAttachmentsToPost saves files using DocumentService and creates attachment records
-func (s *AttachmentService) AddAttachmentsToPost(postID string, userID string, fileHeaders []*multipart.FileHeader) ([]models.Attachment, error) {
+func (s *AttachmentService) AddAttachmentsToPost(postID string, userID string, fileHeaders []*multipart.FileHeader) ([]types.Attachment, error) {
 	// First, save files using existing DocumentService
 	documents, err := s.DocumentService.SaveFilesToLocal(fileHeaders, userID)
 	if err != nil {
@@ -68,9 +68,9 @@ func (s *AttachmentService) AddAttachmentsToPost(postID string, userID string, f
 	}
 
 	// Then create attachments that reference these documents
-	var attachments []models.Attachment
+	var attachments []types.Attachment
 	for _, doc := range documents {
-		attachment := models.Attachment{
+		attachment := types.Attachment{
 			PostID:     postID,
 			DocumentID: doc.ID,
 			UploadedBy: userID,

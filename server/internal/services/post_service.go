@@ -1,8 +1,8 @@
 package services
 
 import (
-	"course-flow/internal/models"
 	"course-flow/internal/storage"
+	"course-flow/internal/types"
 	"course-flow/internal/utils"
 	"fmt"
 	"net/http"
@@ -62,7 +62,7 @@ func (s *PostService) EditComment(comment string, r *http.Request) error {
 	return s.PostStorage.EditComment(commentID, comment, userID)
 }
 
-func (s *PostService) GetCommentForPost(r *http.Request) ([]models.Comment, error) {
+func (s *PostService) GetCommentForPost(r *http.Request) ([]types.Comment, error) {
 	_, err := utils.GetUserIDFromContext(r.Context())
 	if err != nil {
 		return nil, err
@@ -210,7 +210,7 @@ func (s *PostService) EditPost(r *http.Request) error {
 	return nil
 }
 
-func (s *PostService) GetAllPost(r *http.Request) ([]models.PostResponse, error) {
+func (s *PostService) GetAllPost(r *http.Request) ([]types.PostResponse, error) {
 	vars := mux.Vars(r)
 	courseID := vars["id"]
 	if courseID == "" {
@@ -250,17 +250,17 @@ func (s *PostService) DeletePost(r *http.Request) error {
 	return s.PostStorage.DeletePost(courseID, postID, userID)
 }
 
-func (s *PostService) CreatePostService(content string, r *http.Request) error {
+func (s *PostService) CreatePostService(content string, r *http.Request) (*types.NotifPostCreatedResponse, error) {
 	ctx := r.Context()
 	userID, err := utils.GetUserIDFromContext(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	vars := mux.Vars(r)
 	courseID := vars["id"]
 	if courseID == "" {
-		return &utils.ApiError{
+		return nil, &utils.ApiError{
 			Code:    http.StatusBadRequest,
 			Message: "Course ID is required",
 		}
@@ -268,7 +268,7 @@ func (s *PostService) CreatePostService(content string, r *http.Request) error {
 
 	postID, err := s.PostStorage.CreatePost(courseID, userID, content)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if r.MultipartForm != nil && r.MultipartForm.File != nil {
@@ -276,15 +276,18 @@ func (s *PostService) CreatePostService(content string, r *http.Request) error {
 		if len(files) > 0 {
 			_, err := s.AttachmentService.AddAttachmentsToPost(postID, userID, files)
 			if err != nil {
-
 				if err := s.PostStorage.DeletePost(courseID, postID, userID); err != nil {
-					return err
+					return nil, err
 				}
-				return err
+				return nil, err
 			}
 
 		}
 	}
 
-	return nil
+	return &types.NotifPostCreatedResponse{
+		PostID: postID,
+		UserID: userID,
+		ClassID: courseID,
+	}, nil
 }

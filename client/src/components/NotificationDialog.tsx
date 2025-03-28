@@ -64,13 +64,13 @@ const NotificationDialog: React.FC = () => {
               }`}
             >
               <div className="mr-3 mt-1">
-                {notification.type === "chat" && (
+                {notification.type === "message_sent" && (
                   <MessageSquare className="h-5 w-5 text-blue-500" />
                 )}
-                {notification.type === "video_call" && (
+                {/* {notification.type === "video_call" && (
                   <Video className="h-5 w-5 text-green-500" />
-                )}
-                {notification.type === "class_post" && (
+                )} */}
+                {notification.type === "post_created" && (
                   <FileText className="h-5 w-5 text-purple-500" />
                 )}
               </div>

@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"course-flow/internal/models"
+	"course-flow/internal/types"
 	"course-flow/internal/utils"
 	"database/sql"
 	"fmt"
@@ -19,7 +19,7 @@ func NewPostStorage(db *sql.DB) *PostStorage {
 	return &PostStorage{DB: db}
 }
 
-func (s *PostStorage) GetAllCommentsForPost(postID string) ([]models.Comment, error) {
+func (s *PostStorage) GetAllCommentsForPost(postID string) ([]types.Comment, error) {
 	query := `
 		SELECT 
 			c.id AS comment_id,
@@ -45,8 +45,8 @@ func (s *PostStorage) GetAllCommentsForPost(postID string) ([]models.Comment, er
 	}
 	defer rows.Close()
 
-	var comments []models.Comment
-	commentMap := make(map[string]*models.Comment)
+	var comments []types.Comment
+	commentMap := make(map[string]*types.Comment)
 
 	for rows.Next() {
 		var (
@@ -68,9 +68,9 @@ func (s *PostStorage) GetAllCommentsForPost(postID string) ([]models.Comment, er
 		// Create or update the comment in the map
 		comment, exists := commentMap[commentID]
 		if !exists {
-			var user *models.User
+			var user *types.User
 			if uID.Valid { // Only create a User struct if the user exists
-				user = &models.User{
+				user = &types.User{
 					ID:        uID.String,
 					Email:     email.String,
 					Username:  username.String,
@@ -81,7 +81,7 @@ func (s *PostStorage) GetAllCommentsForPost(postID string) ([]models.Comment, er
 				user.Avatar = utils.NormalizeMedia(user.Avatar)
 			}
 
-			comment = &models.Comment{
+			comment = &types.Comment{
 				ID:        commentID,
 				PostID:    postID,
 				UserID:    userID,
@@ -309,7 +309,7 @@ func (s *PostStorage) EditPost(postID, userID, content string) error {
 	return nil
 }
 
-func (s *PostStorage) GetAllPost(courseID string) ([]models.PostResponse, error) {
+func (s *PostStorage) GetAllPost(courseID string) ([]types.PostResponse, error) {
 	query := `
 	SELECT 
 	    p.id, p.course_id, p.user_id, p.content, p.created_at, p.updated_at,
@@ -331,7 +331,7 @@ func (s *PostStorage) GetAllPost(courseID string) ([]models.PostResponse, error)
 	defer rows.Close()
 
 	// Use a map to aggregate attachments with their respective posts.
-	postsMap := make(map[string]*models.PostResponse)
+	postsMap := make(map[string]*types.PostResponse)
 
 	for rows.Next() {
 		var (
@@ -364,29 +364,29 @@ func (s *PostStorage) GetAllPost(courseID string) ([]models.PostResponse, error)
 		// If the post hasn't been added to the map yet, add it along with the user details.
 		post, exists := postsMap[pID]
 		if !exists {
-			post = &models.PostResponse{
-				Post: models.Post{
+			post = &types.PostResponse{
+				Post: types.Post{
 					ID:        pID,
 					UserID:    pUserID,
 					Content:   pContent,
 					CreatedAt: pCreatedAt,
 					UpdatedAt: pUpdatedAt,
 				},
-				User: models.User{
+				User: types.User{
 					Username:  uUsername.String,
 					FirstName: uFirstName.String,
 					LastName:  uLastName.String,
 					Avatar:    utils.NormalizeMedia(uAvatar.String),
 				},
 				// Initialize attachments slice.
-				Attachment: []models.Attachment{},
+				Attachment: []types.Attachment{},
 			}
 			postsMap[pID] = post
 		}
 
 		// If an attachment exists (its id is non-null), append it.
 		if aID.Valid {
-			attachment := models.Attachment{
+			attachment := types.Attachment{
 				ID:         aID.String,
 				UploadedBy: aUploadedBy.String,
 			}
@@ -395,7 +395,7 @@ func (s *PostStorage) GetAllPost(courseID string) ([]models.PostResponse, error)
 			}
 			// If document info exists, include it.
 			if dID.Valid {
-				attachment.Document = &models.Document{
+				attachment.Document = &types.Document{
 					ID:       dID.String,
 					FileName: dFileName.String,
 					FilePath: utils.NormalizeMedia(dFilePath.String),
@@ -417,7 +417,7 @@ func (s *PostStorage) GetAllPost(courseID string) ([]models.PostResponse, error)
 	}
 
 	// Convert the posts map into a slice.
-	posts := make([]models.PostResponse, 0, len(postsMap))
+	posts := make([]types.PostResponse, 0, len(postsMap))
 	for _, post := range postsMap {
 		posts = append(posts, *post)
 	}

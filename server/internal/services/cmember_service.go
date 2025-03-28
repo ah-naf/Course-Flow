@@ -1,7 +1,7 @@
 package services
 
 import (
-	"course-flow/internal/models"
+	"course-flow/internal/types"
 	"course-flow/internal/storage"
 	"course-flow/internal/utils"
 	"net/http"
@@ -38,7 +38,7 @@ func (s *CourseMemberService) ChangeRole(memberID string, role int, r *http.Requ
 	return s.CourseMemberStorage.ChangeRole(courseID, userID, memberID, role)
 }
 
-func (s *CourseMemberService) GetAllMember(r *http.Request) ([]*models.CourseMember, error) {
+func (s *CourseMemberService) GetAllMember(r *http.Request) ([]*types.CourseMember, error) {
 	vars := mux.Vars(r)
 	courseID := vars["id"]
 	if courseID == "" {

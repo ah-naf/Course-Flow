@@ -1,7 +1,7 @@
 package services
 
 import (
-	"course-flow/internal/models"
+	"course-flow/internal/types"
 	"course-flow/internal/storage"
 	"course-flow/internal/utils"
 	"net/http"
@@ -21,7 +21,7 @@ func NewUserService(storage *storage.UserStorage, documentStorage *storage.Docum
 	}
 }
 
-func (s *UserService) GetUserWithID(r *http.Request) (*models.User, error) {
+func (s *UserService) GetUserWithID(r *http.Request) (*types.User, error) {
 	ctx := r.Context()
 	userID, err := utils.GetUserIDFromContext(ctx)
 	if err != nil {
@@ -31,7 +31,7 @@ func (s *UserService) GetUserWithID(r *http.Request) (*models.User, error) {
 	return s.Storage.GetUserWithID(userID)
 }
 
-func (s *UserService) EditUserDetails(user *models.User, r *http.Request) error {
+func (s *UserService) EditUserDetails(user *types.User, r *http.Request) error {
 	ctx := r.Context()
 	userID, err := utils.GetUserIDFromContext(ctx)
 	if err != nil {
@@ -66,6 +66,6 @@ func (s *UserService) EditUserDetails(user *models.User, r *http.Request) error 
 	return s.Storage.EditUserDetails(user)
 }
 
-func (s *UserService) GetAllUser() ([]*models.User, error) {
+func (s *UserService) GetAllUser() ([]*types.User, error) {
 	return s.Storage.GetAllUser()
 }

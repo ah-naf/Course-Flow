@@ -92,3 +92,17 @@ export interface CoursePreview extends Course {
   total_members: number;
   is_private: boolean;
 }
+
+export interface Notification {
+  id: string;
+  type:
+    | "post_created"
+    | "comment_added"
+    | "message_sent"
+    | "role_changed"
+    | "user_kicked";
+  classId: string;
+  message: string;
+  timestamp: string;
+  read: boolean;
+}

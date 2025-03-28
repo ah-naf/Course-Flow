@@ -1,7 +1,7 @@
 package services
 
 import (
-	"course-flow/internal/models"
+	"course-flow/internal/types"
 	"course-flow/internal/storage"
 	"course-flow/internal/utils"
 	"fmt"
@@ -38,7 +38,7 @@ func NewCourseService(courseStorage *storage.CourseStorage, documentStorage *sto
 	}
 }
 
-func (s *CourseService) UpdateCourseSetting(course *models.CoursePreviewResponse, r *http.Request) error {
+func (s *CourseService) UpdateCourseSetting(course *types.CoursePreviewResponse, r *http.Request) error {
 	ctx := r.Context()
 	userID, err := utils.GetUserIDFromContext(ctx)
 	if err != nil {
@@ -76,7 +76,7 @@ func (s *CourseService) UpdateCourseSetting(course *models.CoursePreviewResponse
 	return s.CourseStorage.UpdateCourseSetting(userID, course)
 }
 
-func (s *CourseService) CoursePreview(r *http.Request) (*models.CoursePreviewResponse, error) {
+func (s *CourseService) CoursePreview(r *http.Request) (*types.CoursePreviewResponse, error) {
 	ctx := r.Context()
 	userID, err := utils.GetUserIDFromContext(ctx)
 	showRole := false
@@ -159,7 +159,7 @@ func (s *CourseService) ArchiveCourse(courseID string, r *http.Request) error {
 	return s.CourseStorage.ArchiveCourse(courseID, AdminID, true)
 }
 
-func (s *CourseService) GetCourseOfSingleUser(r *http.Request) ([]*models.CourseListResponse, error) {
+func (s *CourseService) GetCourseOfSingleUser(r *http.Request) ([]*types.CourseListResponse, error) {
 	ctx := r.Context()
 	userID, err := utils.GetUserIDFromContext(ctx)
 	if err != nil {
@@ -201,7 +201,7 @@ func (s *CourseService) JoinCourseService(joinCode string, r *http.Request) erro
 }
 
 // GetCoursesByInstructor fetches all courses where the given user is the instructor.
-func (s *CourseService) GetCoursesByInstructor(r *http.Request) ([]*models.CourseListResponse, error) {
+func (s *CourseService) GetCoursesByInstructor(r *http.Request) ([]*types.CourseListResponse, error) {
 	ctx := r.Context()
 	userID, err := utils.GetUserIDFromContext(ctx)
 	if err != nil {
@@ -210,7 +210,7 @@ func (s *CourseService) GetCoursesByInstructor(r *http.Request) ([]*models.Cours
 	return s.CourseStorage.GetCoursesByInstructor(userID)
 }
 
-func (s *CourseService) CreateNewCourseService(course *models.Course, r *http.Request) error {
+func (s *CourseService) CreateNewCourseService(course *types.Course, r *http.Request) error {
 	ctx := r.Context()
 	instructorID, err := utils.GetUserIDFromContext(ctx)
 	if err != nil {

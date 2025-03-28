@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"course-flow/internal/models"
+	"course-flow/internal/types"
 	"course-flow/internal/utils"
 	"database/sql"
 	"errors"
@@ -20,8 +20,8 @@ func NewUserStorage(db *sql.DB) *UserStorage {
 	}
 }
 
-func (s *UserStorage) GetUserWithID(userID string) (*models.User, error) {
-	var user models.User
+func (s *UserStorage) GetUserWithID(userID string) (*types.User, error) {
+	var user types.User
 
 	query := `
 		SELECT id, email, username, first_name, last_name, created_at, updated_at, avatar
@@ -51,7 +51,7 @@ func (s *UserStorage) GetUserWithID(userID string) (*models.User, error) {
 	return &user, nil
 }
 
-func (s *UserStorage) EditUserDetails(user *models.User) error {
+func (s *UserStorage) EditUserDetails(user *types.User) error {
 	tx, err := s.DB.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
@@ -100,7 +100,7 @@ func (s *UserStorage) EditUserDetails(user *models.User) error {
 	return nil
 }
 
-func (s *UserStorage) GetUserWithEmail(user *models.User) error {
+func (s *UserStorage) GetUserWithEmail(user *types.User) error {
 	query := `
 		SELECT id, email, username, password_hash, first_name, last_name, created_at, updated_at, avatar
 		FROM users
@@ -130,15 +130,15 @@ func (s *UserStorage) GetUserWithEmail(user *models.User) error {
 	return nil
 }
 
-func (s *UserStorage) GetAllUser() ([]*models.User, error) {
+func (s *UserStorage) GetAllUser() ([]*types.User, error) {
 	rows, err := s.DB.Query("SELECT * FROM users")
 	if err != nil {
 		return nil, fmt.Errorf("failed to query users: %w", err)
 	}
 
-	var users []*models.User
+	var users []*types.User
 	for rows.Next() {
-		user := new(models.User)
+		user := new(types.User)
 		if err := rows.Scan(&user.ID, &user.Email, &user.Username, &user.PasswordHash, &user.FirstName, &user.LastName, &user.CreatedAt, &user.UpdatedAt, &user.Avatar); err != nil {
 			return nil, fmt.Errorf("failed to scan user row: %w", err)
 		}
@@ -148,7 +148,7 @@ func (s *UserStorage) GetAllUser() ([]*models.User, error) {
 	return users, nil
 }
 
-func (s *UserStorage) SaveUser(user *models.User) error {
+func (s *UserStorage) SaveUser(user *types.User) error {
 	query := `
 	INSERT INTO users(email, username, password_hash, first_name, last_name, created_at, updated_at, avatar)
 	VALUES($1, $2, $3, $4, $5, $6, $7, $8)
@@ -173,7 +173,7 @@ func (s *UserStorage) SaveUser(user *models.User) error {
 	return nil
 }
 
-func (s *UserStorage) CheckForUsernameOrEmail(user *models.User) error {
+func (s *UserStorage) CheckForUsernameOrEmail(user *types.User) error {
 	query := `
 		SELECT username, email FROM users WHERE email = $1 OR username = $2
 	`

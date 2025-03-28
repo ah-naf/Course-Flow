@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"course-flow/internal/models"
+	"course-flow/internal/types"
 	"course-flow/internal/utils"
 	"database/sql"
 	"fmt"
@@ -22,7 +22,7 @@ func NewCourseStorage(db *sql.DB) *CourseStorage {
 	}
 }
 
-func (s *CourseStorage) UpdateCourseSetting(userID string, course *models.CoursePreviewResponse) error {
+func (s *CourseStorage) UpdateCourseSetting(userID string, course *types.CoursePreviewResponse) error {
 	var err error
 	tx, err := s.DB.Begin()
 	if err != nil {
@@ -69,11 +69,11 @@ func (s *CourseStorage) UpdateCourseSetting(userID string, course *models.Course
 	return nil
 }
 
-func (s *CourseStorage) CoursePreview(joinCode, userID string, showRole bool) (*models.CoursePreviewResponse, error) {
+func (s *CourseStorage) CoursePreview(joinCode, userID string, showRole bool) (*types.CoursePreviewResponse, error) {
 	var query string
 	var row *sql.Row
 	var err error
-	var preview models.CoursePreviewResponse
+	var preview types.CoursePreviewResponse
 
 	if showRole && userID != "" {
 		query = `
@@ -301,7 +301,7 @@ func (s *CourseStorage) ArchiveCourse(courseID, adminID string, archived bool) e
 	return nil
 }
 
-func (s *CourseStorage) GetCourseByUserID(userID string, archieved bool) ([]*models.CourseListResponse, error) {
+func (s *CourseStorage) GetCourseByUserID(userID string, archieved bool) ([]*types.CourseListResponse, error) {
 	query := `
         SELECT 
             c.id, 
@@ -331,9 +331,9 @@ func (s *CourseStorage) GetCourseByUserID(userID string, archieved bool) ([]*mod
 	}
 	defer rows.Close()
 
-	var courses []*models.CourseListResponse
+	var courses []*types.CourseListResponse
 	for rows.Next() {
-		var course models.CourseListResponse
+		var course types.CourseListResponse
 		if err := rows.Scan(
 			&course.ID,
 			&course.Name,
@@ -390,7 +390,7 @@ func (s *CourseStorage) JoinCourse(joinCode, userID string) error {
 	return nil
 }
 
-func (s *CourseStorage) GetCoursesByInstructor(userID string) ([]*models.CourseListResponse, error) {
+func (s *CourseStorage) GetCoursesByInstructor(userID string) ([]*types.CourseListResponse, error) {
 	query := `
 		SELECT 
 			c.id, 
@@ -413,9 +413,9 @@ func (s *CourseStorage) GetCoursesByInstructor(userID string) ([]*models.CourseL
 	}
 	defer rows.Close()
 
-	var courses []*models.CourseListResponse
+	var courses []*types.CourseListResponse
 	for rows.Next() {
-		var course models.CourseListResponse
+		var course types.CourseListResponse
 		if err := rows.Scan(
 			&course.ID,
 			&course.Name,
@@ -436,7 +436,7 @@ func (s *CourseStorage) GetCoursesByInstructor(userID string) ([]*models.CourseL
 	return courses, nil
 }
 
-func (s *CourseStorage) CreateNewCourse(course *models.Course) error {
+func (s *CourseStorage) CreateNewCourse(course *types.Course) error {
 	query := `
 	INSERT INTO courses (
 		name,

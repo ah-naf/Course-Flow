@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"course-flow/internal/notifications"
 	"course-flow/internal/services"
 	"course-flow/internal/utils"
 	"encoding/json"
@@ -8,11 +9,12 @@ import (
 )
 
 type PostHandler struct {
-	postService *services.PostService
+	postService         *services.PostService
+	postCreatedNotifier *notifications.PostCreatedNotifier
 }
 
-func NewPostHandler(postService *services.PostService) *PostHandler {
-	return &PostHandler{postService: postService}
+func NewPostHandler(postService *services.PostService, postCreatedNotifier *notifications.PostCreatedNotifier) *PostHandler {
+	return &PostHandler{postService: postService, postCreatedNotifier: postCreatedNotifier}
 }
 
 func (h *PostHandler) DeleteCommentHandler(w http.ResponseWriter, r *http.Request) error {
@@ -114,7 +116,12 @@ func (h *PostHandler) CreateNewPostHandler(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	if err := h.postService.CreatePostService(content, r); err != nil {
+	payload, err := h.postService.CreatePostService(content, r)
+	if err != nil {
+		return err
+	}
+
+	if err := h.postCreatedNotifier.Notify(payload.ClassID, content, payload.UserID); err != nil {
 		return err
 	}
 
