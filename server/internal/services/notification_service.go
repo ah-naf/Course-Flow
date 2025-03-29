@@ -73,9 +73,17 @@ func (s *NotificationService) CreatePostCreatedNotifications(classID, postConten
 }
 
 func (s *NotificationService) GetUserNotifications(userID string) ([]types.Notification, error) {
-	return s.notificationStorage.GetUserNotifications(userID)
+    return s.notificationStorage.GetUserNotifications(userID)
 }
 
 func (s *NotificationService) MarkNotificationAsRead(notificationID string) error {
-	return s.notificationStorage.MarkNotificationAsRead(notificationID)
+    return s.notificationStorage.MarkNotificationAsRead(notificationID)
+}
+
+func (s *NotificationService) MarkAllNotificationsAsRead(userID string) error {
+    return s.notificationStorage.MarkAllNotificationsAsRead(userID)
+}
+
+func (s *NotificationService) ClearAllNotifications(userID string) error {
+    return s.notificationStorage.ClearAllNotifications(userID)
 }
