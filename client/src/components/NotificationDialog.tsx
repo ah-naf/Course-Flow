@@ -3,7 +3,6 @@ import React from "react";
 import {
   Bell,
   MessageSquare,
-  Video,
   FileText,
   CheckCircle,
   Trash2,
@@ -21,22 +20,28 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useNotificationStore } from "@/store/notificationStore";
 import { formatRelativeTime } from "@/utils/formatRelativeTime";
-import { useGetNotifications } from "@/hooks/useNotification";
-import { cn } from "@/lib/utils"; // Assuming you have a utility for className concatenation
+import { cn } from "@/lib/utils";
+import {
+  useClearAllNotifications,
+  useGetNotifications,
+  useMarkAllNotificationsAsRead,
+  useMarkNotificationAsRead,
+} from "@/hooks/useNotification";
 
 const NotificationDialog: React.FC = () => {
-  const { isLoading, error } = useGetNotifications();
-  const { notifications, markAsRead, getTotalUnreadCount, setNotifications } =
-    useNotificationStore();
+  const { isLoading: isFetching } = useGetNotifications();
+  const { mutate: markAsRead, isPending: isMarkingOne } =
+    useMarkNotificationAsRead();
+  const { mutate: markAllAsRead, isPending: isMarkingAll } =
+    useMarkAllNotificationsAsRead();
+  const { mutate: clearAll, isPending: isClearing } =
+    useClearAllNotifications();
+
+  const { notifications, getTotalUnreadCount } = useNotificationStore();
   const unreadCount = getTotalUnreadCount();
 
-  const handleMarkAllAsRead = () => {
-    setNotifications(notifications.map((n) => ({ ...n, read: true })));
-  };
-
-  const handleClearAll = () => {
-    setNotifications([]);
-  };
+  const handleMarkAllAsRead = () => markAllAsRead();
+  const handleClearAll = () => clearAll();
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -46,7 +51,6 @@ const NotificationDialog: React.FC = () => {
         return <FileText className="h-5 w-5 text-purple-500" />;
       case "role_changed":
         return <CheckCircle className="h-5 w-5 text-green-500" />;
-      // Add more cases as needed
       default:
         return <Bell className="h-5 w-5 text-gray-500" />;
     }
@@ -87,24 +91,25 @@ const NotificationDialog: React.FC = () => {
                 variant="ghost"
                 size="sm"
                 onClick={handleMarkAllAsRead}
-                disabled={unreadCount === 0}
+                disabled={unreadCount === 0 || isMarkingAll}
                 className="text-xs text-blue-600 hover:text-blue-800"
               >
-                Mark All as Read
+                {isMarkingAll ? "Marking..." : "Mark All as Read"}
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleClearAll}
+                disabled={isClearing}
                 className="text-xs text-red-600 hover:text-red-800"
               >
-                Clear All
+                {isClearing ? "Clearing..." : "Clear All"}
               </Button>
             </div>
           )}
         </div>
 
-        {isLoading && (
+        {isFetching && !notifications.length && (
           <div className="flex items-center justify-center p-4">
             <svg
               className="animate-spin h-5 w-5 text-blue-500"
@@ -130,27 +135,13 @@ const NotificationDialog: React.FC = () => {
           </div>
         )}
 
-        {error && (
-          <div className="p-4 text-center text-red-600 text-sm">
-            <p>Error: {error.message}</p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => window.location.reload()}
-              className="mt-2"
-            >
-              Retry
-            </Button>
-          </div>
-        )}
-
-        {!isLoading && !error && notifications.length === 0 && (
+        {!isFetching && notifications.length === 0 && (
           <div className="p-4 text-center text-gray-500 text-sm">
             No notifications yet
           </div>
         )}
 
-        {!isLoading && !error && notifications.length > 0 && (
+        {!isFetching && notifications.length > 0 && (
           <DropdownMenuGroup>
             {notifications.map((notification) => (
               <DropdownMenuItem
@@ -158,6 +149,7 @@ const NotificationDialog: React.FC = () => {
                 onClick={() =>
                   !notification.read && markAsRead(notification.id)
                 }
+                disabled={isMarkingOne}
                 className={cn(
                   "flex items-start p-3 cursor-pointer transition-colors",
                   notification.read
@@ -169,7 +161,7 @@ const NotificationDialog: React.FC = () => {
                   {getNotificationIcon(notification.type)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800">
+                  <p className="text-sm font-medium text-gray-800 truncate">
                     {notification.message}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">

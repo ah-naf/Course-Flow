@@ -64,26 +64,26 @@ func (s *NotificationService) CreatePostCreatedNotifications(classID, postConten
 	}
 
 	// Store in database
-	err = s.notificationStorage.CreateNotifications([]types.Notification{notification})
+	createdNotifications, err := s.notificationStorage.CreateNotifications([]types.Notification{notification})
 	if err != nil {
 		return nil, err
 	}
 
-	return []types.Notification{notification}, nil
+	return createdNotifications, nil
 }
 
 func (s *NotificationService) GetUserNotifications(userID string) ([]types.Notification, error) {
-    return s.notificationStorage.GetUserNotifications(userID)
+	return s.notificationStorage.GetUserNotifications(userID)
 }
 
 func (s *NotificationService) MarkNotificationAsRead(notificationID string) error {
-    return s.notificationStorage.MarkNotificationAsRead(notificationID)
+	return s.notificationStorage.MarkNotificationAsRead(notificationID)
 }
 
 func (s *NotificationService) MarkAllNotificationsAsRead(userID string) error {
-    return s.notificationStorage.MarkAllNotificationsAsRead(userID)
+	return s.notificationStorage.MarkAllNotificationsAsRead(userID)
 }
 
 func (s *NotificationService) ClearAllNotifications(userID string) error {
-    return s.notificationStorage.ClearAllNotifications(userID)
+	return s.notificationStorage.ClearAllNotifications(userID)
 }

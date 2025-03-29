@@ -81,7 +81,7 @@ CREATE TABLE comments (
 );
 
 CREATE TABLE notifications (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id VARCHAR(100) PRIMARY KEY,
     type VARCHAR(50) NOT NULL, -- Stores NotificationType
     class_id UUID REFERENCES courses(id) ON DELETE CASCADE,
     recipient_id UUID REFERENCES users(id) ON DELETE CASCADE,

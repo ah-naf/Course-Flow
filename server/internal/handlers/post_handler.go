@@ -5,6 +5,8 @@ import (
 	"course-flow/internal/services"
 	"course-flow/internal/utils"
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -121,7 +123,9 @@ func (h *PostHandler) CreateNewPostHandler(w http.ResponseWriter, r *http.Reques
 		return err
 	}
 
+	fmt.Println("payload", payload)
 	if err := h.postCreatedNotifier.Notify(payload.ClassID, content, payload.UserID); err != nil {
+		log.Fatal(err)
 		return err
 	}
 

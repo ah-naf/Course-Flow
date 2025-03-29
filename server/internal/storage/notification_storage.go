@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+
+	"github.com/google/uuid"
 )
 
 type NotificationStorage struct {
@@ -16,10 +18,10 @@ func NewNotificationStorage(db *sql.DB) *NotificationStorage {
 	return &NotificationStorage{db: db}
 }
 
-func (s *NotificationStorage) CreateNotifications(notifications []types.Notification) error {
+func (s *NotificationStorage) CreateNotifications(notifications []types.Notification) ([]types.Notification, error) {
 	tx, err := s.db.Begin()
 	if err != nil {
-		return fmt.Errorf("failed to begin transaction for creating notifications: %w", err)
+		return nil, fmt.Errorf("failed to begin transaction for creating notifications: %w", err)
 	}
 	defer func() {
 		if err != nil {
@@ -30,44 +32,67 @@ func (s *NotificationStorage) CreateNotifications(notifications []types.Notifica
 	}()
 
 	stmt, err := tx.Prepare(`
-        INSERT INTO notifications (type, class_id, recipient_id, message, data, timestamp)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO notifications (id, type, class_id, recipient_id, message, data, timestamp, is_read)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING id
     `)
 	if err != nil {
-		return fmt.Errorf("failed to prepare insert statement for notifications: %w", err)
+		return nil, fmt.Errorf("failed to prepare insert statement for notifications: %w", err)
 	}
 	defer stmt.Close()
 
+	var createdNotifications []types.Notification
 	for i, notif := range notifications {
 		dataJSON, err := json.Marshal(notif.Data)
 		if err != nil {
-			return fmt.Errorf("failed to marshal data for notification %d: %w", i, err)
+			return nil, fmt.Errorf("failed to marshal data for notification %d: %w", i, err)
 		}
 
 		for j, recipientID := range notif.RecipientIDs {
-			result, err := stmt.Exec(notif.Type, notif.ClassID, recipientID, notif.Message, dataJSON, notif.Timestamp)
+			uniqueID := uuid.New().String()
+			var insertedID string
+
+			err = stmt.QueryRow(
+				uniqueID,
+				notif.Type,
+				notif.ClassID,
+				recipientID,
+				notif.Message,
+				dataJSON,
+				notif.Timestamp,
+				notif.Read,
+			).Scan(&insertedID)
 			if err != nil {
-				return fmt.Errorf("failed to execute insert for notification %d, recipient %d: %w", i, j, err)
+				return nil, fmt.Errorf("failed to execute insert for notification %d, recipient %d: %w", i, j, err)
 			}
-			rowsAffected, err := result.RowsAffected()
-			if err != nil {
-				return fmt.Errorf("failed to check rows affected for notification %d, recipient %d: %w", i, j, err)
-			}
-			log.Printf("Inserted notification: type=%s, class_id=%s, recipient_id=%s, rows_affected=%d",
-				notif.Type, notif.ClassID, recipientID, rowsAffected)
+
+			log.Printf("Inserted notification: id=%s, type=%s, class_id=%s, recipient_id=%s",
+				insertedID, notif.Type, notif.ClassID, recipientID)
+
+			// Create a new notification object with the inserted ID
+			createdNotifications = append(createdNotifications, types.Notification{
+				ID:           insertedID,
+				Type:         notif.Type,
+				ClassID:      notif.ClassID,
+				RecipientIDs: []string{recipientID},
+				Message:      notif.Message,
+				Data:         notif.Data,
+				Timestamp:    notif.Timestamp,
+				Read:         notif.Read,
+			})
 		}
 	}
 
 	if err = tx.Commit(); err != nil {
-		return fmt.Errorf("failed to commit transaction for creating notifications: %w", err)
+		return nil, fmt.Errorf("failed to commit transaction for creating notifications: %w", err)
 	}
 	log.Printf("Successfully committed transaction for %d notifications", len(notifications))
-	return nil
+	return createdNotifications, nil
 }
 
 func (s *NotificationStorage) GetUserNotifications(userID string) ([]types.Notification, error) {
 	rows, err := s.db.Query(`
-        SELECT type, class_id, message, data, timestamp, is_read
+        SELECT id, type, class_id, message, data, timestamp, is_read
         FROM notifications
         WHERE recipient_id = $1
         ORDER BY timestamp DESC
@@ -82,7 +107,7 @@ func (s *NotificationStorage) GetUserNotifications(userID string) ([]types.Notif
 		var ntf types.Notification
 		var dataJSON []byte
 
-		err = rows.Scan(&ntf.Type, &ntf.ClassID, &ntf.Message, &dataJSON, &ntf.Timestamp, &ntf.Read)
+		err = rows.Scan(&ntf.ID, &ntf.Type, &ntf.ClassID, &ntf.Message, &dataJSON, &ntf.Timestamp, &ntf.Read)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan notification row %d for user %s: %w", i, userID, err)
 		}

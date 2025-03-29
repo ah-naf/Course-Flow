@@ -22,6 +22,7 @@ type NotifPostCreatedResponse struct {
 }
 
 type Notification struct {
+	ID           string           `json:"id"`
 	Type         NotificationType `json:"type"`
 	ClassID      string           `json:"classId"`
 	RecipientIDs []string         `json:"-"` // Users to notify
