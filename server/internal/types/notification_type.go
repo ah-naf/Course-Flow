@@ -28,6 +28,7 @@ type Notification struct {
 	Message      string           `json:"message"`
 	Data         interface{}      `json:"data"` // Additional data (e.g., post content, user info)
 	Timestamp    time.Time        `json:"timestamp"`
+	Read         bool             `json:"read"`
 }
 
 func (n *Notification) ToJSON() ([]byte, error) {
