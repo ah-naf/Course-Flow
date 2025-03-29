@@ -9,6 +9,7 @@ interface NotificationState {
   markAsRead: (notificationId: string) => void;
   getUnreadCountForClass: (classId: string) => number;
   getTotalUnreadCount: () => number;
+  setNotifications: (notifications: Notification[]) => void; // New function
 }
 
 export const useNotificationStore = create<NotificationState>()(
@@ -36,6 +37,8 @@ export const useNotificationStore = create<NotificationState>()(
           .length,
       getTotalUnreadCount: () =>
         get().notifications.filter((n) => !n.read).length,
+
+      setNotifications: (notifications) => set({ notifications }),
     }),
     {
       name: "notification-storage",

@@ -1,6 +1,13 @@
 // src/components/NotificationDialog.tsx
 import React from "react";
-import { Bell, MessageSquare, Video, FileText } from "lucide-react";
+import {
+  Bell,
+  MessageSquare,
+  Video,
+  FileText,
+  CheckCircle,
+  Trash2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,15 +16,41 @@ import {
   DropdownMenuTrigger,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { useNotificationStore } from "@/store/notificationStore";
 import { formatRelativeTime } from "@/utils/formatRelativeTime";
+import { useGetNotifications } from "@/hooks/useNotification";
+import { cn } from "@/lib/utils"; // Assuming you have a utility for className concatenation
 
 const NotificationDialog: React.FC = () => {
-  const { notifications, markAsRead, getTotalUnreadCount } =
+  const { isLoading, error } = useGetNotifications();
+  const { notifications, markAsRead, getTotalUnreadCount, setNotifications } =
     useNotificationStore();
   const unreadCount = getTotalUnreadCount();
+
+  const handleMarkAllAsRead = () => {
+    setNotifications(notifications.map((n) => ({ ...n, read: true })));
+  };
+
+  const handleClearAll = () => {
+    setNotifications([]);
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case "message_sent":
+        return <MessageSquare className="h-5 w-5 text-blue-500" />;
+      case "post_created":
+        return <FileText className="h-5 w-5 text-purple-500" />;
+      case "role_changed":
+        return <CheckCircle className="h-5 w-5 text-green-500" />;
+      // Add more cases as needed
+      default:
+        return <Bell className="h-5 w-5 text-gray-500" />;
+    }
+  };
 
   return (
     <DropdownMenu>
@@ -25,65 +58,132 @@ const NotificationDialog: React.FC = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="rounded-full hover:bg-gray-100 relative"
+          className="rounded-full hover:bg-gray-100 relative focus:outline-none focus:ring-2 focus:ring-blue-500"
           title="Notifications"
           aria-label={`Notifications (${unreadCount} unread)`}
         >
-          <Bell className="h-5 w-5" />
+          <Bell className="h-5 w-5 text-gray-700" />
           {unreadCount > 0 && (
             <Badge
               variant="destructive"
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full text-xs"
+              className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center rounded-full text-xs font-bold"
             >
-              {unreadCount}
+              {unreadCount > 99 ? "99+" : unreadCount}
             </Badge>
           )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="w-96 p-2 max-h-96 overflow-y-auto"
+        className="w-96 p-0 max-h-[calc(100vh-100px)] overflow-y-auto shadow-lg rounded-lg border border-gray-200"
       >
-        <DropdownMenuLabel className="text-lg font-semibold">
-          Notifications
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {notifications.length === 0 ? (
-          <div className="p-4 text-center text-gray-500 text-sm">
-            No notifications
-          </div>
-        ) : (
-          notifications.map((notification) => (
-            <DropdownMenuItem
-              key={notification.id}
-              onClick={() => markAsRead(notification.id)}
-              className={`flex items-start p-3 cursor-pointer rounded-md transition-colors ${
-                notification.read
-                  ? "bg-gray-50"
-                  : "bg-blue-50 hover:bg-blue-100"
-              }`}
+        <div className="sticky top-0 bg-white z-10 p-3 border-b border-gray-200">
+          <DropdownMenuLabel className="text-lg font-semibold text-gray-800">
+            Notifications
+          </DropdownMenuLabel>
+          {notifications.length > 0 && (
+            <div className="flex justify-between mt-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleMarkAllAsRead}
+                disabled={unreadCount === 0}
+                className="text-xs text-blue-600 hover:text-blue-800"
+              >
+                Mark All as Read
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearAll}
+                className="text-xs text-red-600 hover:text-red-800"
+              >
+                Clear All
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {isLoading && (
+          <div className="flex items-center justify-center p-4">
+            <svg
+              className="animate-spin h-5 w-5 text-blue-500"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
             >
-              <div className="mr-3 mt-1">
-                {notification.type === "message_sent" && (
-                  <MessageSquare className="h-5 w-5 text-blue-500" />
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+            <span className="ml-2 text-sm text-gray-600">Loading...</span>
+          </div>
+        )}
+
+        {error && (
+          <div className="p-4 text-center text-red-600 text-sm">
+            <p>Error: {error.message}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.location.reload()}
+              className="mt-2"
+            >
+              Retry
+            </Button>
+          </div>
+        )}
+
+        {!isLoading && !error && notifications.length === 0 && (
+          <div className="p-4 text-center text-gray-500 text-sm">
+            No notifications yet
+          </div>
+        )}
+
+        {!isLoading && !error && notifications.length > 0 && (
+          <DropdownMenuGroup>
+            {notifications.map((notification) => (
+              <DropdownMenuItem
+                key={notification.id}
+                onClick={() =>
+                  !notification.read && markAsRead(notification.id)
+                }
+                className={cn(
+                  "flex items-start p-3 cursor-pointer transition-colors",
+                  notification.read
+                    ? "bg-gray-50 hover:bg-gray-100"
+                    : "bg-blue-50 hover:bg-blue-100"
                 )}
-                {/* {notification.type === "video_call" && (
-                  <Video className="h-5 w-5 text-green-500" />
-                )} */}
-                {notification.type === "post_created" && (
-                  <FileText className="h-5 w-5 text-purple-500" />
+              >
+                <div className="mr-3 mt-1 flex-shrink-0">
+                  {getNotificationIcon(notification.type)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-800">
+                    {notification.message}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {formatRelativeTime(notification.timestamp)}
+                  </p>
+                </div>
+                {!notification.read && (
+                  <div className="ml-2 flex-shrink-0">
+                    <span className="h-2 w-2 bg-blue-500 rounded-full" />
+                  </div>
                 )}
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-800">
-                  {notification.message}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {formatRelativeTime(notification.timestamp)}
-                </p>
-              </div>
-            </DropdownMenuItem>
-          ))
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuGroup>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
