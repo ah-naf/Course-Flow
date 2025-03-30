@@ -26,7 +26,8 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = "" }) => {
   const { user, logout } = useUserStore();
-  const { addNotification } = useNotificationStore();
+  const { addNotification, setCurrentPostNotification } =
+    useNotificationStore();
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const logoutMutation = useLogout();
   const location = useLocation();
@@ -59,6 +60,9 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = "" }) => {
       const data = JSON.parse(event.data) as Notification;
       console.log(data);
       addNotification(data);
+      if (data.type === "post_created") {
+        setCurrentPostNotification(data);
+      }
     };
 
     websocket.onerror = (error) => {

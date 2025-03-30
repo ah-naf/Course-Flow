@@ -14,7 +14,11 @@ export const usePostStore = create<PostState>()((set, get) => ({
 
   // Action to set posts from API
   setPosts: (posts: Post[]) => {
-    set({ posts });
+    const sortedPosts = [...posts].sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+    set({ posts: sortedPosts });
   },
 
   // Delete a post
