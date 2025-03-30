@@ -5,18 +5,22 @@ import (
 	"course-flow/internal/services"
 	"course-flow/internal/utils"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 )
 
 type PostHandler struct {
-	postService         *services.PostService
-	postCreatedNotifier *notifications.PostCreatedNotifier
+	postService            *services.PostService
+	postCreatedNotifier    *notifications.PostCreatedNotifier
+	commentCreatedNotifier *notifications.CommentAddedNotifier
 }
 
-func NewPostHandler(postService *services.PostService, postCreatedNotifier *notifications.PostCreatedNotifier) *PostHandler {
-	return &PostHandler{postService: postService, postCreatedNotifier: postCreatedNotifier}
+func NewPostHandler(postService *services.PostService, postCreatedNotifier *notifications.PostCreatedNotifier, commentAddedNotifer *notifications.CommentAddedNotifier) *PostHandler {
+	return &PostHandler{
+		postService:            postService,
+		postCreatedNotifier:    postCreatedNotifier,
+		commentCreatedNotifier: commentAddedNotifer,
+	}
 }
 
 func (h *PostHandler) DeleteCommentHandler(w http.ResponseWriter, r *http.Request) error {
@@ -63,8 +67,13 @@ func (h *PostHandler) AddCommentHandler(w http.ResponseWriter, r *http.Request) 
 		return err
 	}
 
-	err := h.postService.AddComment(req.Comment, r)
+	payload, err := h.postService.AddComment(req.Comment, r)
 	if err != nil {
+		return err
+	}
+
+	if err := h.commentCreatedNotifier.Notify(payload.ClassID, payload.PostID, payload.UserID); err != nil {
+		log.Fatal(err)
 		return err
 	}
 
@@ -123,7 +132,6 @@ func (h *PostHandler) CreateNewPostHandler(w http.ResponseWriter, r *http.Reques
 		return err
 	}
 
-	fmt.Println("payload", payload)
 	if err := h.postCreatedNotifier.Notify(payload.ClassID, content, payload.UserID); err != nil {
 		log.Fatal(err)
 		return err

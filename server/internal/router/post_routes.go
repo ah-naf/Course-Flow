@@ -23,8 +23,9 @@ func (r *Router) setupPostRouter(router *mux.Router) {
 	postService := services.NewPostService(postStorage, attchmentService)
 
 	postCreatedNotifier := notifications.NewPostCreatedNotifier(r.Hub, r.DB)
+	commentAddedNotifier := notifications.NewCommentAddedNotifier(r.Hub, r.DB)
 
-	postHandler := handlers.NewPostHandler(postService, postCreatedNotifier)
+	postHandler := handlers.NewPostHandler(postService, postCreatedNotifier, commentAddedNotifier)
 
 	postRouter := router.PathPrefix("/posts").Subrouter()
 

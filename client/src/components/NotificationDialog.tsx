@@ -161,7 +161,7 @@ const NotificationDialog: React.FC = () => {
                   {getNotificationIcon(notification.type)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 truncate">
+                  <p className="text-sm font-medium text-gray-800">
                     {notification.message}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">

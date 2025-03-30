@@ -22,6 +22,16 @@ func NewCourseStorage(db *sql.DB) *CourseStorage {
 	}
 }
 
+func (s *CourseStorage) GetCourseName(classID string) (string, error) {
+	var className string
+	err := s.DB.QueryRow("SELECT name FROM courses WHERE id = $1", classID).Scan(&className)
+	if err != nil {
+		return "", fmt.Errorf("error scanning name for course: %v", err)
+	}
+
+	return className, nil
+}
+
 func (s *CourseStorage) UpdateCourseSetting(userID string, course *types.CoursePreviewResponse) error {
 	var err error
 	tx, err := s.DB.Begin()

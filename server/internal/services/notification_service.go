@@ -13,13 +13,59 @@ import (
 type NotificationService struct {
 	courseMemberStorage *storage.CourseMemberStorage
 	notificationStorage *storage.NotificationStorage
+	postStorage         *storage.PostStorage
+	courseStorage       *storage.CourseStorage
+	userStorage         *storage.UserStorage
 }
 
 func NewNotificationService(db *sql.DB) *NotificationService {
 	return &NotificationService{
 		courseMemberStorage: storage.NewCourseMemberStorage(db),
 		notificationStorage: storage.NewNotificationStorage(db),
+		postStorage:         storage.NewPostStorage(db),
+		courseStorage:       storage.NewCourseStorage(db),
+		userStorage:         storage.NewUserStorage(db),
 	}
+}
+
+func (s *NotificationService) CreateCommentAddedNotification(postID, classID, creatorID string) ([]types.Notification, error) {
+	whoCreated, recipientIDs, err := s.postStorage.GetAllCommentedUserForPost(postID)
+	if err != nil {
+		return nil, err
+	}
+
+	className, err := s.courseStorage.GetCourseName(classID)
+	if err != nil {
+		return nil, err
+	}
+
+	ntfCreatedDetails, err := s.userStorage.GetUserWithID(creatorID)
+	if err != nil {
+		return nil, err
+	}
+
+	notification := types.Notification{
+		Type:         types.TypeCommentAdded,
+		ClassID:      classID,
+		RecipientIDs: recipientIDs,
+		Message: fmt.Sprintf(
+			"%s %s just commented on %s %s's post in \"%s\". Check out the discussion!",
+			ntfCreatedDetails.FirstName,
+			ntfCreatedDetails.LastName,
+			whoCreated.FirstName,
+			whoCreated.LastName,
+			className,
+		),
+		Timestamp: time.Now().UTC(),
+	}
+
+	// Store in database
+	createdNotifications, err := s.notificationStorage.CreateNotifications([]types.Notification{notification})
+	if err != nil {
+		return nil, err
+	}
+
+	return createdNotifications, nil
 }
 
 func (s *NotificationService) CreatePostCreatedNotifications(classID, postContent, creatorID string) ([]types.Notification, error) {
@@ -29,8 +75,7 @@ func (s *NotificationService) CreatePostCreatedNotifications(classID, postConten
 		return nil, err
 	}
 
-	var className string
-	err = s.courseMemberStorage.DB.QueryRow("SELECT name FROM courses WHERE id = $1", classID).Scan(&className)
+	className, err := s.courseStorage.GetCourseName(classID)
 	if err != nil {
 		return nil, err
 	}

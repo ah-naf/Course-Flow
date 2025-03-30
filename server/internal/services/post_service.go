@@ -77,16 +77,16 @@ func (s *PostService) GetCommentForPost(r *http.Request) ([]types.Comment, error
 	return s.PostStorage.GetAllCommentsForPost(postID)
 }
 
-func (s *PostService) AddComment(comment string, r *http.Request) error {
+func (s *PostService) AddComment(comment string, r *http.Request) (*types.NotifCreatedResponse, error) {
 	userID, err := utils.GetUserIDFromContext(r.Context())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	vars := mux.Vars(r)
 	postID := vars["post_id"]
 	if postID == "" {
-		return &utils.ApiError{Code: http.StatusNotFound, Message: "Post ID not found"}
+		return nil, &utils.ApiError{Code: http.StatusNotFound, Message: "Post ID not found"}
 	}
 
 	return s.PostStorage.AddComment(postID, comment, userID)
@@ -250,7 +250,7 @@ func (s *PostService) DeletePost(r *http.Request) error {
 	return s.PostStorage.DeletePost(courseID, postID, userID)
 }
 
-func (s *PostService) CreatePostService(content string, r *http.Request) (*types.NotifPostCreatedResponse, error) {
+func (s *PostService) CreatePostService(content string, r *http.Request) (*types.NotifCreatedResponse, error) {
 	ctx := r.Context()
 	userID, err := utils.GetUserIDFromContext(ctx)
 	if err != nil {
@@ -285,9 +285,9 @@ func (s *PostService) CreatePostService(content string, r *http.Request) (*types
 		}
 	}
 
-	return &types.NotifPostCreatedResponse{
-		PostID: postID,
-		UserID: userID,
+	return &types.NotifCreatedResponse{
+		PostID:  postID,
+		UserID:  userID,
 		ClassID: courseID,
 	}, nil
 }

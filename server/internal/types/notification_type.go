@@ -15,7 +15,7 @@ const (
 	TypeUserKicked   NotificationType = "user_kicked"
 )
 
-type NotifPostCreatedResponse struct {
+type NotifCreatedResponse struct {
 	ClassID string
 	UserID  string
 	PostID  string

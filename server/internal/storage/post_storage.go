@@ -19,6 +19,57 @@ func NewPostStorage(db *sql.DB) *PostStorage {
 	return &PostStorage{DB: db}
 }
 
+func (s *PostStorage) GetAllCommentedUserForPost(postID string) (*types.User, []string, error) {
+	query := `
+		SELECT DISTINCT user_id FROM comments WHERE post_id = $1
+	`
+
+	var userIDs []string
+	rows, err := s.DB.Query(query, postID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to query user for comments: %v", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var userID string
+		// Optionally check for null userID if necessary
+		err = rows.Scan(&userID)
+		if err != nil {
+			return nil, nil, fmt.Errorf("error scanning user id from comment: %v", err)
+		}
+		userIDs = append(userIDs, userID)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, nil, fmt.Errorf("error iterating over comment rows: %v", err)
+	}
+
+	whoPostedQuery := `
+		SELECT u.id, u.avatar, u.first_name, u.last_name, u.username, u.email
+		FROM posts p
+		JOIN users u
+		ON u.id = p.user_id
+		WHERE p.id = $1
+	`
+
+	var whoPosted types.User
+	err = s.DB.QueryRow(whoPostedQuery, postID).Scan(
+		&whoPosted.ID,
+		&whoPosted.Avatar,
+		&whoPosted.FirstName,
+		&whoPosted.LastName,
+		&whoPosted.Username,
+		&whoPosted.Email,
+	)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error scanning post created user: %v", err)
+	}
+	userIDs = append(userIDs, whoPosted.ID)
+
+	return &whoPosted, userIDs, nil
+}
+
 func (s *PostStorage) GetAllCommentsForPost(postID string) ([]types.Comment, error) {
 	query := `
 		SELECT 
@@ -209,9 +260,9 @@ func (s *PostStorage) EditComment(commentID, comment, userID string) error {
 	return nil
 }
 
-func (s *PostStorage) AddComment(postID, comment, userID string) error {
+func (s *PostStorage) AddComment(postID, comment, userID string) (*types.NotifCreatedResponse, error) {
 	if strings.TrimSpace(comment) == "" {
-		return &utils.ApiError{
+		return nil, &utils.ApiError{
 			Code:    http.StatusBadRequest,
 			Message: "Comment cannot be empty",
 		}
@@ -219,7 +270,7 @@ func (s *PostStorage) AddComment(postID, comment, userID string) error {
 
 	tx, err := s.DB.Begin()
 	if err != nil {
-		return fmt.Errorf("failed to begin transaction: %v", err)
+		return nil, fmt.Errorf("failed to begin transaction: %v", err)
 	}
 	defer tx.Rollback()
 
@@ -233,20 +284,30 @@ func (s *PostStorage) AddComment(postID, comment, userID string) error {
 	err = tx.QueryRow(query, postID, userID, comment, time.Now().UTC()).Scan(&commentID)
 	if err != nil {
 		if err.Error() == "pq: insert or update on table \"comments\" violates foreign key constraint \"comments_post_id_fkey\"" {
-			return &utils.ApiError{Code: http.StatusNotFound, Message: fmt.Sprintf("Post not found with id %s", postID)}
+			return nil, &utils.ApiError{Code: http.StatusNotFound, Message: fmt.Sprintf("Post not found with id %s", postID)}
 		}
 		if err.Error() == "pq: insert or update on table \"comments\" violates foreign key constraint \"comments_user_id_fkey\"" {
-			return &utils.ApiError{Code: http.StatusNotFound, Message: fmt.Sprintf("User not found with id %s", userID)}
+			return nil, &utils.ApiError{Code: http.StatusNotFound, Message: fmt.Sprintf("User not found with id %s", userID)}
 		}
-		return fmt.Errorf("failed to insert comment: %v", err)
+		return nil, fmt.Errorf("failed to insert comment: %v", err)
+	}
+
+	var classID string
+	err = tx.QueryRow("SELECT course_id FROM posts WHERE id = $1", postID).Scan(&classID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve class id for post: %v", err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("failed to commit transaction: %v", err)
+		return nil, fmt.Errorf("failed to commit transaction: %v", err)
 	}
 
 	log.Printf("Successfully added comment with id %s to post %s by user %s", commentID, postID, userID)
-	return nil
+	return &types.NotifCreatedResponse{
+		UserID:  userID,
+		PostID:  postID,
+		ClassID: classID,
+	}, nil
 }
 
 func (s *PostStorage) EditPost(postID, userID, content string) error {
