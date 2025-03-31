@@ -28,8 +28,8 @@ func NewNotificationService(db *sql.DB) *NotificationService {
 	}
 }
 
-func (s *NotificationService) CreateCommentAddedNotification(payload types.NotifCreatedResponse) ([]types.Notification, error) {
-	whoCreated, tempRecipientIDs, err := s.postStorage.GetAllCommentedUserForPost(payload.PostID)
+func (s *NotificationService) CreateCommentAddedNotification(payload types.NotifCommentCreatedResponse) ([]types.Notification, error) {
+	whoCreated, tempRecipientIDs, err := s.postStorage.GetAllCommentedUserForPost(payload.PostID, payload.CommentID)
 	if err != nil {
 		return nil, err
 	}
@@ -40,6 +40,7 @@ func (s *NotificationService) CreateCommentAddedNotification(payload types.Notif
 			recipientIDs = append(recipientIDs, id)
 		}
 	}
+	fmt.Println("recipient", recipientIDs)
 
 	className, err := s.courseStorage.GetCourseName(payload.ClassID)
 	if err != nil {
@@ -69,7 +70,6 @@ func (s *NotificationService) CreateCommentAddedNotification(payload types.Notif
 		Timestamp: time.Now().UTC(),
 		Data:      payload.Data,
 	}
-
 	// Store in database
 	createdNotifications, err := s.notificationStorage.CreateNotifications([]types.Notification{notification})
 	if err != nil {

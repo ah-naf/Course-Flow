@@ -19,7 +19,7 @@ func NewPostStorage(db *sql.DB) *PostStorage {
 	return &PostStorage{DB: db}
 }
 
-func (s *PostStorage) GetAllCommentedUserForPost(postID string) (*types.User, []string, error) {
+func (s *PostStorage) GetAllCommentedUserForPost(postID, commentID string) (*types.User, []string, error) {
 	query := `
 		SELECT DISTINCT user_id FROM comments WHERE post_id = $1
 	`
@@ -45,29 +45,38 @@ func (s *PostStorage) GetAllCommentedUserForPost(postID string) (*types.User, []
 		return nil, nil, fmt.Errorf("error iterating over comment rows: %v", err)
 	}
 
-	whoPostedQuery := `
+	whoCommentedQuery := `
 		SELECT u.id, u.avatar, u.first_name, u.last_name, u.username, u.email
-		FROM posts p
+		FROM comments c
 		JOIN users u
-		ON u.id = p.user_id
-		WHERE p.id = $1
+		ON u.id = c.user_id
+		WHERE c.id = $1
 	`
 
-	var whoPosted types.User
-	err = s.DB.QueryRow(whoPostedQuery, postID).Scan(
-		&whoPosted.ID,
-		&whoPosted.Avatar,
-		&whoPosted.FirstName,
-		&whoPosted.LastName,
-		&whoPosted.Username,
-		&whoPosted.Email,
+	var whoCommented types.User
+	err = s.DB.QueryRow(whoCommentedQuery, commentID).Scan(
+		&whoCommented.ID,
+		&whoCommented.Avatar,
+		&whoCommented.FirstName,
+		&whoCommented.LastName,
+		&whoCommented.Username,
+		&whoCommented.Email,
 	)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error scanning comment created user: %v", err)
+	}
+	whoCommented.Avatar = utils.NormalizeMedia(whoCommented.Avatar)
+
+	whoPostedQuery := "SELECT user_id FROM posts WHERE id = $1"
+	var whoPostedID string
+	err = s.DB.QueryRow(whoPostedQuery, postID).Scan(&whoPostedID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error scanning post created user: %v", err)
 	}
-	userIDs = append(userIDs, whoPosted.ID)
 
-	return &whoPosted, userIDs, nil
+	userIDs = append(userIDs, whoPostedID)
+
+	return &whoCommented, userIDs, nil
 }
 
 func (s *PostStorage) GetAllCommentsForPost(postID string) ([]types.Comment, error) {
@@ -87,7 +96,7 @@ func (s *PostStorage) GetAllCommentsForPost(postID string) ([]types.Comment, err
 		FROM comments c
 		LEFT JOIN users u ON c.user_id = u.id
 		WHERE c.post_id = $1
-		ORDER BY c.created_at DESC
+		ORDER BY c.created_at ASC
 	`
 
 	rows, err := s.DB.Query(query, postID)
@@ -260,7 +269,7 @@ func (s *PostStorage) EditComment(commentID, comment, userID string) error {
 	return nil
 }
 
-func (s *PostStorage) AddComment(postID, comment, userID string) (*types.NotifCreatedResponse, error) {
+func (s *PostStorage) AddComment(postID, comment, userID string) (*types.NotifCommentCreatedResponse, error) {
 	if strings.TrimSpace(comment) == "" {
 		return nil, &utils.ApiError{
 			Code:    http.StatusBadRequest,
@@ -303,11 +312,12 @@ func (s *PostStorage) AddComment(postID, comment, userID string) (*types.NotifCr
 	}
 
 	log.Printf("Successfully added comment with id %s to post %s by user %s", commentID, postID, userID)
-	return &types.NotifCreatedResponse{
-		UserID:  userID,
-		PostID:  postID,
-		ClassID: classID,
-		Data:    map[string]interface{}{"postID": postID, "commentID": commentID, "content": comment},
+	return &types.NotifCommentCreatedResponse{
+		UserID:    userID,
+		PostID:    postID,
+		ClassID:   classID,
+		CommentID: commentID,
+		Data:      map[string]interface{}{"postID": postID, "commentID": commentID, "content": comment},
 	}, nil
 }
 

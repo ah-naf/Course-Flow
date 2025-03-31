@@ -19,6 +19,7 @@ func NewNotificationStorage(db *sql.DB) *NotificationStorage {
 }
 
 func (s *NotificationStorage) CreateNotifications(notifications []types.Notification) ([]types.Notification, error) {
+	fmt.Println("notification", notifications)
 	tx, err := s.db.Begin()
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction for creating notifications: %w", err)

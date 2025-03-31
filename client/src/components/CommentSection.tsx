@@ -42,22 +42,44 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   postId,
   background_color,
 }) => {
-  const { data = [], error, isError, isLoading } = useGetComment(postId);
-  const [comments, setComments] = useState(data);
-  const { currentCommentNotification } = useNotificationStore();
+  const {
+    data: initialComments = [],
+    error,
+    isError,
+    isLoading,
+  } = useGetComment(postId);
+  const { currentCommentNotification, setCurrentCommentNotification } =
+    useNotificationStore();
   const { user } = useUserStore();
+  const [comments, setComments] = useState<Comment[]>(initialComments);
   const [commentText, setCommentText] = useState("");
   const [editCommentId, setEditCommentId] = useState<string | null>(null);
   const addCommentMutation = useAddComment(postId);
   const deleteCommentMutation = useDeleteComment(postId);
 
   useEffect(() => {
-    if (!currentCommentNotification || !currentCommentNotification.data) return;
+    setComments(initialComments || []);
+  }, [initialComments]);
+
+  useEffect(() => {
+    // console.log({ currentCommentNotification, postId, comments });
+    if (!currentCommentNotification) return;
 
     if (postId === currentCommentNotification.data.postID) {
-      setComments([...comments, currentCommentNotification.data]);
+      const temp = currentCommentNotification.data;
+      const newComment: Comment = {
+        id: temp.commentID,
+        content: temp.content,
+        user: temp.user,
+        timestamp: new Date().toISOString(),
+      };
+      setComments((prev) => {
+        if (!prev) return [];
+        return [...prev, newComment];
+      });
+      setCurrentCommentNotification(undefined);
     }
-  }, [currentCommentNotification, postId]);
+  }, [currentCommentNotification, postId, comments]);
 
   const handleSubmitComment = (e: React.FormEvent) => {
     e.preventDefault();

@@ -22,6 +22,14 @@ type NotifCreatedResponse struct {
 	Data    map[string]interface{}
 }
 
+type NotifCommentCreatedResponse struct {
+	ClassID   string
+	UserID    string
+	PostID    string
+	CommentID string
+	Data      map[string]interface{}
+}
+
 type Notification struct {
 	ID           string           `json:"id"`
 	Type         NotificationType `json:"type"`

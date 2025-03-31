@@ -19,7 +19,7 @@ func NewCommentAddedNotifier(hub *websocket.Hub, db *sql.DB) *CommentAddedNotifi
 	}
 }
 
-func (n *CommentAddedNotifier) Notify(payload types.NotifCreatedResponse) error {
+func (n *CommentAddedNotifier) Notify(payload types.NotifCommentCreatedResponse) error {
 	notifications, err := n.service.CreateCommentAddedNotification(payload)
 	if err != nil {
 		return err

@@ -77,7 +77,7 @@ func (s *PostService) GetCommentForPost(r *http.Request) ([]types.Comment, error
 	return s.PostStorage.GetAllCommentsForPost(postID)
 }
 
-func (s *PostService) AddComment(comment string, r *http.Request) (*types.NotifCreatedResponse, error) {
+func (s *PostService) AddComment(comment string, r *http.Request) (*types.NotifCommentCreatedResponse, error) {
 	userID, err := utils.GetUserIDFromContext(r.Context())
 	if err != nil {
 		return nil, err
