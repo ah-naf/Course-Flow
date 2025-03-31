@@ -1,8 +1,6 @@
 // src/components/Attachments.tsx
-import { Attachment, Course, FileStorage } from "@/utils/types";
+import { Course } from "@/utils/types";
 import { useEffect, useState } from "react";
-import { Download } from "lucide-react"; // Import Download icon
-import { Button } from "@/components/ui/button"; // Assuming ShadCN Button for styling
 import { useGetAllAttachments } from "@/hooks/usePost";
 import { toast } from "sonner";
 
@@ -21,16 +19,6 @@ const Attachments: React.FC<{ course: Course }> = ({ course }) => {
     }
   }, [isError, error]);
 
-  // const handleDownload = (file: Attachment) => {
-  //   // Placeholder for download logic (e.g., fetch file from API or trigger download)
-  //   console.log(`Downloading ${file.document.file_name}`);
-  //   // In a real app, you might use something like:
-  //   const link = document.createElement("a").target = "";
-  //   link.href = file.document.file_path;
-  //   link.download = file.document.file_name;
-  //   link.click();
-  // };
-
   return (
     <div className="p-4 sm:p-6 bg-white rounded-lg shadow-md w-full min-h-[300px]">
       <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">
@@ -47,7 +35,7 @@ const Attachments: React.FC<{ course: Course }> = ({ course }) => {
         </div>
       ) : (
         <div className="space-y-4 sm:space-y-6">
-          {data &&
+          {data && data.length > 0 ? (
             data.map((file) => (
               <a
                 key={file.id}
@@ -79,7 +67,31 @@ const Attachments: React.FC<{ course: Course }> = ({ course }) => {
                   </div>
                 </div>
               </a>
-            ))}
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center h-40 text-gray-500">
+              <svg
+                className="w-12 h-12 mb-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                />
+              </svg>
+              <p className="text-sm sm:text-base font-medium">
+                No attachments found
+              </p>
+              <p className="text-xs sm:text-sm mt-1">
+                Upload files to see them here
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>
