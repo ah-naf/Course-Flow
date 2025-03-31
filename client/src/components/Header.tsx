@@ -26,8 +26,11 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = "" }) => {
   const { user, logout } = useUserStore();
-  const { addNotification, setCurrentPostNotification } =
-    useNotificationStore();
+  const {
+    addNotification,
+    setCurrentPostNotification,
+    setCurrentCommentNotification,
+  } = useNotificationStore();
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const logoutMutation = useLogout();
   const location = useLocation();
@@ -62,6 +65,8 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = "" }) => {
       addNotification(data);
       if (data.type === "post_created") {
         setCurrentPostNotification(data);
+      } else if (data.type === "comment_added") {
+        setCurrentCommentNotification(data);
       }
     };
 

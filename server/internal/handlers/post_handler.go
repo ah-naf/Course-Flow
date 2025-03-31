@@ -72,7 +72,7 @@ func (h *PostHandler) AddCommentHandler(w http.ResponseWriter, r *http.Request) 
 		return err
 	}
 
-	if err := h.commentCreatedNotifier.Notify(payload.ClassID, payload.PostID, payload.UserID); err != nil {
+	if err := h.commentCreatedNotifier.Notify(*payload); err != nil {
 		log.Fatal(err)
 		return err
 	}

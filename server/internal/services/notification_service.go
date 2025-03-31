@@ -28,25 +28,35 @@ func NewNotificationService(db *sql.DB) *NotificationService {
 	}
 }
 
-func (s *NotificationService) CreateCommentAddedNotification(postID, classID, creatorID string) ([]types.Notification, error) {
-	whoCreated, recipientIDs, err := s.postStorage.GetAllCommentedUserForPost(postID)
+func (s *NotificationService) CreateCommentAddedNotification(payload types.NotifCreatedResponse) ([]types.Notification, error) {
+	whoCreated, tempRecipientIDs, err := s.postStorage.GetAllCommentedUserForPost(payload.PostID)
 	if err != nil {
 		return nil, err
 	}
 
-	className, err := s.courseStorage.GetCourseName(classID)
+	var recipientIDs []string
+	for _, id := range tempRecipientIDs {
+		if id != payload.UserID {
+			recipientIDs = append(recipientIDs, id)
+		}
+	}
+
+	className, err := s.courseStorage.GetCourseName(payload.ClassID)
 	if err != nil {
 		return nil, err
 	}
 
-	ntfCreatedDetails, err := s.userStorage.GetUserWithID(creatorID)
+	ntfCreatedDetails, err := s.userStorage.GetUserWithID(payload.UserID)
 	if err != nil {
 		return nil, err
 	}
 
+	if payload.Data != nil {
+		payload.Data["user"] = whoCreated
+	}
 	notification := types.Notification{
 		Type:         types.TypeCommentAdded,
-		ClassID:      classID,
+		ClassID:      payload.ClassID,
 		RecipientIDs: recipientIDs,
 		Message: fmt.Sprintf(
 			"%s %s just commented on %s %s's post in \"%s\". Check out the discussion!",
@@ -57,6 +67,7 @@ func (s *NotificationService) CreateCommentAddedNotification(postID, classID, cr
 			className,
 		),
 		Timestamp: time.Now().UTC(),
+		Data:      payload.Data,
 	}
 
 	// Store in database

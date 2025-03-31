@@ -1,5 +1,5 @@
 // src/components/CommentSection.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ import {
 } from "@/hooks/usePost";
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/store/userStore";
+import { useNotificationStore } from "@/store/notificationStore";
 
 interface CommentSectionProps {
   course: Course;
@@ -41,17 +42,22 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   postId,
   background_color,
 }) => {
-  const {
-    data: comments = [],
-    error,
-    isError,
-    isLoading,
-  } = useGetComment(postId);
+  const { data = [], error, isError, isLoading } = useGetComment(postId);
+  const [comments, setComments] = useState(data);
+  const { currentCommentNotification } = useNotificationStore();
   const { user } = useUserStore();
   const [commentText, setCommentText] = useState("");
   const [editCommentId, setEditCommentId] = useState<string | null>(null);
   const addCommentMutation = useAddComment(postId);
   const deleteCommentMutation = useDeleteComment(postId);
+
+  useEffect(() => {
+    if (!currentCommentNotification || !currentCommentNotification.data) return;
+
+    if (postId === currentCommentNotification.data.postID) {
+      setComments([...comments, currentCommentNotification.data]);
+    }
+  }, [currentCommentNotification, postId]);
 
   const handleSubmitComment = (e: React.FormEvent) => {
     e.preventDefault();

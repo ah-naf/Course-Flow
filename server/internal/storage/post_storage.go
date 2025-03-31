@@ -307,6 +307,7 @@ func (s *PostStorage) AddComment(postID, comment, userID string) (*types.NotifCr
 		UserID:  userID,
 		PostID:  postID,
 		ClassID: classID,
+		Data:    map[string]interface{}{"postID": postID, "commentID": commentID, "content": comment},
 	}, nil
 }
 

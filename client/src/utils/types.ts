@@ -105,4 +105,5 @@ export interface Notification {
   message: string;
   timestamp: string;
   read: boolean;
+  data: any;
 }

@@ -2,6 +2,7 @@ package notifications
 
 import (
 	"course-flow/internal/services"
+	"course-flow/internal/types"
 	"course-flow/internal/websocket"
 	"database/sql"
 )
@@ -18,8 +19,8 @@ func NewCommentAddedNotifier(hub *websocket.Hub, db *sql.DB) *CommentAddedNotifi
 	}
 }
 
-func (n *CommentAddedNotifier) Notify(classID, postID, creatorID string) error {
-	notifications, err := n.service.CreateCommentAddedNotification(postID, classID, creatorID)
+func (n *CommentAddedNotifier) Notify(payload types.NotifCreatedResponse) error {
+	notifications, err := n.service.CreateCommentAddedNotification(payload)
 	if err != nil {
 		return err
 	}

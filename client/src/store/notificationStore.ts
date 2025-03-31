@@ -5,12 +5,14 @@ import { create } from "zustand";
 interface NotificationState {
   notifications: Notification[];
   currentPostNotification?: Notification;
+  currentCommentNotification?: Notification;
   addNotification: (notification: Notification) => void;
   markAsRead: (notificationId: string) => void;
   getUnreadCountForClass: (classId: string) => number;
   getTotalUnreadCount: () => number;
   setNotifications: (notifications: Notification[]) => void; // New function
   setCurrentPostNotification: (notifications?: Notification) => void; // New function
+  setCurrentCommentNotification: (notifications?: Notification) => void; // New function
 }
 
 export const useNotificationStore = create<NotificationState>()((set, get) => ({
@@ -38,4 +40,6 @@ export const useNotificationStore = create<NotificationState>()((set, get) => ({
   setNotifications: (notifications) => set({ notifications }),
   setCurrentPostNotification: (notification) =>
     set({ currentPostNotification: notification }),
+  setCurrentCommentNotification: (notification) =>
+    set({ currentCommentNotification: notification }),
 }));

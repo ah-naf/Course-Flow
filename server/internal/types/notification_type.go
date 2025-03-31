@@ -19,6 +19,7 @@ type NotifCreatedResponse struct {
 	ClassID string
 	UserID  string
 	PostID  string
+	Data    map[string]interface{}
 }
 
 type Notification struct {
