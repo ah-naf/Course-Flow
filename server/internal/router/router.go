@@ -29,7 +29,7 @@ func (r *Router) Setup() *mux.Router {
 
 	apiRouter_v1 := router.PathPrefix("/api/v1").Subrouter()
 
-	apiRouter_v1.HandleFunc("/ws", r.setupWebSocketHandler).Methods("GET")
+	apiRouter_v1.HandleFunc("/ws", r.setupWebSocketHandler).Methods("GET", "POST")
 
 	r.setupUserRouter(apiRouter_v1)
 	r.setupAuthRouter(apiRouter_v1)
@@ -107,7 +107,46 @@ func (R *Router) setupWebSocketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// For now, we don't need class memberships, so pass an empty map
 	classMap := make(map[string]bool)
+
+	IDs, err := getUserCourseIDs(userID, R.DB)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	for _, id := range IDs {
+		classMap[id] = true
+	}
+
 	R.Hub.Handler(userID, classMap)(w, r)
+}
+
+func getUserCourseIDs(userID string, db *sql.DB) ([]string, error) {
+	query := `
+		SELECT course_id
+		FROM course_members
+		WHERE user_id = $1
+	`
+
+	rows, err := db.Query(query, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query user course IDs: %v", err)
+	}
+	defer rows.Close()
+
+	var courseIDs []string
+	for rows.Next() {
+		var courseID string
+		err := rows.Scan(&courseID)
+		if err != nil {
+			return nil, fmt.Errorf("error scanning course ID: %v", err)
+		}
+		courseIDs = append(courseIDs, courseID)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating over course ID rows: %v", err)
+	}
+
+	return courseIDs, nil
 }

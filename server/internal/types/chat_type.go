@@ -8,4 +8,6 @@ type ChatMessage struct {
 	Sender    User      `json:"sender"`
 	Content   string    `json:"text"`
 	Timestamp time.Time `json:"timestamp"`
+	FromID    string    `json:"from_id"`
+	Type      string    `json:"type"`
 }

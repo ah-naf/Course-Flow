@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"course-flow/internal/types"
+	"encoding/json"
 	"log"
 	"net/http"
 	"sync"
@@ -23,6 +24,7 @@ type Hub struct {
 	unregister chan *Client
 	notify     chan types.Notification
 	mu         sync.Mutex
+	chat       chan types.ChatMessage
 }
 
 var upgrader = websocket.Upgrader{
@@ -37,6 +39,7 @@ func NewHub() *Hub {
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		notify:     make(chan types.Notification, 256),
+		chat:       make(chan types.ChatMessage, 256),
 	}
 }
 
@@ -75,6 +78,25 @@ func (h *Hub) Run() {
 				}
 			}
 			h.mu.Unlock()
+
+		case chatMsg := <-h.chat:
+			h.mu.Lock()
+			for client := range h.clients {
+				if _, ok := client.classIDs[chatMsg.CourseID]; ok && chatMsg.FromID != client.userID {
+					data, err := json.Marshal(chatMsg)
+					if err != nil {
+						log.Println("Failed to marshal chat message:", err)
+						continue
+					}
+
+					err = client.conn.WriteMessage(websocket.TextMessage, data)
+					if err != nil {
+						go func(c *Client) { h.unregister <- c }(client)
+					}
+				}
+			}
+
+			h.mu.Unlock()
 		}
 	}
 }
@@ -99,11 +121,27 @@ func (h *Hub) Handler(userID string, classIDs map[string]bool) http.HandlerFunc 
 		}()
 
 		for {
-			_, _, err := conn.ReadMessage()
+			_, msg, err := conn.ReadMessage()
 			if err != nil {
+				log.Println("Read error:", err)
 				return
 			}
 
+			// Handle incoming messages
+			var chatMsg types.ChatMessage
+			if err := json.Unmarshal(msg, &chatMsg); err != nil {
+				log.Println("Unmarshal error:", err)
+				continue
+			}
+
+			if chatMsg.Type != "chat_message" {
+				continue
+			}
+
+			if _, ok := client.classIDs[chatMsg.CourseID]; !ok {
+				log.Printf("User %s is not a member of course %s", userID, chatMsg.CourseID)
+				continue
+			}
 		}
 	}
 }
