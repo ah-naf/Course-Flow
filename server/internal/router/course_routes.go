@@ -3,6 +3,7 @@ package router
 import (
 	"course-flow/internal/handlers"
 	"course-flow/internal/middleware"
+	"course-flow/internal/notifications"
 	"course-flow/internal/services"
 	"course-flow/internal/storage"
 
@@ -13,7 +14,10 @@ func (r *Router) setupCourseRouter(router *mux.Router) {
 	courseStorage := storage.NewCourseStorage(r.DB)
 	documentStorage := storage.NewDocumentStorage(r.DB)
 	courseService := services.NewCourseService(courseStorage, documentStorage)
-	courseHandler := handlers.NewCourseHandler(courseService)
+
+	memberKickNotifier := notifications.NewUserKickedNotifier(r.Hub, r.DB)
+
+	courseHandler := handlers.NewCourseHandler(courseService, memberKickNotifier)
 
 	courseRouter := router.PathPrefix("/courses").Subrouter()
 
@@ -29,4 +33,3 @@ func (r *Router) setupCourseRouter(router *mux.Router) {
 	courseRouter.HandleFunc("/leave/{id}", middleware.ConvertToHandlerFunc(courseHandler.LeaveCourseHandler, middleware.AuthMiddleware)).Methods("DELETE")
 	courseRouter.HandleFunc("/preview/{id}", middleware.ConvertToHandlerFunc(courseHandler.CoursePreviewHandler, middleware.AuthMiddleware)).Methods("GET")
 }
-

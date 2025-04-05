@@ -6,6 +6,8 @@ import {
   FileText,
   CheckCircle,
   Trash2,
+  UserMinus,
+  MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,6 +53,10 @@ const NotificationDialog: React.FC = () => {
         return <FileText className="h-5 w-5 text-purple-500" />;
       case "role_changed":
         return <CheckCircle className="h-5 w-5 text-green-500" />;
+      case "user_kicked":
+        return <UserMinus className="h-5 w-5 text-red-500" />; // Red for removal
+      case "comment_added":
+        return <MessageCircle className="h-5 w-5 text-indigo-500" />; // Indigo for discussion
       default:
         return <Bell className="h-5 w-5 text-gray-500" />;
     }

@@ -1,8 +1,9 @@
 package handlers
 
 import (
-	"course-flow/internal/types"
+	"course-flow/internal/notifications"
 	"course-flow/internal/services"
+	"course-flow/internal/types"
 	"course-flow/internal/utils"
 	"encoding/json"
 	"log"
@@ -11,11 +12,12 @@ import (
 )
 
 type CourseHandler struct {
-	Service *services.CourseService
+	Service            *services.CourseService
+	memberKickNotifier *notifications.UserKickedNotifier
 }
 
-func NewCourseHandler(service *services.CourseService) *CourseHandler {
-	return &CourseHandler{Service: service}
+func NewCourseHandler(service *services.CourseService, memberKickNotifier *notifications.UserKickedNotifier) *CourseHandler {
+	return &CourseHandler{Service: service, memberKickNotifier: memberKickNotifier}
 }
 
 func (h *CourseHandler) UpdateCourseSettingHandler(w http.ResponseWriter, r *http.Request) error {
@@ -73,9 +75,16 @@ func (h *CourseHandler) CoursePreviewHandler(w http.ResponseWriter, r *http.Requ
 }
 
 func (h *CourseHandler) LeaveCourseHandler(w http.ResponseWriter, r *http.Request) error {
-	err := h.Service.LeaveCourse(r)
+	toKick := r.URL.Query().Get("to_kick")
+	creatorID, classID, err := h.Service.LeaveCourse(toKick, r)
 	if err != nil {
 		return err
+	}
+
+	if toKick != "" {
+		if err := h.memberKickNotifier.Notify(classID, creatorID, toKick); err != nil {
+			return err
+		}
 	}
 
 	return utils.WriteJSON(w, http.StatusOK, map[string]string{"message": "You have successfully left the course."})

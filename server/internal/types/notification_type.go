@@ -15,6 +15,13 @@ const (
 	TypeUserKicked   NotificationType = "user_kicked"
 )
 
+type NotifKickedResponse struct {
+	ClassID string
+	AdminID  string
+	UserID  string
+	Data    map[string]interface{}
+}
+
 type NotifCreatedResponse struct {
 	ClassID string
 	UserID  string

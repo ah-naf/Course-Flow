@@ -28,6 +28,35 @@ func NewNotificationService(db *sql.DB) *NotificationService {
 	}
 }
 
+func (s *NotificationService) UserKickedNotification(payload types.NotifKickedResponse) ([]types.Notification, error) {
+	className, err := s.courseStorage.GetCourseName(payload.ClassID)
+	if err != nil {
+		return nil, err
+	}
+
+	kickedUser, err := s.userStorage.GetUserWithID(payload.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	notification := types.Notification{
+		Type:         types.TypeUserKicked,
+		ClassID:      payload.ClassID,
+		RecipientIDs: []string{kickedUser.ID},
+		Message:      fmt.Sprintf("You have been kicked out from the class \"%s\"", className),
+		Timestamp:    time.Now().UTC(),
+		Data:         payload.Data,
+	}
+
+	// Store in database
+	createdNotifications, err := s.notificationStorage.CreateNotifications([]types.Notification{notification})
+	if err != nil {
+		return nil, err
+	}
+
+	return createdNotifications, nil
+}
+
 func (s *NotificationService) CreateCommentAddedNotification(payload types.NotifCommentCreatedResponse) ([]types.Notification, error) {
 	whoCreated, tempRecipientIDs, err := s.postStorage.GetAllCommentedUserForPost(payload.PostID, payload.CommentID)
 	if err != nil {
@@ -35,19 +64,23 @@ func (s *NotificationService) CreateCommentAddedNotification(payload types.Notif
 	}
 
 	var recipientIDs []string
+	isIDTaken := make(map[string]bool)
 	for _, id := range tempRecipientIDs {
+		if _, ok := isIDTaken[id]; ok {
+			continue
+		}
 		if id != payload.UserID {
 			recipientIDs = append(recipientIDs, id)
+			isIDTaken[id] = true
 		}
 	}
-	fmt.Println("recipient", recipientIDs)
 
 	className, err := s.courseStorage.GetCourseName(payload.ClassID)
 	if err != nil {
 		return nil, err
 	}
 
-	ntfCreatedDetails, err := s.userStorage.GetUserWithID(payload.UserID)
+	postAuthor, err := s.postStorage.GetPostAuthor(payload.PostID)
 	if err != nil {
 		return nil, err
 	}
@@ -61,10 +94,10 @@ func (s *NotificationService) CreateCommentAddedNotification(payload types.Notif
 		RecipientIDs: recipientIDs,
 		Message: fmt.Sprintf(
 			"%s %s just commented on %s %s's post in \"%s\". Check out the discussion!",
-			ntfCreatedDetails.FirstName,
-			ntfCreatedDetails.LastName,
 			whoCreated.FirstName,
 			whoCreated.LastName,
+			postAuthor.FirstName,
+			postAuthor.LastName,
 			className,
 		),
 		Timestamp: time.Now().UTC(),

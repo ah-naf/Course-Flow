@@ -19,6 +19,35 @@ func NewPostStorage(db *sql.DB) *PostStorage {
 	return &PostStorage{DB: db}
 }
 
+func (s *PostStorage) GetPostAuthor(postID string) (*types.User, error) {
+	query := `
+		SELECT u.id, u.avatar, u.first_name, u.last_name, u.username, u.email
+		FROM posts p
+		JOIN users u ON u.id = p.user_id
+		WHERE p.id = $1
+	`
+
+	var author types.User
+	err := s.DB.QueryRow(query, postID).Scan(
+		&author.ID,
+		&author.Avatar,
+		&author.FirstName,
+		&author.LastName,
+		&author.Username,
+		&author.Email,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("no author found for post with ID %s", postID)
+		}
+		return nil, fmt.Errorf("failed to query post author: %v", err)
+	}
+
+	author.Avatar = utils.NormalizeMedia(author.Avatar)
+
+	return &author, nil
+}
+
 func (s *PostStorage) GetAllCommentedUserForPost(postID, commentID string) (*types.User, []string, error) {
 	query := `
 		SELECT DISTINCT user_id FROM comments WHERE post_id = $1

@@ -1,8 +1,8 @@
 package services
 
 import (
-	"course-flow/internal/types"
 	"course-flow/internal/storage"
+	"course-flow/internal/types"
 	"course-flow/internal/utils"
 	"fmt"
 	"math/rand"
@@ -96,14 +96,13 @@ func (s *CourseService) CoursePreview(r *http.Request) (*types.CoursePreviewResp
 	return s.CourseStorage.CoursePreview(joinCode, userID, showRole)
 }
 
-func (s *CourseService) LeaveCourse(r *http.Request) error {
+func (s *CourseService) LeaveCourse(toKick string, r *http.Request) (string, string, error) {
 	ctx := r.Context()
 	userID, err := utils.GetUserIDFromContext(ctx)
 	if err != nil {
-		return err
+		return "", "", err
 	}
 
-	toKick := r.URL.Query().Get("to_kick")
 	if toKick != "" {
 		userID = toKick
 	}
@@ -111,13 +110,13 @@ func (s *CourseService) LeaveCourse(r *http.Request) error {
 	vars := mux.Vars(r)
 	courseID := vars["id"]
 	if courseID == "" {
-		return &utils.ApiError{
+		return "", "", &utils.ApiError{
 			Code:    http.StatusBadRequest,
 			Message: "course_id is required",
 		}
 	}
 
-	return s.CourseStorage.LeaveCourse(courseID, userID)
+	return userID, courseID, s.CourseStorage.LeaveCourse(courseID, userID)
 }
 
 func (s *CourseService) DeleteCourse(r *http.Request) error {
