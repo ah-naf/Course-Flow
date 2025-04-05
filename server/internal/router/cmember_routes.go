@@ -3,6 +3,7 @@ package router
 import (
 	"course-flow/internal/handlers"
 	"course-flow/internal/middleware"
+	"course-flow/internal/notifications"
 	"course-flow/internal/services"
 	"course-flow/internal/storage"
 
@@ -12,7 +13,10 @@ import (
 func (r *Router) setupCourseMemberRouter(router *mux.Router) {
 	cmStorage := storage.NewCourseMemberStorage(r.DB)
 	cmService := services.NewCourseMemberService(cmStorage)
-	cmHandler := handlers.NewCourseMemberHandler(cmService)
+
+	roleChangedNotifier := notifications.NewRoleChangedNotifier(r.Hub, r.DB)
+
+	cmHandler := handlers.NewCourseMemberHandler(cmService, roleChangedNotifier)
 
 	cmRouter := router.PathPrefix("/members").Subrouter()
 

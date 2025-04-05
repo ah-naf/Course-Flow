@@ -1,19 +1,23 @@
 package handlers
 
 import (
+	"course-flow/internal/notifications"
 	"course-flow/internal/services"
 	"course-flow/internal/utils"
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
 type CourseMemberHandler struct {
 	CourseMemberService *services.CourseMemberService
+	roleChangedNotifier *notifications.RoleChangedNotifier
 }
 
-func NewCourseMemberHandler(cmSerivces *services.CourseMemberService) *CourseMemberHandler {
+func NewCourseMemberHandler(cmSerivces *services.CourseMemberService, roleChangedNotifier *notifications.RoleChangedNotifier) *CourseMemberHandler {
 	return &CourseMemberHandler{
 		CourseMemberService: cmSerivces,
+		roleChangedNotifier: roleChangedNotifier,
 	}
 }
 
@@ -27,8 +31,13 @@ func (h *CourseMemberHandler) ChangeRoleHandler(w http.ResponseWriter, r *http.R
 		return err
 	}
 
-	err := h.CourseMemberService.ChangeRole(req.MemberID, req.Role, r)
+	classID, err := h.CourseMemberService.ChangeRole(req.MemberID, req.Role, r)
 	if err != nil {
+		return err
+	}
+
+	if err := h.roleChangedNotifier.Notify(classID, req.MemberID, req.Role); err != nil {
+		log.Fatal(err)
 		return err
 	}
 

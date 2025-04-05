@@ -28,6 +28,48 @@ func NewNotificationService(db *sql.DB) *NotificationService {
 	}
 }
 
+func (s *NotificationService) ChangeRoleNotification(classID, userID string, role int) ([]types.Notification, error) {
+	className, err := s.courseStorage.GetCourseName(classID)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := s.userStorage.GetUserWithID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	message := ""
+	switch role {
+	case 1:
+		message = fmt.Sprintf("You have been assigned as a member of the course \"%s\".", className)
+	case 2:
+		message = fmt.Sprintf("You have been promoted to moderator in the course \"%s\".", className)
+	case 3:
+		message = fmt.Sprintf("You have been appointed as an instructor for the course \"%s\".", className)
+	case 4:
+		message = fmt.Sprintf("You have been designated as the admin of the course \"%s\".", className)
+	default:
+		return nil, fmt.Errorf("invalid role: %d", role)
+	}
+
+	notification := types.Notification{
+		Type:         types.TypeRoleChanged,
+		ClassID:      classID,
+		RecipientIDs: []string{user.ID},
+		Message:      message,
+		Timestamp:    time.Now().UTC(),
+	}
+
+	// Store in database
+	createdNotifications, err := s.notificationStorage.CreateNotifications([]types.Notification{notification})
+	if err != nil {
+		return nil, err
+	}
+
+	return createdNotifications, nil
+}
+
 func (s *NotificationService) UserKickedNotification(payload types.NotifKickedResponse) ([]types.Notification, error) {
 	className, err := s.courseStorage.GetCourseName(payload.ClassID)
 	if err != nil {
