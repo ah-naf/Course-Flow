@@ -94,3 +94,16 @@ CREATE TABLE notifications (
 
 CREATE INDEX idx_notifications_recipient_id ON notifications(recipient_id);
 CREATE INDEX idx_notifications_class_id ON notifications(class_id);
+
+CREATE TABLE messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+    from_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for performance
+CREATE INDEX idx_messages_course_id ON messages(course_id);
+CREATE INDEX idx_messages_from_id ON messages(from_id);
+CREATE INDEX idx_messages_created_at ON messages(created_at);

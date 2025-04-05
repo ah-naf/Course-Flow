@@ -11,9 +11,9 @@ const ClassroomChat: React.FC<{ course: Course }> = ({ course }) => {
     {
       id: "1",
       sender: {
-        id: course.instructor.id,
-        username: course.instructor.username,
-        initial: course.instructor.initial,
+        id: course.admin.id,
+        username: course.admin.username,
+        initial: course.admin.initial,
         firstName: "",
         lastName: "",
         email: "",
@@ -45,7 +45,7 @@ const ClassroomChat: React.FC<{ course: Course }> = ({ course }) => {
   const [isMicOn, setIsMicOn] = useState(true);
   const [isVideoOn, setIsVideoOn] = useState(true);
   const [participants, setParticipants] = useState([
-    { id: "instructor", name: course.instructor.username, isInstructor: true },
+    { id: "instructor", name: course.admin.username, isInstructor: true },
     { id: "currentUser", name: "You", isCurrentUser: true },
     { id: "student1", name: "Alex Johnson" },
     { id: "student2", name: "Maria Garcia" },
