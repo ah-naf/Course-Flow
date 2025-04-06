@@ -4,7 +4,6 @@ import (
 	"course-flow/internal/storage"
 	"course-flow/internal/types"
 	"course-flow/internal/utils"
-	"fmt"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -177,7 +176,6 @@ func (s *CourseService) GetCourseOfSingleUser(r *http.Request) ([]*types.CourseL
 			}
 		}
 	}
-	fmt.Println("archive", archived)
 
 	return s.CourseStorage.GetCourseByUserID(userID, archived)
 }

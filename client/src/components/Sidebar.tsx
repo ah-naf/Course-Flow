@@ -95,7 +95,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                   variant="ghost"
                   className="w-full justify-start text-sm gap-2"
                   title={course.name}
-                  onClick={() => navigate(`/class/${course.id}`)} // Navigate to course page
+                  onClick={() => navigate(`/class/${course.join_code}`)} // Navigate to course page
                 >
                   <Avatar className="h-6 w-6">
                     <AvatarImage src={course.admin.avatar} />
@@ -151,7 +151,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                   variant="ghost"
                   className="w-full justify-start text-sm gap-2"
                   title={course.name}
-                  onClick={() => navigate(`/class/${course.id}`)} // Navigate to course page
+                  onClick={() => navigate(`/class/${course.join_code}`)} // Navigate to course page
                 >
                   <Avatar className="h-6 w-6">
                     <AvatarImage src={course.admin.avatar} />

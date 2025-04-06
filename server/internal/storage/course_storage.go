@@ -365,6 +365,7 @@ func (s *CourseStorage) GetCourseByUserID(userID string, archieved bool) ([]*typ
 		course.CoverPic = utils.NormalizeMedia(course.CoverPic)
 		course.Admin.Avatar = utils.NormalizeMedia(course.Admin.Avatar)
 		courses = append(courses, &course)
+		fmt.Println("join", course.JoinCode)
 	}
 
 	if err = rows.Err(); err != nil {
@@ -411,7 +412,8 @@ func (s *CourseStorage) GetCoursesByInstructor(userID string) ([]*types.CourseLi
 			u.id, 
 			u.first_name, 
 			u.last_name, 
-			u.avatar 
+			u.avatar,
+			c.join_code
 		FROM courses AS c 
 		JOIN users AS u ON c.admin_id = u.id
 		WHERE c.admin_id = $1 AND c.archived = false
@@ -436,6 +438,7 @@ func (s *CourseStorage) GetCoursesByInstructor(userID string) ([]*types.CourseLi
 			&course.Admin.FirstName,
 			&course.Admin.LastName,
 			&course.Admin.Avatar,
+			&course.JoinCode,
 		); err != nil {
 			return nil, fmt.Errorf("Error scanning course by instructor: %v", err)
 		}
