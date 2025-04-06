@@ -365,7 +365,6 @@ func (s *CourseStorage) GetCourseByUserID(userID string, archieved bool) ([]*typ
 		course.CoverPic = utils.NormalizeMedia(course.CoverPic)
 		course.Admin.Avatar = utils.NormalizeMedia(course.Admin.Avatar)
 		courses = append(courses, &course)
-		fmt.Println("join", course.JoinCode)
 	}
 
 	if err = rows.Err(); err != nil {

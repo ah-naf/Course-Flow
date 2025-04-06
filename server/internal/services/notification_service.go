@@ -28,6 +28,63 @@ func NewNotificationService(db *sql.DB) *NotificationService {
 	}
 }
 
+func (s *NotificationService) CreateMessageSentNotification(payload types.NotifMessageSentResponse) ([]types.Notification, error) {
+	// Fetch the sender's details
+	sender, err := s.userStorage.GetUserWithID(payload.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch sender: %v", err)
+	}
+
+	// Fetch all class members
+	members, err := s.courseMemberStorage.GetAllMember(payload.ClassID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch course members: %v", err)
+	}
+
+	// Prepare recipient IDs (exclude the sender)
+	var recipientIDs []string
+	for _, member := range members {
+		if member.ID != payload.UserID {
+			recipientIDs = append(recipientIDs, member.ID)
+		}
+	}
+
+	// Fetch class name
+	className, err := s.courseStorage.GetCourseName(payload.ClassID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch class name: %v", err)
+	}
+
+	// Add sender details to the payload data
+	if payload.Data != nil {
+		payload.Data["user"] = sender
+	}
+
+	// Create notification
+	notification := types.Notification{
+		Type:         types.TypeMessageSent,
+		ClassID:      payload.ClassID,
+		RecipientIDs: recipientIDs,
+		Message: fmt.Sprintf(
+			"%s %s sent a new message in \"%s\": %s",
+			sender.FirstName,
+			sender.LastName,
+			className,
+			payload.Content,
+		),
+		Timestamp: time.Now().UTC(),
+		Data:      payload.Data,
+	}
+
+	// Store in database
+	createdNotifications, err := s.notificationStorage.CreateNotifications([]types.Notification{notification})
+	if err != nil {
+		return nil, fmt.Errorf("failed to store notification: %v", err)
+	}
+
+	return createdNotifications, nil
+}
+
 func (s *NotificationService) ChangeRoleNotification(classID, userID string, role int) ([]types.Notification, error) {
 	className, err := s.courseStorage.GetCourseName(classID)
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 	"course-flow/internal/utils"
 	"database/sql"
 	"fmt"
+	"time"
 )
 
 type ChatStorage struct {
@@ -15,6 +16,25 @@ func NewChatStorage(db *sql.DB) *ChatStorage {
 	return &ChatStorage{
 		DB: db,
 	}
+}
+
+func (s *ChatStorage) CreateChatMessage(chatMsg *types.ChatMessage) error {
+	query := `
+		INSERT INTO messages (course_id, from_id, content, created_at)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, created_at
+	`
+	err := s.DB.QueryRow(
+		query,
+		chatMsg.CourseID,
+		chatMsg.FromID,
+		chatMsg.Content,
+		time.Now().UTC(),
+	).Scan(&chatMsg.ID, &chatMsg.Timestamp)
+	if err != nil {
+		return fmt.Errorf("failed to create chat message: %v", err)
+	}
+	return nil
 }
 
 func (s *ChatStorage) GetMessageByCourse(courseID, userID string) ([]types.ChatMessage, error) {
