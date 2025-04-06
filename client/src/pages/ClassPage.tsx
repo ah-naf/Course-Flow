@@ -10,7 +10,7 @@ import GroupMembers from "@/components/GroupMembers";
 import Attachments from "@/components/Attachments";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Loader2, MessageCircle, RefreshCw } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import ClassroomChat from "@/components/ClassroomChat";
 import { useCoursePreview } from "@/hooks/useCourse";
 import {
@@ -196,7 +196,9 @@ const ClassPage: React.FC = () => {
       </div>
 
       {/* Chat Dialog */}
-      <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
+
+      <Dialog open={isChatOpen} onOpenChange={setIsChatOpen} >
+        <DialogTitle hidden>{course.name}</DialogTitle>
         <DialogContent className="min-w-[95vw] lg:min-w-5xl xl:min-w-6xl min-h-[97vh] lg:min-h-[70vh] p-0 bg-white rounded-xl shadow-2xl border border-gray-200">
           <ClassroomChat course={course} />
         </DialogContent>

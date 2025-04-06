@@ -66,6 +66,9 @@ export interface ChatMessage {
   sender: User;
   text: string;
   timestamp: string;
+  course_id: string;
+  from_id: string;
+  type: "chat_message";
 }
 
 export interface GroupMember extends User {

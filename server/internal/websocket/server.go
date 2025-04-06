@@ -144,6 +144,11 @@ func (h *Hub) Handler(userID string, classIDs map[string]bool, chatService *serv
 				continue
 			}
 
+			if err := chatService.ProcessChatMessage(&chatMsg); err != nil {
+				log.Printf("Error processing chat message: %v", err)
+				continue
+			}
+
 			h.chat <- chatMsg
 		}
 	}
