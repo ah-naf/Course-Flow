@@ -1,6 +1,8 @@
 package router
 
 import (
+	"course-flow/internal/services"
+	"course-flow/internal/storage"
 	"course-flow/internal/utils"
 	"course-flow/internal/websocket"
 	"database/sql"
@@ -119,7 +121,11 @@ func (R *Router) setupWebSocketHandler(w http.ResponseWriter, r *http.Request) {
 		classMap[id] = true
 	}
 
-	R.Hub.Handler(userID, classMap)(w, r)
+	chatStorage := storage.NewChatStorage(R.DB)
+	userStorage := storage.NewUserStorage(R.DB)
+	chatService := services.NewChatService(chatStorage, userStorage)
+
+	R.Hub.Handler(userID, classMap, chatService)(w, r)
 }
 
 func getUserCourseIDs(userID string, db *sql.DB) ([]string, error) {

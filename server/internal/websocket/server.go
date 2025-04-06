@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"course-flow/internal/services"
 	"course-flow/internal/types"
 	"encoding/json"
 	"log"
@@ -101,7 +102,7 @@ func (h *Hub) Run() {
 	}
 }
 
-func (h *Hub) Handler(userID string, classIDs map[string]bool) http.HandlerFunc {
+func (h *Hub) Handler(userID string, classIDs map[string]bool, chatService *services.ChatService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
@@ -142,6 +143,8 @@ func (h *Hub) Handler(userID string, classIDs map[string]bool) http.HandlerFunc 
 				log.Printf("User %s is not a member of course %s", userID, chatMsg.CourseID)
 				continue
 			}
+
+			h.chat <- chatMsg
 		}
 	}
 }
