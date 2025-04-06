@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -117,14 +118,48 @@ func (h *Hub) Handler(userID string, classIDs map[string]bool, chatService *serv
 		}
 		h.register <- client
 
+		// Set up ping/pong
+		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		conn.SetPongHandler(func(string) error {
+			log.Printf("Pong received from user %s", userID)
+			conn.SetReadDeadline(time.Now().Add(60 * time.Second)) // Reset deadline on pong
+			return nil
+		})
+
 		defer func() {
 			h.unregister <- client
+			conn.Close()
+		}()
+
+		// Send pings periodically
+		go func() {
+			ticker := time.NewTicker(30 * time.Second)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-ticker.C:
+					h.mu.Lock()
+					if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+						log.Printf("Ping error for user %s: %v", userID, err)
+						h.unregister <- client
+						h.mu.Unlock()
+						return
+					}
+					h.mu.Unlock()
+				}
+			}
 		}()
 
 		for {
 			_, msg, err := conn.ReadMessage()
 			if err != nil {
-				log.Println("Read error:", err)
+				if websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseNormalClosure) {
+					log.Printf("Normal closure for user %s: %v", userID, err)
+				} else if websocket.IsUnexpectedCloseError(err) {
+					log.Printf("Unexpected closure for user %s: %v", userID, err)
+				} else {
+					log.Printf("Read error for user %s: %v", userID, err)
+				}
 				return
 			}
 

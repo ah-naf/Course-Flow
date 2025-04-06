@@ -1,6 +1,5 @@
-// src/components/ClassroomChat.tsx
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Video, X, Mic, MicOff, VideoOff } from "lucide-react";
+import { Send, Video } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -8,66 +7,172 @@ import { Course, ChatMessage } from "@/utils/types";
 import { useUserStore } from "@/store/userStore";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { toast } from "sonner";
+import { jwtDecode } from "jwt-decode";
+import { refreshAccessToken } from "@/api/api";
+
+type ConnectionStatus = "connecting" | "connected" | "disconnected" | "error";
 
 const ClassroomChat: React.FC<{ course: Course }> = ({ course }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const [connectionStatus, setConnectionStatus] =
+    useState<ConnectionStatus>("connecting");
+  const [errorMessage, setErrorMessage] = useState<string>("");
   const chatEndRef = useRef<HTMLDivElement | null>(null);
-  // WebSocket ref to use inside send handler
   const socketRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const tokenRefreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lastMessageTimeRef = useRef<number>(Date.now());
   const { user } = useUserStore();
 
-  // Video call states
-  const [isVideoCallActive, setIsVideoCallActive] = useState(false);
-  const [isMicOn, setIsMicOn] = useState(true);
-  const [isVideoOn, setIsVideoOn] = useState(true);
-
-  // Open the WebSocket connection on mount and log incoming messages
-  useEffect(() => {
-    // Replace with your actual token retrieval logic
+  const isTokenExpiringSoon = () => {
     const token = localStorage.getItem("access_token");
-    if (!token) return;
+    if (!token) return true;
+    try {
+      const decoded = jwtDecode<{ exp: number }>(token);
+      return decoded.exp * 1000 - Date.now() < 60000;
+    } catch (error) {
+      return true;
+    }
+  };
+
+  const handleTokenRefresh = async () => {
+    try {
+      await refreshAccessToken();
+      console.log("Access token refreshed successfully");
+      return true;
+    } catch (error) {
+      console.error("Failed to refresh token:", error);
+      toast.error("Session expired. Please login again.");
+      setConnectionStatus("error");
+      setErrorMessage("Authentication failed. Please login again.");
+      return false;
+    }
+  };
+
+  const sendWebSocketMessage = (messageType: string, payload: any) => {
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      const message = { type: messageType, ...payload };
+      socketRef.current.send(JSON.stringify(message));
+      lastMessageTimeRef.current = Date.now(); // Update last message time
+      return true;
+    }
+    return false;
+  };
+
+  const initializeWebSocket = async () => {
+    let token = localStorage.getItem("access_token");
+    if (!token) {
+      setConnectionStatus("error");
+      setErrorMessage("Authentication required");
+      return;
+    }
+
+    if (isTokenExpiringSoon()) {
+      const success = await handleTokenRefresh();
+      if (!success) return;
+      token = localStorage.getItem("access_token")!;
+    }
+
+    if (socketRef.current) {
+      socketRef.current.close(1000, "Normal closure");
+      socketRef.current = null;
+    }
+
+    setConnectionStatus("connecting");
+
     const wsUrl = `ws://localhost:8080/api/v1/ws?token=${token}`;
     const socket = new WebSocket(wsUrl);
     socketRef.current = socket;
 
     socket.onopen = () => {
       console.log("WebSocket connection established");
+      setConnectionStatus("connected");
+      setErrorMessage("");
+      lastMessageTimeRef.current = Date.now();
+
+      // Start heartbeat
+      if (heartbeatIntervalRef.current)
+        clearInterval(heartbeatIntervalRef.current);
+      heartbeatIntervalRef.current = setInterval(() => {
+        if (socketRef.current?.readyState === WebSocket.OPEN) {
+          socketRef.current.send(JSON.stringify({ type: "ping" }));
+        }
+      }, 30000); // Ping every 30 seconds
     };
 
     socket.onmessage = (event) => {
-      console.log("Received message:", event.data);
       try {
         const data = JSON.parse(event.data);
-        // Update messages state if the payload is a chat message
-        if (data.type === "chat_message") {
+        lastMessageTimeRef.current = Date.now(); // Update on any message
+        if (data.type === "chat_message" && data.course_id === course.id) {
           setMessages((prev) => [...prev, data]);
+        } else if (data.type === "pong") {
+          console.log("Pong received from server");
         }
       } catch (err) {
-        console.error("Error parsing message:", err);
+        console.error("Error parsing WebSocket message:", err);
       }
     };
 
-    socket.onerror = (error) => {
-      console.error("WebSocket error:", error);
+    socket.onerror = () => {
+      setConnectionStatus("error");
+      setErrorMessage("Connection error. Retrying...");
     };
 
-    socket.onclose = (event) => {
-      console.log("WebSocket connection closed", event);
+    socket.onclose = async (event) => {
+      console.log("WebSocket closed:", event.code, event.reason);
+      setConnectionStatus("disconnected");
+      if (heartbeatIntervalRef.current)
+        clearInterval(heartbeatIntervalRef.current);
+
+      if (event.code === 1008 || event.code === 401) {
+        const success = await handleTokenRefresh();
+        if (success) initializeWebSocket();
+      } else if (event.code !== 1000) {
+        if (reconnectTimeoutRef.current)
+          clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = setTimeout(() => {
+          console.log("Attempting to reconnect...");
+          initializeWebSocket();
+        }, 3000);
+      }
     };
+  };
+
+  useEffect(() => {
+    initializeWebSocket();
+
+    tokenRefreshIntervalRef.current = setInterval(async () => {
+      if (isTokenExpiringSoon()) {
+        const success = await handleTokenRefresh();
+        if (success && socketRef.current?.readyState !== WebSocket.OPEN) {
+          initializeWebSocket();
+        }
+      }
+    }, 30000);
 
     return () => {
-      socket.close();
+      if (socketRef.current) {
+        socketRef.current.close(1000, "Component unmounted");
+        socketRef.current = null;
+      }
+      if (reconnectTimeoutRef.current)
+        clearTimeout(reconnectTimeoutRef.current);
+      if (tokenRefreshIntervalRef.current)
+        clearInterval(tokenRefreshIntervalRef.current);
+      if (heartbeatIntervalRef.current)
+        clearInterval(heartbeatIntervalRef.current);
     };
-  }, []);
+  }, [course.id]);
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSendMessage = () => {
-    if (newMessage.trim()) {
+    if (newMessage.trim() && socketRef.current?.readyState === WebSocket.OPEN) {
       const messagePayload = {
         type: "chat_message",
         course_id: course.id,
@@ -77,143 +182,163 @@ const ClassroomChat: React.FC<{ course: Course }> = ({ course }) => {
         timestamp: new Date().toISOString(),
       } as ChatMessage;
 
-      if (
-        socketRef.current &&
-        socketRef.current.readyState === WebSocket.OPEN
-      ) {
-        socketRef.current.send(JSON.stringify(messagePayload));
-        setMessages([...messages, messagePayload]);
+      const sent = sendWebSocketMessage("chat_message", messagePayload);
+      if (sent) {
+        setNewMessage("");
       } else {
-        toast.error("No internet connection");
+        toast.error("Failed to send message");
       }
-      setNewMessage("");
+    } else if (socketRef.current?.readyState !== WebSocket.OPEN) {
+      toast.error("Not connected to chat server");
+      initializeWebSocket();
     }
   };
 
+  const handleReconnect = async () => {
+    if (socketRef.current) {
+      socketRef.current.close(1000, "Manual reconnect");
+      socketRef.current = null;
+    }
+    setConnectionStatus("connecting");
+    await initializeWebSocket();
+  };
+
   const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return new Date(timestamp).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
-  const startVideoCall = () => {
-    setIsVideoCallActive(true);
-  };
-
-  const endVideoCall = () => {
-    setIsVideoCallActive(false);
+  const renderConnectionStatus = () => {
+    switch (connectionStatus) {
+      case "connecting":
+        return (
+          <div className="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full flex items-center">
+            Connecting...
+          </div>
+        );
+      case "connected":
+        return (
+          <div className="ml-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full flex items-center">
+            Connected
+          </div>
+        );
+      case "disconnected":
+        return (
+          <div className="ml-2 px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full flex items-center">
+            Disconnected
+            <Button
+              size="sm"
+              variant="ghost"
+              className="ml-1"
+              onClick={handleReconnect}
+            >
+              Reconnect
+            </Button>
+          </div>
+        );
+      case "error":
+        return (
+          <div className="ml-2 px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full flex items-center">
+            Error
+            <Button
+              size="sm"
+              variant="ghost"
+              className="ml-1"
+              onClick={handleReconnect}
+            >
+              Retry
+            </Button>
+          </div>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg flex flex-col h-full overflow-hidden relative">
-      {/* Chat Header with Video Call Button */}
+    <div className="bg-white rounded-xl shadow-lg flex flex-col h-full overflow-hidden">
       <div className="p-3 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-        <h3 className="font-medium text-gray-800">{course.name} Chat</h3>
+        <div className="flex items-center">
+          <h3 className="font-medium text-gray-800">{course.name} Chat</h3>
+          {renderConnectionStatus()}
+        </div>
         <Button
-          onClick={startVideoCall}
+          onClick={() => {}}
           variant="ghost"
-          className="rounded-full p-2 hover:bg-gray-200 absolute top-1.5 right-5 -translate-x-1/2"
+          className="rounded-full p-2 hover:bg-gray-200"
           title="Start video call"
         >
           <Video className="w-6 h-6 text-blue-500" />
         </Button>
       </div>
-
-      {/* Messages Container */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-white">
-        {messages.map((msg) => {
-          const isCurrentUser = msg.sender.id === user?.id;
-          return (
+        {messages.map((msg) => (
+          <div
+            key={msg.id}
+            className={cn(
+              "flex items-end space-x-2",
+              msg.sender.id === user?.id ? "justify-end" : "justify-start"
+            )}
+          >
+            {msg.sender.id !== user?.id && (
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={msg.sender.avatar} />
+                <AvatarFallback>
+                  {msg.sender.firstName[0]}
+                  {msg.sender.lastName[0]}
+                </AvatarFallback>
+              </Avatar>
+            )}
             <div
-              key={msg.id}
               className={cn(
-                "flex items-end space-x-2",
-                isCurrentUser ? "justify-end" : "justify-start"
+                "px-3 py-2 rounded-lg max-w-[70%]",
+                msg.sender.id === user?.id
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 text-gray-800"
               )}
             >
-              {/* User Avatar (only for others) */}
-              {!isCurrentUser && (
-                <Avatar className="h-8 w-8 sm:h-10 sm:w-10 mr-3 ring-2 ring-gray-200">
-                  <AvatarImage src={msg.sender.avatar} />
-                  <AvatarFallback
-                    style={{ backgroundColor: course.background_color }}
-                    className="text-white text-sm"
-                  >
-                    {msg.sender.firstName[0]} {msg.sender.lastName[1]}
-                  </AvatarFallback>
-                </Avatar>
-              )}
-
-              {/* Message Bubble */}
-              <div
-                className={cn(
-                  "px-3 py-2 rounded-lg max-w-[70%] break-words",
-                  isCurrentUser
-                    ? "bg-blue-500 text-white rounded-br-none"
-                    : "bg-gray-200 text-gray-800 rounded-bl-none"
-                )}
-              >
-                <p
-                  className={cn(
-                    "text-sm font-semibold",
-                    isCurrentUser ? "text-blue-100" : "text-gray-600"
-                  )}
-                >
-                  {msg.sender.username}
-                </p>
-                <p className="text-sm">{msg.text}</p>
-                <p
-                  className={cn(
-                    "text-xs mt-1",
-                    isCurrentUser ? "text-blue-100" : "text-gray-500"
-                  )}
-                >
-                  {formatTimestamp(msg.timestamp)}
-                </p>
-              </div>
-
-              {isCurrentUser && (
-                <Avatar
-                  className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium",
-                    "bg-blue-500"
-                  )}
-                >
-                  <AvatarImage src={msg.sender.avatar} />
-                  <AvatarFallback
-                    style={{ backgroundColor: course.background_color }}
-                    className="text-white text-sm"
-                  >
-                    {msg.sender.firstName[0]} {msg.sender.lastName[1]}
-                  </AvatarFallback>
-                </Avatar>
-              )}
+              <p className="text-sm font-semibold">{msg.sender.username}</p>
+              <p className="text-sm">{msg.text}</p>
+              <p className="text-xs mt-1">{formatTimestamp(msg.timestamp)}</p>
             </div>
-          );
-        })}
-        {/* Scroll to bottom ref */}
+            {msg.sender.id === user?.id && (
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={msg.sender.avatar} />
+                <AvatarFallback>
+                  {msg.sender.firstName[0]}
+                  {msg.sender.lastName[0]}
+                </AvatarFallback>
+              </Avatar>
+            )}
+          </div>
+        ))}
         <div ref={chatEndRef} />
       </div>
-
-      {/* Message Input */}
       <div className="p-3 bg-white border-t border-gray-100">
         <div className="flex items-center space-x-2">
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type your message..."
-            className="flex-1 rounded-full border-gray-300 focus:border-blue-500 focus:ring-0 text-sm py-2"
+            placeholder={
+              connectionStatus === "connected"
+                ? "Type your message..."
+                : "Reconnect to send messages"
+            }
+            className="flex-1 rounded-full"
             onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+            disabled={connectionStatus !== "connected"}
           />
           <Button
             onClick={handleSendMessage}
-            className="bg-blue-500 hover:bg-blue-600 rounded-full p-2 aspect-square"
+            className="bg-blue-500 hover:bg-blue-600 rounded-full p-2"
+            disabled={connectionStatus !== "connected" || !newMessage.trim()}
           >
             <Send className="w-4 h-4 text-white" />
           </Button>
         </div>
       </div>
-
-      {/* Video Call Overlay */}
     </div>
   );
 };
