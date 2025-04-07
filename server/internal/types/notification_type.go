@@ -16,16 +16,16 @@ const (
 )
 
 type NotifMessageSentResponse struct {
-	ClassID    string                 `json:"class_id"`
-	UserID     string                 `json:"user_id"`
-	MessageID  string                 `json:"message_id"`
-	Content    string                 `json:"content"`
-	Data       map[string]interface{} `json:"data"`
+	ClassID   string                 `json:"class_id"`
+	UserID    string                 `json:"user_id"`
+	MessageID string                 `json:"message_id"`
+	Content   string                 `json:"content"`
+	Data      map[string]interface{} `json:"data"`
 }
 
 type NotifKickedResponse struct {
 	ClassID string
-	AdminID  string
+	AdminID string
 	UserID  string
 	Data    map[string]interface{}
 }
@@ -58,4 +58,8 @@ type Notification struct {
 
 func (n *Notification) ToJSON() ([]byte, error) {
 	return json.Marshal(n)
+}
+
+type Notifier interface {
+	Notify(payload NotifMessageSentResponse) error
 }

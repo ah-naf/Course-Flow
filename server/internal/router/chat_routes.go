@@ -12,6 +12,7 @@ import (
 func (r *Router) setupChatRouter(router *mux.Router) {
 	chatStorage := storage.NewChatStorage(r.DB)
 	userStorage := storage.NewUserStorage(r.DB)
+
 	chatService := services.NewChatService(chatStorage, userStorage)
 
 	chatHandler := handlers.NewChatHandler(chatService)

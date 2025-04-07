@@ -29,7 +29,7 @@ const ClassroomChat: React.FC<{ course: Course }> = ({ course }) => {
   const { user } = useUserStore();
 
   useEffect(() => {
-    setMessages(data);
+    if (data) setMessages(data);
   }, [data]);
 
   const isTokenExpiringSoon = () => {

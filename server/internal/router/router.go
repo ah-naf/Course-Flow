@@ -1,6 +1,7 @@
 package router
 
 import (
+	"course-flow/internal/notifications"
 	"course-flow/internal/services"
 	"course-flow/internal/storage"
 	"course-flow/internal/utils"
@@ -124,8 +125,9 @@ func (R *Router) setupWebSocketHandler(w http.ResponseWriter, r *http.Request) {
 	chatStorage := storage.NewChatStorage(R.DB)
 	userStorage := storage.NewUserStorage(R.DB)
 	chatService := services.NewChatService(chatStorage, userStorage)
+	notifier := notifications.NewMessageSentNotifier(R.Hub, R.DB)
 
-	R.Hub.Handler(userID, classMap, chatService)(w, r)
+	R.Hub.Handler(userID, classMap, chatService, notifier)(w, r)
 }
 
 func getUserCourseIDs(userID string, db *sql.DB) ([]string, error) {

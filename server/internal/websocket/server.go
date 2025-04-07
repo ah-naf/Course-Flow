@@ -103,7 +103,7 @@ func (h *Hub) Run() {
 	}
 }
 
-func (h *Hub) Handler(userID string, classIDs map[string]bool, chatService *services.ChatService) http.HandlerFunc {
+func (h *Hub) Handler(userID string, classIDs map[string]bool, chatService *services.ChatService, notifier types.Notifier) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
@@ -185,6 +185,15 @@ func (h *Hub) Handler(userID string, classIDs map[string]bool, chatService *serv
 			}
 
 			h.chat <- chatMsg
+
+			payload := types.NotifMessageSentResponse{
+				ClassID: chatMsg.CourseID,
+				UserID:  chatMsg.FromID,
+				Content: chatMsg.Content,
+			}
+			if err := notifier.Notify(payload); err != nil {
+				log.Printf("Error notifying message sent: %v", err)
+			}
 		}
 	}
 }

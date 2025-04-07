@@ -62,7 +62,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, pagePath = "" }) => {
       console.log("Received WebSocket message:", event.data);
       const data = JSON.parse(event.data) as Notification;
       console.log(data);
-      addNotification(data);
+      if ("data" in data) addNotification(data);
       if (data.type === "post_created") {
         setCurrentPostNotification(data);
       } else if (data.type === "comment_added") {

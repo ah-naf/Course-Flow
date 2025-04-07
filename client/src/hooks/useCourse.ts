@@ -38,7 +38,6 @@ export const useGetMessage = (courseID: string) => {
       const response = await axiosInstance.get(`/chat/${courseID}`);
       return response.data;
     },
-    staleTime: 1 * 60 * 1000,
     retry: 1,
   });
 };

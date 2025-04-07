@@ -58,6 +58,7 @@ const NotificationDialog: React.FC = () => {
       case "comment_added":
         return <MessageCircle className="h-5 w-5 text-indigo-500" />; // Indigo for discussion
       default:
+        console.log(type);
         return <Bell className="h-5 w-5 text-gray-500" />;
     }
   };
