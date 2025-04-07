@@ -181,9 +181,9 @@ const CourseJoin = () => {
                   <span className="text-xs font-medium">POSTS</span>
                 </div>
                 <span className="text-sm font-medium">
-                  {course.post_permission === "Instructor"
+                  {course.post_permission === 3
                     ? "Admin only"
-                    : course.post_permission === "Moderator"
+                    : course.post_permission === 2
                     ? "Moderators & Admins"
                     : "All members"}
                 </span>

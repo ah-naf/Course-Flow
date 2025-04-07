@@ -120,7 +120,6 @@ func (h *CourseHandler) ArchiveCourseHandler(w http.ResponseWriter, r *http.Requ
 	var req struct {
 		CourseID string `json:"course_id"`
 	}
-
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return err
 	}
@@ -168,7 +167,7 @@ func (h *CourseHandler) GetCoursesByInstructorHandler(w http.ResponseWriter, r *
 }
 
 func (h *CourseHandler) CreateCourseHandler(w http.ResponseWriter, r *http.Request) error {
-	// Parse the multipart form data (20MB max size)
+	// Parse the multipart form data (20MB max size)Failed to parse form
 	if err := r.ParseMultipartForm(20 << 20); err != nil {
 		return &utils.ApiError{
 			Code:    http.StatusBadRequest,

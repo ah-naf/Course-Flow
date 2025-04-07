@@ -186,18 +186,12 @@ const ClassPage: React.FC = () => {
           onClick={() => setIsChatOpen(true)}
         >
           <MessageCircle className="w-10 h-10 text-white" />
-          <Badge
-            variant="destructive"
-            className="absolute -top-1 -right-1 px-1.5 py-0.5 text-xs"
-          >
-            3
-          </Badge>
         </Button>
       </div>
 
       {/* Chat Dialog */}
 
-      <Dialog open={isChatOpen} onOpenChange={setIsChatOpen} >
+      <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
         <DialogTitle hidden>{course.name}</DialogTitle>
         <DialogContent className="min-w-[95vw] lg:min-w-5xl xl:min-w-6xl min-h-[97vh] lg:min-h-[70vh] p-0 bg-white rounded-xl shadow-2xl border border-gray-200">
           <ClassroomChat course={course} />

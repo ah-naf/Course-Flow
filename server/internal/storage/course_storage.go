@@ -85,8 +85,7 @@ func (s *CourseStorage) CoursePreview(joinCode, userID string, showRole bool) (*
 	var err error
 	var preview types.CoursePreviewResponse
 
-	if showRole && userID != "" {
-		query = `
+	query = `
 			SELECT 
 				c.id, 
 				c.name, 
@@ -112,29 +111,31 @@ func (s *CourseStorage) CoursePreview(joinCode, userID string, showRole bool) (*
 			WHERE c.join_code = $1 
 			AND c.archived = FALSE
 		`
-		row = s.DB.QueryRow(query, joinCode, userID)
-		err = row.Scan(
-			&preview.ID,
-			&preview.Name,
-			&preview.Description,
-			&preview.BackgroundColor,
-			&preview.CoverPic,
-			&preview.JoinCode,
-			&preview.PostPermission,
-			&preview.CreatedAt,
-			&preview.UpdatedAt,
-			&preview.Admin.ID,
-			&preview.Admin.Username,
-			&preview.Admin.FirstName,
-			&preview.Admin.LastName,
-			&preview.Admin.Avatar,
-			&preview.TotalMembers,
-			&preview.IsArchived,
-			&preview.IsPrivate,
-			&preview.Role,
-		)
-	} else {
-		query = `
+	row = s.DB.QueryRow(query, joinCode, userID)
+	err = row.Scan(
+		&preview.ID,
+		&preview.Name,
+		&preview.Description,
+		&preview.BackgroundColor,
+		&preview.CoverPic,
+		&preview.JoinCode,
+		&preview.PostPermission,
+		&preview.CreatedAt,
+		&preview.UpdatedAt,
+		&preview.Admin.ID,
+		&preview.Admin.Username,
+		&preview.Admin.FirstName,
+		&preview.Admin.LastName,
+		&preview.Admin.Avatar,
+		&preview.TotalMembers,
+		&preview.IsArchived,
+		&preview.IsPrivate,
+		&preview.Role,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			query = `
 			SELECT 
 				c.id, 
 				c.name, 
@@ -158,37 +159,38 @@ func (s *CourseStorage) CoursePreview(joinCode, userID string, showRole bool) (*
 			AND c.is_private = FALSE 
 			AND c.archived = FALSE
 		`
-		row = s.DB.QueryRow(query, joinCode)
-		err = row.Scan(
-			&preview.ID,
-			&preview.Name,
-			&preview.Description,
-			&preview.BackgroundColor,
-			&preview.CoverPic,
-			&preview.JoinCode,
-			&preview.PostPermission,
-			&preview.CreatedAt,
-			&preview.UpdatedAt,
-			&preview.Admin.ID,
-			&preview.Admin.Username,
-			&preview.Admin.FirstName,
-			&preview.Admin.LastName,
-			&preview.Admin.Avatar,
-			&preview.TotalMembers,
-			&preview.IsArchived,
-			&preview.IsPrivate,
-		)
-	}
-
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, &utils.ApiError{Code: http.StatusNotFound, Message: "course not found or not accessible"}
+			row = s.DB.QueryRow(query, joinCode)
+			err = row.Scan(
+				&preview.ID,
+				&preview.Name,
+				&preview.Description,
+				&preview.BackgroundColor,
+				&preview.CoverPic,
+				&preview.JoinCode,
+				&preview.PostPermission,
+				&preview.CreatedAt,
+				&preview.UpdatedAt,
+				&preview.Admin.ID,
+				&preview.Admin.Username,
+				&preview.Admin.FirstName,
+				&preview.Admin.LastName,
+				&preview.Admin.Avatar,
+				&preview.TotalMembers,
+				&preview.IsArchived,
+			)
+			if err != nil {
+				if err == sql.ErrNoRows {
+					return nil, &utils.ApiError{Code: http.StatusNotFound, Message: "course not found or not accessible"}
+				}
+				return nil, fmt.Errorf("error fetching course preview: %w", err)
+			}
 		}
-		return nil, fmt.Errorf("error fetching course preview: %w", err)
 	}
 
 	preview.CoverPic = utils.NormalizeMedia(preview.CoverPic)
 	preview.Admin.Avatar = utils.NormalizeMedia(preview.Admin.Avatar)
+
+	fmt.Println("prev", preview)
 
 	return &preview, nil
 }

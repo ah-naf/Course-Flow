@@ -87,7 +87,7 @@ const ProfileDialog: React.FC<ProfileDialogProps> = ({ isOpen, onClose }) => {
   // Watch avatar field for preview
   const avatarFile = watch("avatar") as File | undefined;
   const [avatarPreview, setAvatarPreview] = React.useState<string | null>(
-    user?.avatar ? `http://localhost:8080/${user.avatar}` : null
+    user?.avatar ? user.avatar : null
   );
 
   // Track if we're using a custom uploaded avatar or the default one
@@ -99,9 +99,7 @@ const ProfileDialog: React.FC<ProfileDialogProps> = ({ isOpen, onClose }) => {
     if (user) {
       setValue("first_name", user.firstName);
       setValue("last_name", user.lastName);
-      setAvatarPreview(
-        user.avatar ? `http://localhost:8080/${user.avatar}` : null
-      );
+      setAvatarPreview(user.avatar ? user.avatar : null);
       setIsUsingUploadedAvatar(false);
     }
   }, [user, setValue]);
@@ -119,9 +117,7 @@ const ProfileDialog: React.FC<ProfileDialogProps> = ({ isOpen, onClose }) => {
   // Handle removing the uploaded avatar and showing the original one
   const handleRemoveAvatar = () => {
     setValue("avatar", undefined);
-    setAvatarPreview(
-      user?.avatar ? `http://localhost:8080/${user.avatar}` : null
-    );
+    setAvatarPreview(user?.avatar ? user.avatar : null);
     setIsUsingUploadedAvatar(false);
   };
 
@@ -136,7 +132,7 @@ const ProfileDialog: React.FC<ProfileDialogProps> = ({ isOpen, onClose }) => {
         onSuccess: () => {
           onClose(); // Close dialog on success
           reset(); // Reset form after successful submission
-          setIsUsingUploadedAvatar(false)
+          setIsUsingUploadedAvatar(false);
         },
       }
     );

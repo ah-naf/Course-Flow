@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"course-flow/internal/utils"
+	"fmt"
 	"net/http"
 )
 
@@ -30,6 +31,7 @@ func ConvertToHandlerFunc(f apiFunc, middlewares ...func(apiFunc) apiFunc) http.
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("url", r.URL)
 		// defer func() {
 		// 	if r := recover(); r != nil {
 		// 		log.Printf("Panice: %v\n", r)
@@ -37,6 +39,7 @@ func ConvertToHandlerFunc(f apiFunc, middlewares ...func(apiFunc) apiFunc) http.
 		// 	}
 		// }()
 		if err := f(w, r); err != nil {
+			fmt.Println("err", err)
 			code, message := mapErrorToStatus(err)
 			utils.WriteJSON(w, code, map[string]string{"error": message})
 		}

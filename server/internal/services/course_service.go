@@ -4,6 +4,7 @@ import (
 	"course-flow/internal/storage"
 	"course-flow/internal/types"
 	"course-flow/internal/utils"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -83,6 +84,7 @@ func (s *CourseService) CoursePreview(r *http.Request) (*types.CoursePreviewResp
 		showRole = true
 	}
 
+	fmt.Println("userid", userID, "role", showRole)
 	vars := mux.Vars(r)
 	joinCode := vars["id"]
 	if joinCode == "" {
