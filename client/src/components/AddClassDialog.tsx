@@ -1,5 +1,5 @@
 // src/components/AddClassDialog.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,

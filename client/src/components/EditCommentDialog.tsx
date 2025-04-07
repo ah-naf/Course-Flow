@@ -19,7 +19,6 @@ interface EditCommentDialogProps {
 }
 
 export const EditCommentDialog: React.FC<EditCommentDialogProps> = ({
-  isOpen,
   onOpenChange,
   comment,
   postID,

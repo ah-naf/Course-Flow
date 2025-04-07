@@ -5,7 +5,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClassBanner } from "@/components/ClassBanner";
 import { CreatePostButton } from "@/components/CreatePostButton";
 import { PostList } from "@/components/PostList";
-import { Badge } from "@/components/ui/badge";
 import GroupMembers from "@/components/GroupMembers";
 import Attachments from "@/components/Attachments";
 import { Button } from "@/components/ui/button";

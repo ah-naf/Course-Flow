@@ -2,12 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 import {
   Dialog,
   DialogContent,
@@ -17,7 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Archive, MoreVertical, Trash, RefreshCw } from "lucide-react";
+import { Archive, Trash, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { formatRelativeTime } from "@/utils/formatRelativeTime";

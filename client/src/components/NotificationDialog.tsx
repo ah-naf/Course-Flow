@@ -5,7 +5,6 @@ import {
   MessageSquare,
   FileText,
   CheckCircle,
-  Trash2,
   UserMinus,
   MessageCircle,
 } from "lucide-react";
@@ -16,7 +15,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";

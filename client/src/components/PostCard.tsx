@@ -10,18 +10,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import {
-  Image as ImageIcon,
-  MoreVertical,
-  Edit,
-  Trash2,
-  Link as LinkIcon,
-} from "lucide-react";
+import { Image as ImageIcon, MoreVertical, Edit, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { Dialog } from "@/components/ui/dialog";
 import { EditPostDialog } from "./EditPostDialog";
 import { CommentSection } from "./CommentSection";
-import { Attachment, Course, Post } from "@/utils/types";
+import { Course, Post } from "@/utils/types";
 import { formatRelativeTime } from "@/utils/formatRelativeTime";
 import { useUserStore } from "@/store/userStore";
 import {
@@ -46,7 +40,6 @@ interface PostCardProps {
 export const PostCard: React.FC<PostCardProps> = ({
   post,
   course,
-  classId,
   onDeletePost,
 }) => {
   const { user } = useUserStore();
@@ -177,7 +170,11 @@ export const PostCard: React.FC<PostCardProps> = ({
 
         {/* Comment Section */}
         <div className="mt-6">
-          <CommentSection course={course} postId={post.id} background_color={course.background_color} />
+          <CommentSection
+            course={course}
+            postId={post.id}
+            background_color={course.background_color}
+          />
         </div>
 
         {/* Edit Post Dialog */}

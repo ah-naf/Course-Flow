@@ -14,24 +14,14 @@ import {
   MDXEditorMethods,
   headingsPlugin,
   quotePlugin,
-  thematicBreakPlugin,
-  imagePlugin,
-  tablePlugin,
-  frontmatterPlugin,
-  codeBlockPlugin,
-  sandpackPlugin,
-  diffSourcePlugin,
-  markdownShortcutPlugin,
   toolbarPlugin,
   UndoRedo,
   BoldItalicUnderlineToggles,
-  BlockTypeSelect,
   CreateLink,
   ListsToggle,
   listsPlugin,
   linkPlugin,
   linkDialogPlugin,
-  CodeBlockNode,
 } from "@mdxeditor/editor";
 import "@mdxeditor/editor/style.css";
 
@@ -43,10 +33,7 @@ interface CreatePostDialogProps {
 }
 
 export const CreatePostDialog: React.FC<CreatePostDialogProps> = ({
-  isOpen,
-  onOpenChange,
   onSubmit,
-  courseID,
 }) => {
   const [postContent, setPostContent] = useState("");
   const [postAttachments, setPostAttachments] = useState<File[]>([]);
