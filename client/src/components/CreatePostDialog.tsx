@@ -9,16 +9,31 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Image as ImageIcon, X } from "lucide-react";
-import { MDXEditor, MDXEditorMethods } from "@mdxeditor/editor";
-import "@mdxeditor/editor/style.css";
 import {
+  MDXEditor,
+  MDXEditorMethods,
+  headingsPlugin,
+  quotePlugin,
+  thematicBreakPlugin,
+  imagePlugin,
+  tablePlugin,
+  frontmatterPlugin,
+  codeBlockPlugin,
+  sandpackPlugin,
+  diffSourcePlugin,
+  markdownShortcutPlugin,
+  toolbarPlugin,
   UndoRedo,
   BoldItalicUnderlineToggles,
   BlockTypeSelect,
   CreateLink,
   ListsToggle,
-  toolbarPlugin,
+  listsPlugin,
+  linkPlugin,
+  linkDialogPlugin,
+  CodeBlockNode,
 } from "@mdxeditor/editor";
+import "@mdxeditor/editor/style.css";
 
 interface CreatePostDialogProps {
   isOpen: boolean;
@@ -37,6 +52,7 @@ export const CreatePostDialog: React.FC<CreatePostDialogProps> = ({
   const [postAttachments, setPostAttachments] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const editorRef = useRef<MDXEditorMethods>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   // Handle file input for attachments
   const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,7 +84,10 @@ export const CreatePostDialog: React.FC<CreatePostDialogProps> = ({
   };
 
   return (
-    <DialogContent className="sm:max-w-[800px] w-[90vw] max-h-[80vh] overflow-y-auto rounded-lg">
+    <DialogContent
+      ref={dialogRef}
+      className="sm:max-w-[800px] w-[90vw] max-h-[80vh] overflow-y-auto rounded-lg"
+    >
       <DialogHeader>
         <DialogTitle className="text-2xl sm:text-3xl font-semibold">
           Create a Post
@@ -99,12 +118,20 @@ export const CreatePostDialog: React.FC<CreatePostDialogProps> = ({
               className="border rounded-md min-h-[250px]"
               contentEditableClassName="min-h-[220px] px-3 py-2 focus:outline-none prose prose-sm"
               plugins={[
+                // Core plugins
+                headingsPlugin(),
+                quotePlugin(),
+                listsPlugin(),
+                linkPlugin(),
+                linkDialogPlugin(),
+
+                // UI toolbar plugin
                 toolbarPlugin({
+                  toolbarClassName: "list-[unset]",
                   toolbarContents: () => (
                     <>
                       <UndoRedo />
                       <BoldItalicUnderlineToggles />
-                      <BlockTypeSelect />
                       <CreateLink />
                       <ListsToggle />
                     </>
