@@ -1,5 +1,5 @@
 import axiosInstance from "@/api/axiosInstance";
-import { Course, CoursePreview, User } from "@/utils/types";
+import { ChatMessage, Course, CoursePreview, User } from "@/utils/types";
 import {
   useMutation,
   useQuery,
@@ -30,6 +30,18 @@ interface CourseSetting {
   post_permission: number;
   is_private: boolean;
 }
+
+export const useGetMessage = (courseID: string) => {
+  return useQuery<ChatMessage[], Error>({
+    queryKey: ["chat", courseID],
+    queryFn: async () => {
+      const response = await axiosInstance.get(`/chat/${courseID}`);
+      return response.data;
+    },
+    staleTime: 1 * 60 * 1000,
+    retry: 1,
+  });
+};
 
 export const useUpdateClassSettings = () => {
   const queryClient = useQueryClient();

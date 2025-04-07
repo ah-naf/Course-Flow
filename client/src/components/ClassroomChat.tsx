@@ -9,10 +9,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { toast } from "sonner";
 import { jwtDecode } from "jwt-decode";
 import { refreshAccessToken } from "@/api/api";
+import { useGetMessage } from "@/hooks/useCourse";
 
 type ConnectionStatus = "connecting" | "connected" | "disconnected" | "error";
 
 const ClassroomChat: React.FC<{ course: Course }> = ({ course }) => {
+  const { data = [] } = useGetMessage(course.id);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [connectionStatus, setConnectionStatus] =
@@ -25,6 +27,10 @@ const ClassroomChat: React.FC<{ course: Course }> = ({ course }) => {
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastMessageTimeRef = useRef<number>(Date.now());
   const { user } = useUserStore();
+
+  useEffect(() => {
+    setMessages(data);
+  }, [data]);
 
   const isTokenExpiringSoon = () => {
     const token = localStorage.getItem("access_token");
@@ -56,6 +62,7 @@ const ClassroomChat: React.FC<{ course: Course }> = ({ course }) => {
       const message = { type: messageType, ...payload };
       socketRef.current.send(JSON.stringify(message));
       lastMessageTimeRef.current = Date.now(); // Update last message time
+      setMessages([...messages, message]);
       return true;
     }
     return false;
@@ -267,7 +274,7 @@ const ClassroomChat: React.FC<{ course: Course }> = ({ course }) => {
         <Button
           onClick={() => {}}
           variant="ghost"
-          className="rounded-full p-2 hover:bg-gray-200"
+          className="rounded-full p-2 relative -left-5 -top-2 hover:bg-gray-200"
           title="Start video call"
         >
           <Video className="w-6 h-6 text-blue-500" />
