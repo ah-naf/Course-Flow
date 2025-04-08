@@ -1,12 +1,23 @@
 # Course Flow
 
-**Course Flow** is a modern classroom management system inspired by Google Classroom. It is built with a **React** frontend (leveraging shadcn UI, React Query, and Zustand) and a **Go** backend (using Gorilla Mux for routing and Gorilla WebSocket for real-time communication). 
+**Course Flow** is a modern classroom management system inspired by Google Classroom. It is built with a **React** frontend (leveraging shadcn UI, React Query, and Zustand) and a **Go** backend (using Gorilla Mux for routing and Gorilla WebSocket for real-time communication).
 
 ---
+
+## Demo
+
+For a visual demonstration of Course-Flow in action, check out our video demo:
+
+<center>
+  <a href="https://youtu.be/plxhcOpebKM">
+    <img src="https://img.youtube.com/vi/plxhcOpebKM/0.jpg" alt="" width="480" height="360">
+  </a>
+</center>
 
 ## Table of Contents
 
 - [Course Flow](#course-flow)
+  - [Demo](#demo)
   - [Table of Contents](#table-of-contents)
   - [Features](#features)
   - [Technologies Used](#technologies-used)
@@ -26,34 +37,40 @@
 
 ## Features
 
-1. **User Authentication & OAuth**  
-   - Login, registration, and logout using email and password.  
-   - OAuth integrations with Google and GitHub.  
+1. **User Authentication & OAuth**
+
+   - Login, registration, and logout using email and password.
+   - OAuth integrations with Google and GitHub.
    - JWT-based session management for secure API and WebSocket access.
 
-2. **Course (Class) Management**  
-   - Create, delete, archive, and restore courses.  
-   - Public or private courses, each with configurable permissions.  
+2. **Course (Class) Management**
+
+   - Create, delete, archive, and restore courses.
+   - Public or private courses, each with configurable permissions.
    - Join courses using invite links or join codes.
 
-3. **Posting & Commenting**  
-   - Create, edit, and delete posts.  
-   - Upload files (stored in the backend) with Markdown support.  
+3. **Posting & Commenting**
+
+   - Create, edit, and delete posts.
+   - Upload files (stored in the backend) with Markdown support.
    - Add, edit, and delete comments on posts.
 
-4. **Notifications**  
-   - Real-time notifications for post creation, comments, messages, and role changes.  
+4. **Notifications**
+
+   - Real-time notifications for post creation, comments, messages, and role changes.
    - Mark notifications as read or clear them.
 
-5. **Real-Time Chat**  
-   - WebSocket-based class-specific chat.  
+5. **Real-Time Chat**
+
+   - WebSocket-based class-specific chat.
    - Authentication ensures only enrolled members can access a course’s chat.
 
-6. **Profile Management**  
+6. **Profile Management**
+
    - Update user details (e.g., avatar, personal info).
 
-7. **State Management**  
-   - **React Query** for server-state caching and synchronization.  
+7. **State Management**
+   - **React Query** for server-state caching and synchronization.
    - **Zustand** for local state (e.g., UI states, ephemeral data).
 
 ---
@@ -61,17 +78,19 @@
 ## Technologies Used
 
 - **Frontend:**
+
   - **React** with **shadcn UI** components
   - **React Query** for data fetching and caching
   - **Zustand** for local state management
   - **Axios** (or Fetch) for API calls
 
 - **Backend:**
-  - **Go**  
-  - **Gorilla Mux** for routing  
-  - **Gorilla WebSocket** for real-time communication  
-  - **PostgreSQL** as the primary database  
-  - **JWT** for token-based authentication  
+
+  - **Go**
+  - **Gorilla Mux** for routing
+  - **Gorilla WebSocket** for real-time communication
+  - **PostgreSQL** as the primary database
+  - **JWT** for token-based authentication
 
 - **File Storage:**
   - Uploaded files are stored on the backend filesystem in the `./media` directory.
@@ -192,13 +211,13 @@ OAUTH_COOKIE_FALLBACK=
 BASE_URL=http://localhost:8080/
 ```
 
-> **Note:**  
-> - `DATABASE_URL` should match your PostgreSQL connection string.  
-> - `SECRET_KEY` is used for JWT signing.  
-> - `MEDIA_DIR` is the local directory for storing uploaded files.  
-> - OAuth credentials (`GOOGLE_CLIENT_ID`, `GITHUB_CLIENT_ID`, etc.) should match your registered apps.  
+> **Note:**
+>
+> - `DATABASE_URL` should match your PostgreSQL connection string.
+> - `SECRET_KEY` is used for JWT signing.
+> - `MEDIA_DIR` is the local directory for storing uploaded files.
+> - OAuth credentials (`GOOGLE_CLIENT_ID`, `GITHUB_CLIENT_ID`, etc.) should match your registered apps.
 > - `BASE_URL` might be used for constructing callback URLs or for other service integrations.
-
 
 ### Running the Application
 
@@ -214,10 +233,12 @@ BASE_URL=http://localhost:8080/
 2. **Frontend (if applicable):**
 
    If you have a separate React frontend:
+
    ```bash
    cd ../client
    npm run dev
    ```
+
    By default, the frontend might run on [http://localhost:5173](http://localhost:5173), but this can vary.
 
 ---
@@ -226,78 +247,85 @@ BASE_URL=http://localhost:8080/
 
 The backend exposes a RESTful API under routes such as `/api/v1`. Below are key endpoint groups:
 
-- **Auth Routes** (`/auth`)  
-  - `POST /register` – Register a new user.  
-  - `POST /login` – Login and obtain JWT tokens.  
-  - `POST /refresh` – Refresh expired tokens.  
-  - `POST /logout` – Logout user, invalidating tokens.  
-  - `GET /google/login`, `GET /google/callback` – Google OAuth flow.  
+- **Auth Routes** (`/auth`)
+
+  - `POST /register` – Register a new user.
+  - `POST /login` – Login and obtain JWT tokens.
+  - `POST /refresh` – Refresh expired tokens.
+  - `POST /logout` – Logout user, invalidating tokens.
+  - `GET /google/login`, `GET /google/callback` – Google OAuth flow.
   - `GET /github/login`, `GET /github/callback` – GitHub OAuth flow.
 
-- **User Routes** (`/users`)  
-  - `GET /` – Get user details (admin or self usage).  
-  - `GET /me` – Get current user info.  
+- **User Routes** (`/users`)
+
+  - `GET /` – Get user details (admin or self usage).
+  - `GET /me` – Get current user info.
   - `PUT /edit` – Update user details (avatar, name, etc.).
 
-- **Course (Class) Routes** (`/courses`)  
-  - `POST /` – Create a course.  
-  - `GET /` – Get courses for the authenticated user.  
-  - `PUT /archive` – Archive a course.  
-  - `PUT /restore` – Restore an archived course.  
-  - `DELETE /{id}` – Delete a course.  
-  - `POST /join` – Join a course by code or invite link.  
+- **Course (Class) Routes** (`/courses`)
+
+  - `POST /` – Create a course.
+  - `GET /` – Get courses for the authenticated user.
+  - `PUT /archive` – Archive a course.
+  - `PUT /restore` – Restore an archived course.
+  - `DELETE /{id}` – Delete a course.
+  - `POST /join` – Join a course by code or invite link.
   - Additional endpoints for course preview, leaving a course, updating settings, etc.
 
-- **Course Members** (`/members`)  
-  - `GET /{id}` – Get all members in a course.  
+- **Course Members** (`/members`)
+
+  - `GET /{id}` – Get all members in a course.
   - `PUT /change-role/{id}` – Change a user’s role (teacher, student, etc.).
 
-- **Posts & Comments** (`/posts`)  
-  - `GET /{course_id}` – Fetch all posts for a course.  
-  - `POST /{course_id}` – Create a new post.  
-  - `PUT /{post_id}` – Edit a post.  
-  - `DELETE /{post_id}` – Delete a post.  
-  - `POST /comment/{post_id}` – Add a comment.  
-  - `PUT /comment/{comment_id}` – Edit a comment.  
+- **Posts & Comments** (`/posts`)
+
+  - `GET /{course_id}` – Fetch all posts for a course.
+  - `POST /{course_id}` – Create a new post.
+  - `PUT /{post_id}` – Edit a post.
+  - `DELETE /{post_id}` – Delete a post.
+  - `POST /comment/{post_id}` – Add a comment.
+  - `PUT /comment/{comment_id}` – Edit a comment.
   - `DELETE /comment/{comment_id}` – Delete a comment.
 
-- **Attachments** (`/attachments`)  
+- **Attachments** (`/attachments`)
+
   - `GET /{id}` – Get all attachments for a specific course (or post).
 
-- **Notifications** (`/notifications`)  
-  - `GET /` – Retrieve all notifications for a user.  
-  - `POST /read` – Mark a notification as read.  
-  - `POST /read-all` – Mark all notifications as read.  
+- **Notifications** (`/notifications`)
+
+  - `GET /` – Retrieve all notifications for a user.
+  - `POST /read` – Mark a notification as read.
+  - `POST /read-all` – Mark all notifications as read.
   - `POST /clear` – Clear all notifications.
 
-- **Chat** (`/chat`)  
+- **Chat** (`/chat`)
   - `GET /{course_id}` – Retrieve chat messages for a specific course.
 
 ---
 
 ## File Uploads & Media
 
-- **Upload Handling:**  
+- **Upload Handling:**
   - Files attached to posts are uploaded to the backend and stored in the directory specified by `MEDIA_DIR` (e.g., `./media`).
-- **Serving Files:**  
+- **Serving Files:**
   - The backend exposes these files under the `/media/` path. A `FileServer` or similar approach strips the prefix and serves files from the `MEDIA_DIR`.
 
 ---
 
 ## WebSocket & Real-Time Communication
 
-- **Gorilla WebSocket:**  
+- **Gorilla WebSocket:**
   - A central `Hub` manages all active connections.
-  - Each user connects via `/api/v1/ws` with a valid JWT token (provided in query params).  
-- **Use Cases:**  
-  - **Chat:** Class-specific real-time messaging.  
+  - Each user connects via `/api/v1/ws` with a valid JWT token (provided in query params).
+- **Use Cases:**
+  - **Chat:** Class-specific real-time messaging.
   - **Notifications:** Broadcast new post/comment notifications or role changes to the relevant users.
 
 ---
 
 ## Contributing
 
-1. **Fork** the repository.  
+1. **Fork** the repository.
 2. **Create** a feature branch:
    ```bash
    git checkout -b feature/your-feature
@@ -314,10 +342,9 @@ The backend exposes a RESTful API under routes such as `/api/v1`. Below are key 
 
 ---
 
-
 ## Contact
 
-- **Project Maintainer:** [Ahnaf Hasan Shifat](mailto:sheikhahnafshifatl@gmail.com)  
+- **Project Maintainer:** [Ahnaf Hasan Shifat](mailto:sheikhahnafshifatl@gmail.com)
 - **GitHub:** [github.com/ah-naf](https://github.com/ah-naf)
 
 For any inquiries, issues, or suggestions, please reach out via GitHub or email.

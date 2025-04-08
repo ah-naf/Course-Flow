@@ -46,10 +46,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       <Link
         to={"/"}
         className="p-4 flex items-center font-medium text-xl"
-        title="Learning Hub"
+        title="Course Flow"
       >
         <BookOpen className="h-6 w-6 mr-2 text-blue-600" />
-        <span>Learning Hub</span>
+        <span>Course Flow</span>
       </Link>
       <div className="flex-1 overflow-y-auto space-y-2 p-2">
         <Button
