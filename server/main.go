@@ -1,6 +1,7 @@
 package main
 
 import (
+	"course-flow/internal/middleware"
 	"course-flow/internal/router"
 	"course-flow/pkg/database"
 	"fmt"
@@ -16,7 +17,7 @@ func main() {
 	defer db.Close()
 
 	router := router.NewRouter(db)
-	appRouter := router.Setup()
+	appRouter := middleware.CORSMiddleware([]string{"http://localhost:5173"})(router.Setup())
 
 	// Start the server
 	port := ":8080"
